@@ -45,7 +45,7 @@ export async function POST(request) {
       const milestones = await sql(
         `SELECT title, starts_on FROM project_milestones
          WHERE project_id = ? AND kind = 'milestone'
-         AND starts_on BETWEEN CURRENT_DATE AND (CURRENT_DATE + INTERVAL '14 days')`,
+         AND starts_on::date BETWEEN CURRENT_DATE AND (CURRENT_DATE + 14)`,
         [p.id]
       );
       if (milestones.length) {

@@ -17,7 +17,7 @@ export async function getWeeklyHours() {
 }
 
 export async function getBlackoutDates() {
-  return sql("SELECT * FROM blackout_dates WHERE on_date >= CURRENT_DATE ORDER BY on_date, start_time");
+  return sql("SELECT * FROM blackout_dates WHERE on_date::date >= CURRENT_DATE ORDER BY on_date, start_time");
 }
 
 export async function addBlackout({ date, startTime, endTime, note }) {
