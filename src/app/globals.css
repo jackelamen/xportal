@@ -1,0 +1,153 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Theme tokens resolve through plain CSS vars so .dark can swap the palette.
+   Light is the default: bold editorial — true white canvas, near-black ink,
+   electric indigo used decisively. */
+@theme inline {
+  --font-sans: var(--font-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, "SF Mono", monospace;
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-secondary: var(--bg-secondary);
+  --color-bg-tertiary: var(--bg-tertiary);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-warn: var(--warn);
+  --color-danger: var(--danger);
+  --color-dispute: var(--dispute);
+}
+
+:root {
+  /* Canvas is faintly indigo-tinted; cards are pure white and float above it. */
+  --bg-primary: #f5f5f9;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #efeff5;
+  --accent: #5b48ee;
+  --accent-2: #059669;
+  --ink: #16161d;
+  --ink-soft: #4d4d59;
+  --ink-muted: #6e6e7a;
+  --line: #e5e5ee;
+  --warn: #b45309;
+  --danger: #be123c;
+  --dispute: #7e22ce;
+  --shadow-card: 0 1px 2px rgb(22 22 29 / 0.04), 0 12px 32px -16px rgb(22 22 29 / 0.14);
+  --shadow-button: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 1px 2px rgb(22 22 29 / 0.24);
+  color-scheme: light;
+}
+
+.dark {
+  --bg-primary: #0b0f19;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1f2937;
+  --accent: #7c6cf6;
+  --accent-2: #10b981;
+  --ink: #f3f4f6;
+  --ink-soft: #9ca3af;
+  --ink-muted: #6b7280;
+  --line: #374151;
+  --warn: #fbbf24;
+  --danger: #fb7185;
+  --dispute: #c084fc;
+  --shadow-card: none;
+  --shadow-button: inset 0 1px 0 rgb(255 255 255 / 0.08);
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-bg-primary);
+  color: var(--color-ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-feature-settings: "cv05", "cv11"; /* Inter: open digits + curved l */
+}
+
+button, a, summary, input, select, textarea {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
+}
+
+/* Solid buttons dim slightly on hover — one rule instead of per-button utilities. */
+button.bg-accent:hover:not(:disabled),
+button.bg-accent-2:hover:not(:disabled),
+button.bg-danger:hover:not(:disabled),
+button.bg-warn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+/* Keyboard focus is always visible. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+h1, h2, h3 {
+  text-wrap: balance;
+  letter-spacing: -0.02em;
+}
+
+/* Cards float: every rounded panel on the secondary surface carries the
+   layered card shadow (none in dark mode, where borders do the separating). */
+.rounded-xl.bg-bg-secondary {
+  box-shadow: var(--shadow-card);
+}
+
+/* Solid buttons are tactile — inner highlight + grounded shadow, and they
+   lift a hair on hover. */
+button.bg-accent, button.bg-accent-2, button.bg-danger, button.bg-warn {
+  box-shadow: var(--shadow-button);
+}
+button.bg-accent:hover:not(:disabled),
+button.bg-accent-2:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+button.bg-accent:active:not(:disabled),
+button.bg-accent-2:active:not(:disabled) {
+  transform: translateY(0);
+}
+button { transition-property: background-color, border-color, color, opacity, transform, box-shadow; }
+
+/* A whisper of grain over everything — texture is what separates "rendered"
+   from "printed". Imperceptible as an effect, felt as quality. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Data reads as instrumentation: numbers, dates, and IDs in the mono face
+   with tabular figures so columns of values align. */
+.font-data, time {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+/* Toasts rise into view, settling with an exponential ease-out. */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.toast-enter {
+  animation: toast-in 240ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

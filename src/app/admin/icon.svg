@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- xPortal mark: the x mid-teleport — split by an unseen plane, the far
+       half already through and shifted. -->
+  <rect width="512" height="512" rx="115" fill="#059669"/>
+  <defs>
+    <g id="x" stroke="#ffffff" stroke-width="64" stroke-linecap="round">
+      <line x1="150" y1="150" x2="362" y2="362"/>
+      <line x1="362" y1="150" x2="150" y2="362"/>
+    </g>
+    <clipPath id="left"><rect x="0" y="0" width="249" height="512"/></clipPath>
+    <clipPath id="right"><rect x="267" y="0" width="245" height="512"/></clipPath>
+  </defs>
+  <use href="#x" clip-path="url(#left)"/>
+  <use href="#x" clip-path="url(#right)" transform="translate(0,-34)"/>
+</svg>
