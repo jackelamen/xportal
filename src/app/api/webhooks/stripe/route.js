@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 
 // Payment confirmation listener. Phase 1 (no STRIPE_WEBHOOK_SECRET) accepts
 // unsigned test payloads so the Unpaid -> Paid transition is testable locally.
@@ -27,11 +27,10 @@ export async function POST(request) {
     const pi = event.data?.object;
     const invoiceNumber = pi?.metadata?.invoice_number;
     if (invoiceNumber) {
-      getDb()
-        .prepare(
-          "UPDATE invoices SET status = 'Paid', stripe_payment_intent_id = ? WHERE invoice_number = ?"
-        )
-        .run(pi.id || null, invoiceNumber);
+      await sql(
+        "UPDATE invoices SET status = 'Paid', stripe_payment_intent_id = ? WHERE invoice_number = ?",
+        [pi.id || null, invoiceNumber]
+      );
     }
   }
   return NextResponse.json({ received: true });

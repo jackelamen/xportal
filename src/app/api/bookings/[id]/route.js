@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { notifyXpm } from "@/lib/xpm-bridge";
 import { logActivity, notifyOperators } from "@/lib/activity";
@@ -12,14 +12,14 @@ export async function DELETE(request, { params }) {
   const { user, client } = session;
 
   const { id } = await params;
-  const db = getDb();
-  const booking = db
-    .prepare("SELECT * FROM bookings WHERE id = ? AND client_id = ? AND status = 'confirmed'")
-    .get(id, client.id);
+  const booking = (await sql(
+    "SELECT * FROM bookings WHERE id = ? AND client_id = ? AND status = 'confirmed'",
+    [id, client.id]
+  ))[0];
   if (!booking) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  db.prepare("UPDATE bookings SET status = 'cancelled' WHERE id = ?").run(id);
-  logActivity({
+  await sql("UPDATE bookings SET status = 'cancelled' WHERE id = ?", [id]);
+  await logActivity({
     clientId: client.id, actorType: "client", actorName: user.name,
     eventType: "meeting.cancelled", summary: `${user.name} cancelled "${booking.topic}" (${booking.starts_at})`,
   });

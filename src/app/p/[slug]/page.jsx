@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import LoginForm from "@/components/LoginForm";
 
 export const dynamic = "force-dynamic";
@@ -7,9 +7,10 @@ export const dynamic = "force-dynamic";
 // White-labeled login: /p/acme shows the client's logo and accent color.
 export default async function BrandedLoginPage({ params }) {
   const { slug } = await params;
-  const client = getDb()
-    .prepare("SELECT company_name, logo_path, accent_color FROM clients WHERE slug = ?")
-    .get(slug);
+  const client = (await sql(
+    "SELECT company_name, logo_path, accent_color FROM clients WHERE slug = ?",
+    [slug]
+  ))[0];
   if (!client) notFound();
 
   return (

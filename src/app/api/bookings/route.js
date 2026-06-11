@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb, uuid } from "@/lib/db";
+import { sql, uuid } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { getAvailableSlots, MEETING_LENGTHS } from "@/lib/calendar";
 import { notifyXpm } from "@/lib/xpm-bridge";
@@ -10,14 +10,11 @@ export async function GET(request) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const duration = Number(new URL(request.url).searchParams.get("duration")) || 30;
-  const mine = getDb()
-    .prepare(
-      `SELECT * FROM bookings WHERE client_id = ? AND status = 'confirmed'
-       AND starts_at > datetime('now') ORDER BY starts_at ASC`
-    )
-    .all(session.client.id)
-    .map((r) => ({ ...r }));
-  return NextResponse.json({ slots: getAvailableSlots(duration), bookings: mine });
+  const mine = await sql(
+    "SELECT * FROM bookings WHERE client_id = ? AND status = 'confirmed' AND starts_at > NOW() ORDER BY starts_at ASC",
+    [session.client.id]
+  );
+  return NextResponse.json({ slots: await getAvailableSlots(duration), bookings: mine });
 }
 
 export async function POST(request) {
@@ -34,19 +31,17 @@ export async function POST(request) {
   if (!MEETING_LENGTHS.includes(duration)) {
     return NextResponse.json({ error: "Invalid meeting length" }, { status: 400 });
   }
-  if (!getAvailableSlots(duration).includes(starts_at)) {
+  if (!(await getAvailableSlots(duration)).includes(starts_at)) {
     return NextResponse.json({ error: "Slot is no longer available" }, { status: 409 });
   }
 
   const id = uuid();
-  getDb()
-    .prepare(
-      `INSERT INTO bookings (id, client_id, client_user_id, starts_at, duration_minutes, topic)
-       VALUES (?, ?, ?, ?, ?, ?)`
-    )
-    .run(id, client.id, user.id, starts_at, duration, topic.trim());
+  await sql(
+    "INSERT INTO bookings (id, client_id, client_user_id, starts_at, duration_minutes, topic) VALUES (?, ?, ?, ?, ?, ?)",
+    [id, client.id, user.id, starts_at, duration, topic.trim()]
+  );
 
-  logActivity({
+  await logActivity({
     clientId: client.id, actorType: "client", actorName: user.name,
     eventType: "meeting.booked", summary: `${user.name} booked "${topic.trim()}" (${duration} min) for ${starts_at}`,
   });

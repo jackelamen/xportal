@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { sql, uuid } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { notifyXpm } from "@/lib/xpm-bridge";
 import { logActivity, notifyOperators } from "@/lib/activity";
@@ -15,31 +15,28 @@ export async function POST(request, { params }) {
   const { id } = await params;
   const { action, feedback_notes } = await request.json().catch(() => ({}));
 
-  const db = getDb();
-  const row = db
-    .prepare(
-      `SELECT d.*, p.xpm_project_id, p.id AS project_id, p.title AS project_title
-       FROM deliverables_approvals d
-       JOIN portal_projects p ON p.id = d.project_id
-       WHERE d.id = ? AND p.client_id = ?`
-    )
-    .get(id, client.id);
+  const row = (await sql(
+    `SELECT d.*, p.xpm_project_id, p.id AS project_id, p.title AS project_title
+     FROM deliverables_approvals d
+     JOIN portal_projects p ON p.id = d.project_id
+     WHERE d.id = ? AND p.client_id = ?`,
+    [id, client.id]
+  ))[0];
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (row.status !== "Pending") {
     return NextResponse.json({ error: "Deliverable already actioned" }, { status: 409 });
   }
 
   if (action === "approve") {
-    db.prepare(
-      `UPDATE deliverables_approvals
-       SET status = 'Approved', actioned_by = ?, actioned_at = datetime('now') WHERE id = ?`
-    ).run(user.name, id);
-    // Approvals are decisions — auto-capture them in the project decision log.
-    db.prepare(
-      `INSERT INTO decision_log (id, project_id, decided_on, summary, recorded_by, source)
-       VALUES (?, ?, date('now'), ?, ?, 'approval')`
-    ).run(crypto.randomUUID(), row.project_id, `Approved deliverable "${row.title}"`, user.name);
-    logActivity({
+    await sql(
+      "UPDATE deliverables_approvals SET status = 'Approved', actioned_by = ?, actioned_at = NOW() WHERE id = ?",
+      [user.name, id]
+    );
+    await sql(
+      "INSERT INTO decision_log (id, project_id, decided_on, summary, recorded_by, source) VALUES (?, ?, CURRENT_DATE, ?, ?, 'approval')",
+      [uuid(), row.project_id, `Approved deliverable "${row.title}"`, user.name]
+    );
+    await logActivity({
       clientId: client.id, projectId: row.project_id, actorType: "client", actorName: user.name,
       eventType: "deliverable.approved", summary: `${user.name} approved "${row.title}"`,
     });
@@ -54,12 +51,11 @@ export async function POST(request, { params }) {
     if (!feedback_notes?.trim()) {
       return NextResponse.json({ error: "Feedback notes are required for revisions" }, { status: 400 });
     }
-    db.prepare(
-      `UPDATE deliverables_approvals
-       SET status = 'Revisions Requested', feedback_notes = ?, actioned_by = ?, actioned_at = datetime('now')
-       WHERE id = ?`
-    ).run(feedback_notes.trim(), user.name, id);
-    logActivity({
+    await sql(
+      "UPDATE deliverables_approvals SET status = 'Revisions Requested', feedback_notes = ?, actioned_by = ?, actioned_at = NOW() WHERE id = ?",
+      [feedback_notes.trim(), user.name, id]
+    );
+    await logActivity({
       clientId: client.id, projectId: row.project_id, actorType: "client", actorName: user.name,
       eventType: "deliverable.revisions", summary: `${user.name} requested revisions on "${row.title}"`,
     });

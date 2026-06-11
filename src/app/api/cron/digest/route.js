@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { getOperatorSession } from "@/lib/auth";
 import { verifyBridgeSecret } from "@/lib/xpm-bridge";
 import { notifyClient } from "@/lib/activity";
@@ -13,63 +13,56 @@ export async function POST(request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const db = getDb();
-  const clients = db.prepare("SELECT * FROM clients").all();
+  const clients = await sql("SELECT * FROM clients");
   let sent = 0;
 
   for (const client of clients) {
-    const projects = db
-      .prepare("SELECT * FROM portal_projects WHERE client_id = ?")
-      .all(client.id);
+    const projects = await sql("SELECT * FROM portal_projects WHERE client_id = ?", [client.id]);
     if (projects.length === 0) continue;
 
     const sections = [];
     for (const p of projects) {
       const lines = [`${p.title} — ${p.current_phase}, ${p.progress_percentage}% complete`];
 
-      const delivered = db
-        .prepare(
-          `SELECT title FROM deliverables_approvals
-           WHERE project_id = ? AND submitted_at > datetime('now', '-7 days')`
-        )
-        .all(p.id);
+      const delivered = await sql(
+        "SELECT title FROM deliverables_approvals WHERE project_id = ? AND submitted_at > (NOW() - INTERVAL '7 days')",
+        [p.id]
+      );
       if (delivered.length) lines.push(`  Delivered this week: ${delivered.map((d) => d.title).join(", ")}`);
 
-      const waiting = db
-        .prepare("SELECT title FROM deliverables_approvals WHERE project_id = ? AND status = 'Pending'")
-        .all(p.id)
-        .map((d) => `review "${d.title}"`);
-      waiting.push(
-        ...db
-          .prepare("SELECT title FROM file_requests WHERE project_id = ? AND status = 'open'")
-          .all(p.id)
-          .map((f) => `upload "${f.title}"`)
+      const pendingDels = await sql(
+        "SELECT title FROM deliverables_approvals WHERE project_id = ? AND status = 'Pending'",
+        [p.id]
       );
+      const waiting = pendingDels.map((d) => `review "${d.title}"`);
+      const openRequests = await sql(
+        "SELECT title FROM file_requests WHERE project_id = ? AND status = 'open'",
+        [p.id]
+      );
+      waiting.push(...openRequests.map((f) => `upload "${f.title}"`));
       if (waiting.length) lines.push(`  Waiting on you: ${waiting.join("; ")}`);
 
-      const milestones = db
-        .prepare(
-          `SELECT title, starts_on FROM project_milestones
-           WHERE project_id = ? AND kind = 'milestone'
-           AND starts_on BETWEEN date('now') AND date('now', '+14 days')`
-        )
-        .all(p.id);
+      const milestones = await sql(
+        `SELECT title, starts_on FROM project_milestones
+         WHERE project_id = ? AND kind = 'milestone'
+         AND starts_on BETWEEN CURRENT_DATE AND (CURRENT_DATE + INTERVAL '14 days')`,
+        [p.id]
+      );
       if (milestones.length) {
         lines.push(`  Coming up: ${milestones.map((m) => `${m.title} (${m.starts_on})`).join(", ")}`);
       }
       sections.push(lines.join("\n"));
     }
 
-    const meetings = db
-      .prepare(
-        `SELECT topic, starts_at FROM bookings
-         WHERE client_id = ? AND status = 'confirmed' AND starts_at > datetime('now')
-         ORDER BY starts_at LIMIT 3`
-      )
-      .all(client.id);
+    const meetings = await sql(
+      `SELECT topic, starts_at FROM bookings
+       WHERE client_id = ? AND status = 'confirmed' AND starts_at > NOW()
+       ORDER BY starts_at LIMIT 3`,
+      [client.id]
+    );
     if (meetings.length) {
       sections.push(
-        `Upcoming meetings:\n${meetings.map((m) => `  ${m.starts_at.slice(0, 16)} — ${m.topic}`).join("\n")}`
+        `Upcoming meetings:\n${meetings.map((m) => `  ${String(m.starts_at).slice(0, 16)} — ${m.topic}`).join("\n")}`
       );
     }
 
@@ -80,7 +73,6 @@ export async function POST(request) {
     );
     sent++;
   }
-  // Form posts from the admin button get sent back to the dashboard.
   if ((request.headers.get("content-type") || "").includes("form")) {
     return NextResponse.redirect(new URL("/admin", request.url), 303);
   }

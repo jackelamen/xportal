@@ -1,10 +1,4 @@
-import { getDb, uuid } from "./db";
-
-// Availability provider, Calendly-style:
-//   - weekly_hours: per-weekday default bookable window (seeded M-F 9-5)
-//   - blackout_dates: specific unavailable dates, whole-day or a time range
-// Phase 1 generates slots locally with confirmed bookings as the busy source;
-// Phase 2 swaps in a Google Calendar freebusy query behind the same signature.
+import { sql, uuid } from "./db";
 
 export const MEETING_LENGTHS = [15, 30, 45, 60];
 const STEP_MIN = 30;
@@ -18,82 +12,41 @@ const toMin = (hhmm) => {
   return Number.isFinite(h) ? h * 60 + (m || 0) : null;
 };
 
-// Tables are created lazily so adding availability features never wipes the
-// dev DB; both also live in SCHEMA for fresh creates.
-export function ensureAvailability(db) {
-  db.exec(
-    `CREATE TABLE IF NOT EXISTS blackout_dates (
-       id TEXT PRIMARY KEY,
-       on_date TEXT NOT NULL,
-       start_time TEXT,
-       end_time TEXT,
-       note TEXT,
-       created_at TEXT DEFAULT (datetime('now'))
-     )`
+export async function getWeeklyHours() {
+  return sql("SELECT * FROM weekly_hours ORDER BY weekday");
+}
+
+export async function getBlackoutDates() {
+  return sql("SELECT * FROM blackout_dates WHERE on_date >= CURRENT_DATE ORDER BY on_date, start_time");
+}
+
+export async function addBlackout({ date, startTime, endTime, note }) {
+  await sql(
+    "INSERT INTO blackout_dates (id, on_date, start_time, end_time, note) VALUES (?, ?, ?, ?, ?)",
+    [uuid(), date, startTime || null, endTime || null, note || null]
   );
-  const cols = db.prepare("PRAGMA table_info(blackout_dates)").all().map((c) => c.name);
-  if (!cols.includes("start_time")) db.exec("ALTER TABLE blackout_dates ADD COLUMN start_time TEXT");
-  if (!cols.includes("end_time")) db.exec("ALTER TABLE blackout_dates ADD COLUMN end_time TEXT");
-
-  db.exec(
-    `CREATE TABLE IF NOT EXISTS weekly_hours (
-       weekday INTEGER PRIMARY KEY,  -- 0 = Sunday … 6 = Saturday
-       enabled INTEGER NOT NULL DEFAULT 0,
-       start_time TEXT NOT NULL DEFAULT '09:00',
-       end_time TEXT NOT NULL DEFAULT '17:00'
-     )`
-  );
-  const { n } = db.prepare("SELECT COUNT(*) AS n FROM weekly_hours").get();
-  if (n === 0) {
-    const ins = db.prepare("INSERT INTO weekly_hours (weekday, enabled) VALUES (?, ?)");
-    for (let d = 0; d < 7; d++) ins.run(d, d >= 1 && d <= 5 ? 1 : 0);
-  }
 }
 
-export function getWeeklyHours() {
-  const db = getDb();
-  ensureAvailability(db);
-  return db.prepare("SELECT * FROM weekly_hours ORDER BY weekday").all();
-}
-
-export function getBlackoutDates() {
-  const db = getDb();
-  ensureAvailability(db);
-  return db
-    .prepare("SELECT * FROM blackout_dates WHERE on_date >= date('now') ORDER BY on_date, start_time")
-    .all();
-}
-
-export function addBlackout({ date, startTime, endTime, note }) {
-  const db = getDb();
-  ensureAvailability(db);
-  db.prepare(
-    "INSERT INTO blackout_dates (id, on_date, start_time, end_time, note) VALUES (?, ?, ?, ?, ?)"
-  ).run(uuid(), date, startTime || null, endTime || null, note || null);
-}
-
-export function getAvailableSlots(durationMinutes = 30) {
+export async function getAvailableSlots(durationMinutes = 30) {
   if (!MEETING_LENGTHS.includes(durationMinutes)) return [];
-  const db = getDb();
-  ensureAvailability(db);
 
-  const hours = Object.fromEntries(getWeeklyHours().map((h) => [h.weekday, h]));
+  const hoursRows = await getWeeklyHours();
+  const hours = Object.fromEntries(hoursRows.map((h) => [h.weekday, h]));
 
+  const allBlackouts = await sql("SELECT * FROM blackout_dates");
   const blackouts = {};
-  for (const b of db.prepare("SELECT * FROM blackout_dates").all()) {
+  for (const b of allBlackouts) {
     (blackouts[b.on_date] ||= []).push(b);
   }
 
-  const busy = db
-    .prepare(
-      `SELECT starts_at, duration_minutes FROM bookings
-       WHERE status = 'confirmed' AND starts_at > datetime('now', '-1 day')`
-    )
-    .all()
-    .map((b) => {
-      const start = new Date(b.starts_at.replace(" ", "T"));
-      return [start.getTime(), start.getTime() + b.duration_minutes * 60_000];
-    });
+  const busyRows = await sql(
+    `SELECT starts_at, duration_minutes FROM bookings
+     WHERE status = 'confirmed' AND starts_at > (NOW() - INTERVAL '1 day')`
+  );
+  const busy = busyRows.map((b) => {
+    const start = new Date(b.starts_at);
+    return [start.getTime(), start.getTime() + b.duration_minutes * 60_000];
+  });
   const overlapsBooking = (s, e) => busy.some(([bs, be]) => s < be && bs < e);
 
   const slots = [];
@@ -105,9 +58,7 @@ export function getAvailableSlots(durationMinutes = 30) {
 
     const dateStr = `${day.getFullYear()}-${pad(day.getMonth() + 1)}-${pad(day.getDate())}`;
     const dayBlackouts = blackouts[dateStr] || [];
-    // A blackout without times blocks the whole day.
     if (dayBlackouts.some((b) => !b.start_time && !b.end_time)) continue;
-    // Timed blackouts block their range (open-ended ranges block to the edge of the day).
     const blockedRanges = dayBlackouts.map((b) => [
       toMin(b.start_time) ?? 0,
       toMin(b.end_time) ?? 24 * 60,

@@ -3,7 +3,7 @@ import { redeemLoginToken, setSessionCookie } from "@/lib/auth";
 
 export async function GET(request) {
   const token = new URL(request.url).searchParams.get("token") || "";
-  const result = redeemLoginToken(token);
+  const result = await redeemLoginToken(token);
   if (!result) {
     return NextResponse.redirect(new URL("/?error=expired", request.url));
   }

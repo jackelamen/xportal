@@ -1,4 +1,4 @@
-import { getDb, uuid } from "@/lib/db";
+import { sql, uuid } from "@/lib/db";
 import { requireOperator, redirectBack } from "@/lib/admin";
 import { logActivity, notifyClient } from "@/lib/activity";
 
@@ -13,18 +13,17 @@ export async function POST(request) {
   const issued = String(form.get("issued_date") || "");
   const due = String(form.get("due_date") || "");
 
-  const db = getDb();
-  const project = db.prepare("SELECT * FROM portal_projects WHERE id = ?").get(projectId);
+  const project = (await sql("SELECT * FROM portal_projects WHERE id = ?", [projectId]))[0];
   if (!project || !number || !(amount > 0) || !issued || !due) {
     return new Response("project, invoice_number, positive amount, issued and due dates required", { status: 400 });
   }
 
-  db.prepare(
-    `INSERT INTO invoices (id, project_id, invoice_number, amount, issued_date, due_date)
-     VALUES (?, ?, ?, ?, ?, ?)`
-  ).run(uuid(), projectId, number, amount, issued, due);
+  await sql(
+    "INSERT INTO invoices (id, project_id, invoice_number, amount, issued_date, due_date) VALUES (?, ?, ?, ?, ?, ?)",
+    [uuid(), projectId, number, amount, issued, due]
+  );
 
-  logActivity({
+  await logActivity({
     clientId: project.client_id, projectId, actorType: "operator", actorName: operator.name,
     eventType: "invoice.issued", summary: `Invoice ${number} issued ($${amount.toFixed(2)})`,
   });

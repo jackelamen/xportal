@@ -1,4 +1,4 @@
-import { getDb, uuid } from "@/lib/db";
+import { sql, uuid } from "@/lib/db";
 import { requireOperator, redirectBack } from "@/lib/admin";
 import { saveUpload } from "@/lib/storage";
 
@@ -9,8 +9,7 @@ export async function POST(request, { params }) {
   if (error) return error;
 
   const { id } = await params;
-  const db = getDb();
-  if (!db.prepare("SELECT id FROM clients WHERE id = ?").get(id)) {
+  if (!(await sql("SELECT id FROM clients WHERE id = ?", [id]))[0]) {
     return new Response("Not found", { status: 404 });
   }
 
@@ -29,42 +28,47 @@ export async function POST(request, { params }) {
       if (logo.size > 2_000_000) return new Response("Logo must be under 2 MB", { status: 400 });
       logoPath = (await saveUpload(logo, "logos")).storedPath;
     }
-    db.prepare(
+    await sql(
       `UPDATE clients SET
          accent_color = COALESCE(NULLIF(?, ''), accent_color),
          slug = COALESCE(NULLIF(?, ''), slug),
          logo_path = COALESCE(?, logo_path)
-       WHERE id = ?`
-    ).run(accent, slug, logoPath ?? null, id);
+       WHERE id = ?`,
+      [accent, slug, logoPath ?? null, id]
+    );
   } else if (action === "add_user") {
     const name = String(form.get("name") || "").trim();
     const email = String(form.get("email") || "").trim().toLowerCase();
     if (!name || !email) return new Response("Name and email are required", { status: 400 });
-    db.prepare("INSERT INTO client_users (id, client_id, name, email) VALUES (?, ?, ?, ?)").run(
-      uuid(), id, name, email
+    await sql(
+      "INSERT INTO client_users (id, client_id, name, email) VALUES (?, ?, ?, ?)",
+      [uuid(), id, name, email]
     );
   } else if (action === "remove_user") {
-    db.prepare("DELETE FROM client_users WHERE id = ? AND client_id = ?").run(
-      String(form.get("user_id")), id
-    );
+    await sql("DELETE FROM client_users WHERE id = ? AND client_id = ?", [
+      String(form.get("user_id")), id,
+    ]);
   } else if (action === "add_note") {
     const content = String(form.get("content") || "").trim();
     if (!content) return new Response("Note content required", { status: 400 });
     const { getOperatorSession } = await import("@/lib/auth");
     const op = await getOperatorSession();
-    db.prepare(
-      "INSERT INTO internal_notes (id, client_id, project_id, author_name, content) VALUES (?, ?, NULL, ?, ?)"
-    ).run(uuid(), id, op?.name || "Operator", content);
+    await sql(
+      "INSERT INTO internal_notes (id, client_id, project_id, author_name, content) VALUES (?, ?, NULL, ?, ?)",
+      [uuid(), id, op?.name || "Operator", content]
+    );
   } else if (action === "update_note") {
     const content = String(form.get("content") || "").trim();
     if (!content) return new Response("Note content required", { status: 400 });
-    db.prepare(
-      "UPDATE internal_notes SET content = ? WHERE id = ? AND client_id = ? AND project_id IS NULL"
-    ).run(content, String(form.get("note_id")), id);
+    await sql(
+      "UPDATE internal_notes SET content = ? WHERE id = ? AND client_id = ? AND project_id IS NULL",
+      [content, String(form.get("note_id")), id]
+    );
   } else if (action === "delete_note") {
-    db.prepare(
-      "DELETE FROM internal_notes WHERE id = ? AND client_id = ? AND project_id IS NULL"
-    ).run(String(form.get("note_id")), id);
+    await sql(
+      "DELETE FROM internal_notes WHERE id = ? AND client_id = ? AND project_id IS NULL",
+      [String(form.get("note_id")), id]
+    );
   } else {
     return new Response("Unknown action", { status: 400 });
   }

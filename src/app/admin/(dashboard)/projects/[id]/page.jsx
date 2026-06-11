@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import FilePicker from "@/components/FilePicker";
 import { EditableRow, RowButton } from "@/components/admin/EditableRow";
 import { InfoTip } from "@/components/Tip";
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -19,51 +19,52 @@ export default async function AdminProjectPage({ params, searchParams }) {
   const { tab: rawTab } = await searchParams;
   const tab = TABS.includes(rawTab) ? rawTab : "overview";
 
-  const db = getDb();
-  const project = db
-    .prepare(
-      `SELECT p.*, c.company_name, c.id AS cid FROM portal_projects p
-       JOIN clients c ON c.id = p.client_id WHERE p.id = ?`
-    )
-    .get(id);
+  const project = (await sql(
+    `SELECT p.*, c.company_name, c.id AS cid FROM portal_projects p
+     JOIN clients c ON c.id = p.client_id WHERE p.id = ?`,
+    [id]
+  ))[0];
   if (!project) notFound();
 
-  const milestones = db
-    .prepare("SELECT * FROM project_milestones WHERE project_id = ? ORDER BY sort_order")
-    .all(id);
-  const deliverables = db
-    .prepare("SELECT * FROM deliverables_approvals WHERE project_id = ? ORDER BY submitted_at DESC")
-    .all(id)
-    .map((d) => ({
+  const milestones = await sql(
+    "SELECT * FROM project_milestones WHERE project_id = ? ORDER BY sort_order", [id]
+  );
+  const deliverableRows = await sql(
+    "SELECT * FROM deliverables_approvals WHERE project_id = ? ORDER BY submitted_at DESC", [id]
+  );
+  const deliverables = [];
+  for (const d of deliverableRows) {
+    deliverables.push({
       ...d,
-      versions: db
-        .prepare("SELECT * FROM deliverable_versions WHERE deliverable_id = ? ORDER BY version_no DESC")
-        .all(d.id),
-    }));
-  const invoices = db
-    .prepare("SELECT * FROM invoices WHERE project_id = ? ORDER BY issued_date DESC")
-    .all(id);
-  const messages = db
-    .prepare("SELECT * FROM communication_threads WHERE project_id = ? ORDER BY created_at ASC")
-    .all(id);
-  const kpis = db.prepare("SELECT * FROM project_kpis WHERE project_id = ? ORDER BY name").all(id);
-  const documents = db
-    .prepare("SELECT * FROM project_documents WHERE project_id = ? ORDER BY category, created_at DESC")
-    .all(id);
-  const links = db.prepare("SELECT * FROM project_links WHERE project_id = ?").all(id);
-  const people = db.prepare("SELECT * FROM project_people WHERE project_id = ? ORDER BY side DESC").all(id);
-  const fileRequests = db
-    .prepare("SELECT * FROM file_requests WHERE project_id = ? ORDER BY created_at DESC")
-    .all(id);
-  const decisions = db
-    .prepare("SELECT * FROM decision_log WHERE project_id = ? ORDER BY decided_on DESC")
-    .all(id);
-  const working = db
-    .prepare("SELECT * FROM working_items WHERE project_id = ? ORDER BY status, created_at")
-    .all(id);
-  const notes = db
-    .prepare("SELECT * FROM internal_notes WHERE project_id = ? ORDER BY created_at DESC")
-    .all(id);
+      versions: await sql(
+        "SELECT * FROM deliverable_versions WHERE deliverable_id = ? ORDER BY version_no DESC", [d.id]
+      ),
+    });
+  }
+  const invoices = await sql(
+    "SELECT * FROM invoices WHERE project_id = ? ORDER BY issued_date DESC", [id]
+  );
+  const messages = await sql(
+    "SELECT * FROM communication_threads WHERE project_id = ? ORDER BY created_at ASC", [id]
+  );
+  const kpis = await sql("SELECT * FROM project_kpis WHERE project_id = ? ORDER BY name", [id]);
+  const documents = await sql(
+    "SELECT * FROM project_documents WHERE project_id = ? ORDER BY category, created_at DESC", [id]
+  );
+  const links = await sql("SELECT * FROM project_links WHERE project_id = ?", [id]);
+  const people = await sql("SELECT * FROM project_people WHERE project_id = ? ORDER BY side DESC", [id]);
+  const fileRequests = await sql(
+    "SELECT * FROM file_requests WHERE project_id = ? ORDER BY created_at DESC", [id]
+  );
+  const decisions = await sql(
+    "SELECT * FROM decision_log WHERE project_id = ? ORDER BY decided_on DESC", [id]
+  );
+  const working = await sql(
+    "SELECT * FROM working_items WHERE project_id = ? ORDER BY status, created_at", [id]
+  );
+  const notes = await sql(
+    "SELECT * FROM internal_notes WHERE project_id = ? ORDER BY created_at DESC", [id]
+  );
 
   // Badge counts before any read-marking below.
   const unreadMessages = messages.filter((m) => m.sender_type === "Client" && !m.operator_read).length;
@@ -72,9 +73,9 @@ export default async function AdminProjectPage({ params, searchParams }) {
 
   // Operators don't need manual read controls — opening the messages tab is reading.
   if (tab === "messages" && unreadMessages > 0) {
-    db.prepare(
-      "UPDATE communication_threads SET operator_read = 1 WHERE project_id = ? AND sender_type = 'Client'"
-    ).run(id);
+    await sql(
+      "UPDATE communication_threads SET operator_read = 1 WHERE project_id = ? AND sender_type = 'Client'", [id]
+    );
   }
 
   const here = `/admin/projects/${id}${tab === "overview" ? "" : `?tab=${tab}`}`;

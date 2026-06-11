@@ -8,7 +8,7 @@ export async function POST(request) {
 
   const form = await request.formData();
   for (const key of INVOICE_SETTING_KEYS) {
-    setSetting(key, String(form.get(key) || "").trim());
+    await setSetting(key, String(form.get(key) || "").trim());
   }
   return redirectBack(request, form);
 }

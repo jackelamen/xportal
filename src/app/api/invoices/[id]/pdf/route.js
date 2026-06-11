@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { textPdf } from "@/lib/pdf";
 import { getSettings, INVOICE_SETTING_KEYS } from "@/lib/settings";
@@ -9,16 +9,15 @@ export async function GET(request, { params }) {
   const { client } = session;
 
   const { id } = await params;
-  const inv = getDb()
-    .prepare(
-      `SELECT i.*, p.title AS project_title FROM invoices i
-       JOIN portal_projects p ON p.id = i.project_id
-       WHERE i.id = ? AND p.client_id = ?`
-    )
-    .get(id, client.id);
+  const inv = (await sql(
+    `SELECT i.*, p.title AS project_title FROM invoices i
+     JOIN portal_projects p ON p.id = i.project_id
+     WHERE i.id = ? AND p.client_id = ?`,
+    [id, client.id]
+  ))[0];
   if (!inv) return new Response("Not found", { status: 404 });
 
-  const s = getSettings(INVOICE_SETTING_KEYS);
+  const s = await getSettings(INVOICE_SETTING_KEYS);
   const lines = [
     { text: s.invoice_business_name || "Invoice", size: 20, bold: true },
     ...(s.invoice_business_address

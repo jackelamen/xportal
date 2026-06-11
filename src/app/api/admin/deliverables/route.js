@@ -1,4 +1,4 @@
-import { getDb, uuid } from "@/lib/db";
+import { sql, uuid } from "@/lib/db";
 import { requireOperator, redirectBack } from "@/lib/admin";
 import { logActivity, notifyClient } from "@/lib/activity";
 import { buildVersion } from "@/lib/deliverable-version";
@@ -11,23 +11,21 @@ export async function POST(request) {
   const form = await request.formData();
   const projectId = String(form.get("project_id") || "");
   const title = String(form.get("title") || "").trim();
-  const db = getDb();
-  const project = db.prepare("SELECT * FROM portal_projects WHERE id = ?").get(projectId);
+  const project = (await sql("SELECT * FROM portal_projects WHERE id = ?", [projectId]))[0];
   if (!project || !title) return new Response("project_id and title are required", { status: 400 });
 
   const version = await buildVersion(form);
   if (version.error) return new Response(version.error, { status: 400 });
 
   const id = uuid();
-  db.prepare("INSERT INTO deliverables_approvals (id, project_id, title) VALUES (?, ?, ?)").run(
-    id, projectId, title
-  );
-  db.prepare(
+  await sql("INSERT INTO deliverables_approvals (id, project_id, title) VALUES (?, ?, ?)", [id, projectId, title]);
+  await sql(
     `INSERT INTO deliverable_versions (id, deliverable_id, version_no, kind, asset_path, original_name, note)
-     VALUES (?, ?, 1, ?, ?, ?, ?)`
-  ).run(uuid(), id, version.kind, version.assetPath, version.originalName, version.note);
+     VALUES (?, ?, 1, ?, ?, ?, ?)`,
+    [uuid(), id, version.kind, version.assetPath, version.originalName, version.note]
+  );
 
-  logActivity({
+  await logActivity({
     clientId: project.client_id, projectId, actorType: "operator", actorName: operator.name,
     eventType: "deliverable.submitted", summary: `"${title}" submitted for review`,
   });

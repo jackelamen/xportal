@@ -1,4 +1,4 @@
-import { getDb, uuid } from "@/lib/db";
+import { sql, uuid } from "@/lib/db";
 import { requireOperator, redirectBack } from "@/lib/admin";
 import { logActivity, notifyClient } from "@/lib/activity";
 import { buildVersion } from "@/lib/deliverable-version";
@@ -9,35 +9,32 @@ export async function POST(request, { params }) {
   if (error) return error;
 
   const { id } = await params;
-  const db = getDb();
-  const row = db
-    .prepare(
-      `SELECT d.*, p.client_id, p.title AS project_title FROM deliverables_approvals d
-       JOIN portal_projects p ON p.id = d.project_id WHERE d.id = ?`
-    )
-    .get(id);
+  const row = (await sql(
+    `SELECT d.*, p.client_id, p.title AS project_title FROM deliverables_approvals d
+     JOIN portal_projects p ON p.id = d.project_id WHERE d.id = ?`,
+    [id]
+  ))[0];
   if (!row) return new Response("Not found", { status: 404 });
 
   const form = await request.formData();
   const version = await buildVersion(form);
   if (version.error) return new Response(version.error, { status: 400 });
 
-  const { mx } = db
-    .prepare("SELECT MAX(version_no) AS mx FROM deliverable_versions WHERE deliverable_id = ?")
-    .get(id);
-  db.prepare(
+  const mxRow = (await sql("SELECT MAX(version_no) AS mx FROM deliverable_versions WHERE deliverable_id = ?", [id]))[0];
+  const mx = mxRow?.mx ?? 0;
+  await sql(
     `INSERT INTO deliverable_versions (id, deliverable_id, version_no, kind, asset_path, original_name, note)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`
-  ).run(uuid(), id, (mx || 0) + 1, version.kind, version.assetPath, version.originalName, version.note);
-  db.prepare(
-    `UPDATE deliverables_approvals
-     SET status = 'Pending', feedback_notes = NULL, actioned_by = NULL, actioned_at = NULL
-     WHERE id = ?`
-  ).run(id);
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [uuid(), id, mx + 1, version.kind, version.assetPath, version.originalName, version.note]
+  );
+  await sql(
+    "UPDATE deliverables_approvals SET status = 'Pending', feedback_notes = NULL, actioned_by = NULL, actioned_at = NULL WHERE id = ?",
+    [id]
+  );
 
-  logActivity({
+  await logActivity({
     clientId: row.client_id, projectId: row.project_id, actorType: "operator", actorName: operator.name,
-    eventType: "deliverable.submitted", summary: `"${row.title}" v${(mx || 0) + 1} submitted for review`,
+    eventType: "deliverable.submitted", summary: `"${row.title}" v${mx + 1} submitted for review`,
   });
   await notifyClient(
     row.client_id,

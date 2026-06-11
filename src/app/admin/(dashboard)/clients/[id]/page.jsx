@@ -4,7 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import FilePicker from "@/components/FilePicker";
 import { EditableRow } from "@/components/admin/EditableRow";
 import { InfoTip } from "@/components/Tip";
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
@@ -15,17 +15,16 @@ export default async function AdminClientPage({ params, searchParams }) {
   const { tab: rawTab } = await searchParams;
   const tab = TABS.includes(rawTab) ? rawTab : "projects";
 
-  const db = getDb();
-  const client = db.prepare("SELECT * FROM clients WHERE id = ?").get(id);
+  const client = (await sql("SELECT * FROM clients WHERE id = ?", [id]))[0];
   if (!client) notFound();
 
-  const users = db.prepare("SELECT * FROM client_users WHERE client_id = ? ORDER BY name").all(id);
-  const projects = db
-    .prepare("SELECT * FROM portal_projects WHERE client_id = ? ORDER BY updated_at DESC")
-    .all(id);
-  const notes = db
-    .prepare("SELECT * FROM internal_notes WHERE client_id = ? AND project_id IS NULL ORDER BY created_at DESC")
-    .all(id);
+  const users = await sql("SELECT * FROM client_users WHERE client_id = ? ORDER BY name", [id]);
+  const projects = await sql(
+    "SELECT * FROM portal_projects WHERE client_id = ? ORDER BY updated_at DESC", [id]
+  );
+  const notes = await sql(
+    "SELECT * FROM internal_notes WHERE client_id = ? AND project_id IS NULL ORDER BY created_at DESC", [id]
+  );
   const here = `/admin/clients/${id}${tab === "projects" ? "" : `?tab=${tab}`}`;
 
   return (

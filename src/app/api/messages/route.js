@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb, uuid } from "@/lib/db";
+import { sql, uuid } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { notifyXpm } from "@/lib/xpm-bridge";
 import { logActivity, notifyOperators } from "@/lib/activity";
@@ -15,26 +15,23 @@ export async function POST(request) {
     return NextResponse.json({ error: "Message is required" }, { status: 400 });
   }
 
-  const db = getDb();
-  const project = db
-    .prepare("SELECT * FROM portal_projects WHERE id = ? AND client_id = ?")
-    .get(project_id, client.id);
+  const project = (await sql(
+    "SELECT * FROM portal_projects WHERE id = ? AND client_id = ?",
+    [project_id, client.id]
+  ))[0];
   if (!project) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Invoice-scoped messages (dispute threads) must reference an invoice on this project.
   if (invoice_id) {
-    const inv = db
-      .prepare("SELECT id FROM invoices WHERE id = ? AND project_id = ?")
-      .get(invoice_id, project_id);
+    const inv = (await sql("SELECT id FROM invoices WHERE id = ? AND project_id = ?", [invoice_id, project_id]))[0];
     if (!inv) return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
   }
 
-  db.prepare(
-    `INSERT INTO communication_threads (id, project_id, invoice_id, sender_type, sender_name, message_content)
-     VALUES (?, ?, ?, 'Client', ?, ?)`
-  ).run(uuid(), project_id, invoice_id || null, user.name, message_content.trim());
+  await sql(
+    "INSERT INTO communication_threads (id, project_id, invoice_id, sender_type, sender_name, message_content) VALUES (?, ?, ?, 'Client', ?, ?)",
+    [uuid(), project_id, invoice_id || null, user.name, message_content.trim()]
+  );
 
-  logActivity({
+  await logActivity({
     clientId: client.id, projectId: project_id, actorType: "client", actorName: user.name,
     eventType: "message.sent", summary: `${user.name} sent a message`,
   });

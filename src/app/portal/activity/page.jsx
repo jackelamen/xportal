@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import {
   FileCheck2, MessageSquare, Receipt, CalendarClock, CircleDot,
@@ -20,13 +20,12 @@ const ICON = {
 
 export default async function ActivityPage() {
   const { client } = await getClientSession();
-  const rows = getDb()
-    .prepare(
-      `SELECT a.*, p.title AS project_title FROM activity_log a
-       LEFT JOIN portal_projects p ON p.id = a.project_id
-       WHERE a.client_id = ? ORDER BY a.created_at DESC LIMIT 100`
-    )
-    .all(client.id);
+  const rows = await sql(
+    `SELECT a.*, p.title AS project_title FROM activity_log a
+     LEFT JOIN portal_projects p ON p.id = a.project_id
+     WHERE a.client_id = ? ORDER BY a.created_at DESC LIMIT 100`,
+    [client.id]
+  );
 
   return (
     <div>

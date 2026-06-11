@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { getBlackoutDates, getWeeklyHours } from "@/lib/calendar";
 import { getSettings, INVOICE_SETTING_KEYS } from "@/lib/settings";
 import { InfoTip } from "@/components/Tip";
@@ -7,42 +7,35 @@ import { InfoTip } from "@/components/Tip";
 export const dynamic = "force-dynamic";
 
 export default async function AdminHome() {
-  const db = getDb();
-  const clients = db
-    .prepare(
-      `SELECT c.*,
-        (SELECT COUNT(*) FROM portal_projects p WHERE p.client_id = c.id) AS project_count,
-        (SELECT COUNT(*) FROM deliverables_approvals d JOIN portal_projects p ON p.id = d.project_id
-          WHERE p.client_id = c.id AND d.status = 'Revisions Requested') AS revision_count,
-        (SELECT COUNT(*) FROM invoices i JOIN portal_projects p ON p.id = i.project_id
-          WHERE p.client_id = c.id AND i.status = 'Disputed') AS dispute_count,
-        (SELECT COUNT(*) FROM deliverables_approvals d JOIN portal_projects p ON p.id = d.project_id
-          WHERE p.client_id = c.id AND d.status = 'Pending'
-          AND d.submitted_at < datetime('now', '-5 days')) AS stale_reviews,
-        (SELECT COUNT(*) FROM file_requests f JOIN portal_projects p ON p.id = f.project_id
-          WHERE p.client_id = c.id AND f.status = 'open') AS open_requests,
-        (SELECT MAX(created_at) FROM activity_log a
-          WHERE a.client_id = c.id AND a.actor_type = 'client') AS last_client_activity,
-        (SELECT COUNT(*) FROM communication_threads t JOIN portal_projects p ON p.id = t.project_id
-          WHERE p.client_id = c.id AND t.sender_type = 'Client' AND t.operator_read = 0) AS unread_messages
-       FROM clients c ORDER BY c.company_name`
-    )
-    .all();
-  const bookings = db
-    .prepare(
-      `SELECT b.*, c.company_name, u.name AS booked_by FROM bookings b
-       JOIN clients c ON c.id = b.client_id
-       LEFT JOIN client_users u ON u.id = b.client_user_id
-       WHERE b.status = 'confirmed' AND b.starts_at > datetime('now')
-       ORDER BY b.starts_at ASC LIMIT 10`
-    )
-    .all();
-  const activity = db
-    .prepare(
-      `SELECT a.*, c.company_name FROM activity_log a JOIN clients c ON c.id = a.client_id
-       ORDER BY a.created_at DESC LIMIT 15`
-    )
-    .all();
+  const clients = await sql(
+    `SELECT c.*,
+      (SELECT COUNT(*)::int FROM portal_projects p WHERE p.client_id = c.id) AS project_count,
+      (SELECT COUNT(*)::int FROM deliverables_approvals d JOIN portal_projects p ON p.id = d.project_id
+        WHERE p.client_id = c.id AND d.status = 'Revisions Requested') AS revision_count,
+      (SELECT COUNT(*)::int FROM invoices i JOIN portal_projects p ON p.id = i.project_id
+        WHERE p.client_id = c.id AND i.status = 'Disputed') AS dispute_count,
+      (SELECT COUNT(*)::int FROM deliverables_approvals d JOIN portal_projects p ON p.id = d.project_id
+        WHERE p.client_id = c.id AND d.status = 'Pending'
+        AND d.submitted_at < (NOW() - INTERVAL '5 days')) AS stale_reviews,
+      (SELECT COUNT(*)::int FROM file_requests f JOIN portal_projects p ON p.id = f.project_id
+        WHERE p.client_id = c.id AND f.status = 'open') AS open_requests,
+      (SELECT MAX(created_at) FROM activity_log a
+        WHERE a.client_id = c.id AND a.actor_type = 'client') AS last_client_activity,
+      (SELECT COUNT(*)::int FROM communication_threads t JOIN portal_projects p ON p.id = t.project_id
+        WHERE p.client_id = c.id AND t.sender_type = 'Client' AND t.operator_read = 0) AS unread_messages
+     FROM clients c ORDER BY c.company_name`
+  );
+  const bookings = await sql(
+    `SELECT b.*, c.company_name, u.name AS booked_by FROM bookings b
+     JOIN clients c ON c.id = b.client_id
+     LEFT JOIN client_users u ON u.id = b.client_user_id
+     WHERE b.status = 'confirmed' AND b.starts_at > NOW()
+     ORDER BY b.starts_at ASC LIMIT 10`
+  );
+  const activity = await sql(
+    `SELECT a.*, c.company_name FROM activity_log a JOIN clients c ON c.id = a.client_id
+     ORDER BY a.created_at DESC LIMIT 15`
+  );
 
   return (
     <div className="space-y-10">
@@ -108,7 +101,7 @@ export default async function AdminHome() {
         </details>
       </section>
 
-      <Availability hours={getWeeklyHours()} blackouts={getBlackoutDates()} />
+      <Availability hours={await getWeeklyHours()} blackouts={await getBlackoutDates()} />
 
       <section>
         <h2 className="text-lg font-medium">Upcoming meetings</h2>
@@ -133,7 +126,7 @@ export default async function AdminHome() {
         </form>
       </section>
 
-      <InvoiceSettings settings={getSettings(INVOICE_SETTING_KEYS)} />
+      <InvoiceSettings settings={await getSettings(INVOICE_SETTING_KEYS)} />
 
       <section>
         <h2 className="text-lg font-medium">Recent activity</h2>

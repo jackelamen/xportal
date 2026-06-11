@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { getClientSession } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import Toaster from "@/components/Toaster";
 import ThemeToggle from "@/components/ThemeToggle";
 import PortalNav from "@/components/PortalNav";
@@ -22,13 +22,12 @@ export default async function PortalLayout({ children }) {
   if (!session) redirect("/");
   const { user, client } = session;
 
-  const { n: unread } = getDb()
-    .prepare(
-      `SELECT COUNT(*) AS n FROM communication_threads t
-       JOIN portal_projects p ON p.id = t.project_id
-       WHERE p.client_id = ? AND p.hidden_from_client = 0 AND t.sender_type = 'Internal_Operator' AND t.is_read = 0`
-    )
-    .get(client.id);
+  const { n: unread } = (await sql(
+    `SELECT COUNT(*)::int AS n FROM communication_threads t
+     JOIN portal_projects p ON p.id = t.project_id
+     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND t.sender_type = 'Internal_Operator' AND t.is_read = 0`,
+    [client.id]
+  ))[0];
 
   return (
     // Per-client branding: accent color cascades into every bg-accent/text-accent utility.

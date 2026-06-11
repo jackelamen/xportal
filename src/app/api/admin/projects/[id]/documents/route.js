@@ -1,4 +1,4 @@
-import { getDb, uuid } from "@/lib/db";
+import { sql, uuid } from "@/lib/db";
 import { requireOperator, redirectBack } from "@/lib/admin";
 import { saveUpload } from "@/lib/storage";
 import { logActivity, notifyClient } from "@/lib/activity";
@@ -12,15 +12,15 @@ export async function POST(request, { params }) {
   if (error) return error;
 
   const { id } = await params;
-  const db = getDb();
-  const project = db.prepare("SELECT * FROM portal_projects WHERE id = ?").get(id);
+  const project = (await sql("SELECT * FROM portal_projects WHERE id = ?", [id]))[0];
   if (!project) return new Response("Not found", { status: 404 });
 
   const form = await request.formData();
 
   if (form.get("_action") === "delete") {
-    db.prepare("DELETE FROM project_documents WHERE id = ? AND project_id = ?")
-      .run(String(form.get("document_id")), id);
+    await sql("DELETE FROM project_documents WHERE id = ? AND project_id = ?", [
+      String(form.get("document_id")), id,
+    ]);
     return redirectBack(request, form);
   }
 
@@ -40,12 +40,13 @@ export async function POST(request, { params }) {
     kind = "link"; assetPath = link;
   }
 
-  db.prepare(
+  await sql(
     `INSERT INTO project_documents (id, project_id, category, title, kind, asset_path, original_name, uploaded_by_type, uploaded_by_name)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'operator', ?)`
-  ).run(uuid(), id, category, title, kind, assetPath, originalName, operator.name);
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'operator', ?)`,
+    [uuid(), id, category, title, kind, assetPath, originalName, operator.name]
+  );
 
-  logActivity({
+  await logActivity({
     clientId: project.client_id, projectId: id, actorType: "operator", actorName: operator.name,
     eventType: "document.uploaded", summary: `${category} document added: "${title}"`,
   });

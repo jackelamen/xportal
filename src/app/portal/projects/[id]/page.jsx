@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { Link2, Users, Gavel, Hammer } from "lucide-react";
 import ProjectStatus from "@/components/ProjectStatus";
@@ -13,9 +13,6 @@ import { InfoTip } from "@/components/Tip";
 
 export const dynamic = "force-dynamic";
 
-// node:sqlite rows have a null prototype; clone before crossing into client components.
-const plain = (rows) => rows.map((r) => ({ ...r }));
-
 const TABS = ["overview", "deliverables", "documents", "timeline", "messages"];
 
 export default async function ProjectPage({ params, searchParams }) {
@@ -24,44 +21,47 @@ export default async function ProjectPage({ params, searchParams }) {
   const tab = TABS.includes(rawTab) ? rawTab : "overview";
 
   const { client } = await getClientSession();
-  const db = getDb();
 
-  const project = db
-    .prepare("SELECT * FROM portal_projects WHERE id = ? AND client_id = ? AND hidden_from_client = 0")
-    .get(id, client.id);
+  const project = (await sql(
+    "SELECT * FROM portal_projects WHERE id = ? AND client_id = ? AND hidden_from_client = 0",
+    [id, client.id]
+  ))[0];
   if (!project) notFound();
 
-  const milestones = plain(
-    db.prepare("SELECT * FROM project_milestones WHERE project_id = ? ORDER BY sort_order").all(id)
+  const milestones = await sql(
+    "SELECT * FROM project_milestones WHERE project_id = ? ORDER BY sort_order", [id]
   );
-  const deliverables = plain(
-    db.prepare("SELECT * FROM deliverables_approvals WHERE project_id = ? ORDER BY submitted_at DESC").all(id)
-  ).map((d) => ({
-    ...d,
-    versions: plain(
-      db.prepare("SELECT * FROM deliverable_versions WHERE deliverable_id = ? ORDER BY version_no DESC").all(d.id)
-    ),
-  }));
-  const messages = plain(
-    db.prepare(
-      "SELECT * FROM communication_threads WHERE project_id = ? AND invoice_id IS NULL ORDER BY created_at ASC"
-    ).all(id)
+  const deliverableRows = await sql(
+    "SELECT * FROM deliverables_approvals WHERE project_id = ? ORDER BY submitted_at DESC", [id]
   );
-  const kpis = plain(db.prepare("SELECT * FROM project_kpis WHERE project_id = ? ORDER BY name").all(id));
-  const documents = plain(
-    db.prepare("SELECT * FROM project_documents WHERE project_id = ? ORDER BY created_at DESC").all(id)
+  const deliverables = [];
+  for (const d of deliverableRows) {
+    deliverables.push({
+      ...d,
+      versions: await sql(
+        "SELECT * FROM deliverable_versions WHERE deliverable_id = ? ORDER BY version_no DESC", [d.id]
+      ),
+    });
+  }
+  const messages = await sql(
+    "SELECT * FROM communication_threads WHERE project_id = ? AND invoice_id IS NULL ORDER BY created_at ASC",
+    [id]
   );
-  const fileRequests = plain(
-    db.prepare("SELECT * FROM file_requests WHERE project_id = ? AND status = 'open' ORDER BY created_at").all(id)
+  const kpis = await sql("SELECT * FROM project_kpis WHERE project_id = ? ORDER BY name", [id]);
+  const documents = await sql(
+    "SELECT * FROM project_documents WHERE project_id = ? ORDER BY created_at DESC", [id]
   );
-  const links = db.prepare("SELECT * FROM project_links WHERE project_id = ?").all(id);
-  const people = db.prepare("SELECT * FROM project_people WHERE project_id = ? ORDER BY side DESC, name").all(id);
-  const decisions = db
-    .prepare("SELECT * FROM decision_log WHERE project_id = ? ORDER BY decided_on DESC, created_at DESC")
-    .all(id);
-  const working = db
-    .prepare("SELECT * FROM working_items WHERE project_id = ? AND status = 'active' ORDER BY created_at")
-    .all(id);
+  const fileRequests = await sql(
+    "SELECT * FROM file_requests WHERE project_id = ? AND status = 'open' ORDER BY created_at", [id]
+  );
+  const links = await sql("SELECT * FROM project_links WHERE project_id = ?", [id]);
+  const people = await sql("SELECT * FROM project_people WHERE project_id = ? ORDER BY side DESC, name", [id]);
+  const decisions = await sql(
+    "SELECT * FROM decision_log WHERE project_id = ? ORDER BY decided_on DESC, created_at DESC", [id]
+  );
+  const working = await sql(
+    "SELECT * FROM working_items WHERE project_id = ? AND status = 'active' ORDER BY created_at", [id]
+  );
 
   // Attention counts drive the tab badges. Messages stay unread until the
   // client marks them read (or replies) — no silent auto-read on page visit.

@@ -1,4 +1,4 @@
-import LoginForm from "@/components/LoginForm";
+import OperatorLoginForm from "@/components/OperatorLoginForm";
 import Logo from "@/components/Logo";
 
 export default function AdminLoginPage() {
@@ -7,7 +7,7 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md rounded-xl border border-line bg-bg-secondary p-8">
         <Logo size={34} tile="emerald" sub="Operator console" />
         <h1 className="mt-5 text-2xl font-semibold">Operator sign-in</h1>
-        <LoginForm kind="operator" />
+        <OperatorLoginForm />
       </div>
     </main>
   );

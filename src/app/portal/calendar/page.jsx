@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +7,6 @@ export const dynamic = "force-dynamic";
 // Month grid combining meetings, milestones, and invoice due dates.
 export default async function CalendarPage({ searchParams }) {
   const { client } = await getClientSession();
-  const db = getDb();
 
   const sp = await searchParams;
   const now = new Date();
@@ -24,29 +23,31 @@ export default async function CalendarPage({ searchParams }) {
     if (date?.startsWith(prefix)) (events[date] ||= []).push(ev);
   };
 
-  for (const b of db
-    .prepare("SELECT * FROM bookings WHERE client_id = ? AND status = 'confirmed'")
-    .all(client.id)) {
+  const bookings = await sql(
+    "SELECT * FROM bookings WHERE client_id = ? AND status = 'confirmed'",
+    [client.id]
+  );
+  for (const b of bookings) {
     add(b.starts_at.slice(0, 10), {
       kind: "meeting",
       label: `${b.starts_at.slice(11, 16)} ${b.topic}`,
     });
   }
-  for (const m of db
-    .prepare(
-      `SELECT m.*, p.title AS project_title FROM project_milestones m
-       JOIN portal_projects p ON p.id = m.project_id WHERE p.client_id = ? AND p.hidden_from_client = 0`
-    )
-    .all(client.id)) {
+  const milestones = await sql(
+    `SELECT m.*, p.title AS project_title FROM project_milestones m
+     JOIN portal_projects p ON p.id = m.project_id WHERE p.client_id = ? AND p.hidden_from_client = 0`,
+    [client.id]
+  );
+  for (const m of milestones) {
     if (m.kind === "milestone") add(m.starts_on, { kind: "milestone", label: m.title });
     else add(m.ends_on, { kind: "phase-end", label: `${m.title} ends (${m.project_title})` });
   }
-  for (const i of db
-    .prepare(
-      `SELECT i.* FROM invoices i JOIN portal_projects p ON p.id = i.project_id
-       WHERE p.client_id = ? AND p.hidden_from_client = 0 AND i.status IN ('Unpaid','Overdue','Disputed')`
-    )
-    .all(client.id)) {
+  const dueInvoices = await sql(
+    `SELECT i.* FROM invoices i JOIN portal_projects p ON p.id = i.project_id
+     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND i.status IN ('Unpaid','Overdue','Disputed')`,
+    [client.id]
+  );
+  for (const i of dueInvoices) {
     add(i.due_date, { kind: "invoice", label: `${i.invoice_number} due` });
   }
 

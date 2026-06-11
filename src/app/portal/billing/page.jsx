@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import InvoiceRow from "@/components/InvoiceRow";
 
@@ -6,14 +6,12 @@ export const dynamic = "force-dynamic";
 
 export default async function BillingPage() {
   const { client } = await getClientSession();
-  const invoices = getDb()
-    .prepare(
-      `SELECT i.*, p.title AS project_title FROM invoices i
-       JOIN portal_projects p ON p.id = i.project_id
-       WHERE p.client_id = ? AND p.hidden_from_client = 0 ORDER BY i.issued_date DESC`
-    )
-    .all(client.id)
-    .map((r) => ({ ...r }));
+  const invoices = await sql(
+    `SELECT i.*, p.title AS project_title FROM invoices i
+     JOIN portal_projects p ON p.id = i.project_id
+     WHERE p.client_id = ? AND p.hidden_from_client = 0 ORDER BY i.issued_date DESC`,
+    [client.id]
+  );
 
   return (
     <div>

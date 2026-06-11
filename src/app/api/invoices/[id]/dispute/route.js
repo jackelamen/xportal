@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb, uuid } from "@/lib/db";
+import { sql, uuid } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { notifyXpm } from "@/lib/xpm-bridge";
 import { logActivity, notifyOperators } from "@/lib/activity";
@@ -18,14 +18,12 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: "A reason is required to dispute an invoice" }, { status: 400 });
   }
 
-  const db = getDb();
-  const inv = db
-    .prepare(
-      `SELECT i.*, p.client_id, p.title AS project_title, p.xpm_project_id
-       FROM invoices i JOIN portal_projects p ON p.id = i.project_id
-       WHERE i.id = ? AND p.client_id = ?`
-    )
-    .get(id, client.id);
+  const inv = (await sql(
+    `SELECT i.*, p.client_id, p.title AS project_title, p.xpm_project_id
+     FROM invoices i JOIN portal_projects p ON p.id = i.project_id
+     WHERE i.id = ? AND p.client_id = ?`,
+    [id, client.id]
+  ))[0];
   if (!inv) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (inv.status === "Paid") {
     return NextResponse.json({ error: "Paid invoices cannot be disputed here — message the team instead" }, { status: 409 });
@@ -34,15 +32,13 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: "This invoice is already under dispute" }, { status: 409 });
   }
 
-  db.prepare("UPDATE invoices SET status = 'Disputed', dispute_reason = ? WHERE id = ?").run(
-    reason.trim(), id
+  await sql("UPDATE invoices SET status = 'Disputed', dispute_reason = ? WHERE id = ?", [reason.trim(), id]);
+  await sql(
+    "INSERT INTO communication_threads (id, project_id, invoice_id, sender_type, sender_name, message_content) VALUES (?, ?, ?, 'Client', ?, ?)",
+    [uuid(), inv.project_id, id, user.name, `Invoice ${inv.invoice_number} disputed: ${reason.trim()}`]
   );
-  db.prepare(
-    `INSERT INTO communication_threads (id, project_id, invoice_id, sender_type, sender_name, message_content)
-     VALUES (?, ?, ?, 'Client', ?, ?)`
-  ).run(uuid(), inv.project_id, id, user.name, `Invoice ${inv.invoice_number} disputed: ${reason.trim()}`);
 
-  logActivity({
+  await logActivity({
     clientId: client.id, projectId: inv.project_id, actorType: "client", actorName: user.name,
     eventType: "invoice.disputed", summary: `${user.name} disputed invoice ${inv.invoice_number}`,
   });

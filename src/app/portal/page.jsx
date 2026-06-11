@@ -2,7 +2,7 @@ import Link from "next/link";
 import {
   FileCheck2, Receipt, CalendarClock, MessageSquare, Inbox, ArrowRight, CalendarPlus,
 } from "lucide-react";
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { InfoTip } from "@/components/Tip";
 
@@ -13,64 +13,59 @@ const fmtDate = (s) =>
 
 export default async function Home() {
   const { user, client } = await getClientSession();
-  const db = getDb();
 
-  const projects = db
-    .prepare("SELECT * FROM portal_projects WHERE client_id = ? AND hidden_from_client = 0 ORDER BY updated_at DESC")
-    .all(client.id);
+  const projects = await sql(
+    "SELECT * FROM portal_projects WHERE client_id = ? AND hidden_from_client = 0 ORDER BY updated_at DESC",
+    [client.id]
+  );
   const phasesByProject = {};
   for (const p of projects) {
-    phasesByProject[p.id] = db
-      .prepare(
-        "SELECT * FROM project_milestones WHERE project_id = ? AND kind = 'phase' ORDER BY sort_order"
-      )
-      .all(p.id);
+    phasesByProject[p.id] = await sql(
+      "SELECT * FROM project_milestones WHERE project_id = ? AND kind = 'phase' ORDER BY sort_order",
+      [p.id]
+    );
   }
 
   // Attention items: the reason the client logged in.
-  const pending = db
-    .prepare(
-      `SELECT d.id, d.title, p.id AS project_id, p.title AS project_title
-       FROM deliverables_approvals d JOIN portal_projects p ON p.id = d.project_id
-       WHERE p.client_id = ? AND p.hidden_from_client = 0 AND d.status = 'Pending' ORDER BY d.submitted_at ASC`
-    )
-    .all(client.id);
-  const openInvoices = db
-    .prepare(
-      `SELECT i.* FROM invoices i JOIN portal_projects p ON p.id = i.project_id
-       WHERE p.client_id = ? AND p.hidden_from_client = 0 AND i.status IN ('Unpaid','Overdue') ORDER BY i.due_date ASC`
-    )
-    .all(client.id);
-  // SQLite's bare-column-with-MIN picks the row of the earliest unread message,
-  // so the attention link can jump straight to where the catching-up starts.
-  const unreadByProject = db
-    .prepare(
-      `SELECT p.id AS project_id, p.title AS project_title, COUNT(*) AS n,
-         t.id AS first_unread_id, t.sender_name AS first_sender, MIN(t.created_at)
-       FROM communication_threads t JOIN portal_projects p ON p.id = t.project_id
-       WHERE p.client_id = ? AND p.hidden_from_client = 0 AND t.sender_type = 'Internal_Operator' AND t.is_read = 0
-       GROUP BY p.id, p.title ORDER BY 6 DESC`
-    )
-    .all(client.id);
-  const nextMeeting = db
-    .prepare(
-      `SELECT * FROM bookings WHERE client_id = ? AND status = 'confirmed' AND starts_at > datetime('now')
-       ORDER BY starts_at ASC LIMIT 1`
-    )
-    .get(client.id);
-  const openRequests = db
-    .prepare(
-      `SELECT f.title, p.id AS project_id, p.title AS project_title
-       FROM file_requests f JOIN portal_projects p ON p.id = f.project_id
-       WHERE p.client_id = ? AND p.hidden_from_client = 0 AND f.status = 'open' ORDER BY f.created_at ASC`
-    )
-    .all(client.id);
-  const recentActivity = db
-    .prepare(
-      `SELECT * FROM activity_log WHERE client_id = ? AND actor_type = 'operator'
-       ORDER BY created_at DESC LIMIT 5`
-    )
-    .all(client.id);
+  const pending = await sql(
+    `SELECT d.id, d.title, p.id AS project_id, p.title AS project_title
+     FROM deliverables_approvals d JOIN portal_projects p ON p.id = d.project_id
+     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND d.status = 'Pending' ORDER BY d.submitted_at ASC`,
+    [client.id]
+  );
+  const openInvoices = await sql(
+    `SELECT i.* FROM invoices i JOIN portal_projects p ON p.id = i.project_id
+     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND i.status IN ('Unpaid','Overdue') ORDER BY i.due_date ASC`,
+    [client.id]
+  );
+  // The earliest unread message per project, so the attention link can jump
+  // straight to where the catching-up starts.
+  const unreadByProject = await sql(
+    `SELECT p.id AS project_id, p.title AS project_title, COUNT(*)::int AS n,
+       (array_agg(t.id ORDER BY t.created_at ASC))[1] AS first_unread_id,
+       (array_agg(t.sender_name ORDER BY t.created_at ASC))[1] AS first_sender,
+       MIN(t.created_at) AS first_at
+     FROM communication_threads t JOIN portal_projects p ON p.id = t.project_id
+     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND t.sender_type = 'Internal_Operator' AND t.is_read = 0
+     GROUP BY p.id, p.title ORDER BY first_at DESC`,
+    [client.id]
+  );
+  const nextMeeting = (await sql(
+    `SELECT * FROM bookings WHERE client_id = ? AND status = 'confirmed' AND starts_at > NOW()
+     ORDER BY starts_at ASC LIMIT 1`,
+    [client.id]
+  ))[0];
+  const openRequests = await sql(
+    `SELECT f.title, p.id AS project_id, p.title AS project_title
+     FROM file_requests f JOIN portal_projects p ON p.id = f.project_id
+     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND f.status = 'open' ORDER BY f.created_at ASC`,
+    [client.id]
+  );
+  const recentActivity = await sql(
+    `SELECT * FROM activity_log WHERE client_id = ? AND actor_type = 'operator'
+     ORDER BY created_at DESC LIMIT 5`,
+    [client.id]
+  );
 
   const unreadMap = Object.fromEntries(unreadByProject.map((m) => [m.project_id, m.n]));
 

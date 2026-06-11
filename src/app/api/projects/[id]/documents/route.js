@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb, uuid } from "@/lib/db";
+import { sql, uuid } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { saveUpload } from "@/lib/storage";
 import { logActivity, notifyOperators } from "@/lib/activity";
@@ -17,10 +17,10 @@ export async function POST(request, { params }) {
   const { user, client } = session;
 
   const { id } = await params;
-  const db = getDb();
-  const project = db
-    .prepare("SELECT * FROM portal_projects WHERE id = ? AND client_id = ?")
-    .get(id, client.id);
+  const project = (await sql(
+    "SELECT * FROM portal_projects WHERE id = ? AND client_id = ?",
+    [id, client.id]
+  ))[0];
   if (!project) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const form = await request.formData();
@@ -37,9 +37,10 @@ export async function POST(request, { params }) {
   const requestId = String(form.get("file_request_id") || "") || null;
   let fileRequest = null;
   if (requestId) {
-    fileRequest = db
-      .prepare("SELECT * FROM file_requests WHERE id = ? AND project_id = ? AND status = 'open'")
-      .get(requestId, id);
+    fileRequest = (await sql(
+      "SELECT * FROM file_requests WHERE id = ? AND project_id = ? AND status = 'open'",
+      [requestId, id]
+    ))[0];
     if (!fileRequest) {
       return NextResponse.json({ error: "That file request is no longer open" }, { status: 409 });
     }
@@ -47,18 +48,20 @@ export async function POST(request, { params }) {
 
   const saved = await saveUpload(file, "documents");
   const docId = uuid();
-  db.prepare(
+  await sql(
     `INSERT INTO project_documents (id, project_id, category, title, kind, asset_path, original_name, uploaded_by_type, uploaded_by_name)
-     VALUES (?, ?, 'reference', ?, 'file', ?, ?, 'client', ?)`
-  ).run(docId, id, title, saved.storedPath, saved.originalName, user.name);
+     VALUES (?, ?, 'reference', ?, 'file', ?, ?, 'client', ?)`,
+    [docId, id, title, saved.storedPath, saved.originalName, user.name]
+  );
 
   if (fileRequest) {
-    db.prepare(
-      "UPDATE file_requests SET status = 'fulfilled', document_id = ?, fulfilled_at = datetime('now') WHERE id = ?"
-    ).run(docId, fileRequest.id);
+    await sql(
+      "UPDATE file_requests SET status = 'fulfilled', document_id = ?, fulfilled_at = NOW() WHERE id = ?",
+      [docId, fileRequest.id]
+    );
   }
 
-  logActivity({
+  await logActivity({
     clientId: client.id, projectId: id, actorType: "client", actorName: user.name,
     eventType: "document.uploaded",
     summary: fileRequest

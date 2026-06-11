@@ -1,4 +1,4 @@
-import { getDb, uuid } from "@/lib/db";
+import { sql, uuid } from "@/lib/db";
 import { requireOperator, redirectBack } from "@/lib/admin";
 import { logActivity, notifyClient } from "@/lib/activity";
 
@@ -12,16 +12,16 @@ export async function POST(request) {
   const invoiceId = String(form.get("invoice_id") || "") || null;
   const content = String(form.get("message_content") || "").trim();
 
-  const db = getDb();
-  const project = db.prepare("SELECT * FROM portal_projects WHERE id = ?").get(projectId);
+  const project = (await sql("SELECT * FROM portal_projects WHERE id = ?", [projectId]))[0];
   if (!project || !content) return new Response("project_id and message are required", { status: 400 });
 
-  db.prepare(
+  await sql(
     `INSERT INTO communication_threads (id, project_id, invoice_id, sender_type, sender_name, message_content, operator_read)
-     VALUES (?, ?, ?, 'Internal_Operator', ?, ?, 1)`
-  ).run(uuid(), projectId, invoiceId, operator.name, content);
+     VALUES (?, ?, ?, 'Internal_Operator', ?, ?, 1)`,
+    [uuid(), projectId, invoiceId, operator.name, content]
+  );
 
-  logActivity({
+  await logActivity({
     clientId: project.client_id, projectId, actorType: "operator", actorName: operator.name,
     eventType: "message.sent", summary: `${operator.name} sent a message`,
   });

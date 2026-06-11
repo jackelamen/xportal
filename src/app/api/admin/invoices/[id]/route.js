@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { requireOperator, redirectBack } from "@/lib/admin";
 import { logActivity, notifyClient } from "@/lib/activity";
 
@@ -8,27 +8,25 @@ export async function POST(request, { params }) {
   if (error) return error;
 
   const { id } = await params;
-  const db = getDb();
-  const inv = db
-    .prepare(
-      `SELECT i.*, p.client_id, p.id AS project_id, p.title AS project_title
-       FROM invoices i JOIN portal_projects p ON p.id = i.project_id WHERE i.id = ?`
-    )
-    .get(id);
+  const inv = (await sql(
+    `SELECT i.*, p.client_id, p.id AS project_id, p.title AS project_title
+     FROM invoices i JOIN portal_projects p ON p.id = i.project_id WHERE i.id = ?`,
+    [id]
+  ))[0];
   if (!inv) return new Response("Not found", { status: 404 });
 
   const form = await request.formData();
   const action = form.get("_action");
 
   if (action === "mark_paid") {
-    db.prepare("UPDATE invoices SET status = 'Paid' WHERE id = ?").run(id);
-    logActivity({
+    await sql("UPDATE invoices SET status = 'Paid' WHERE id = ?", [id]);
+    await logActivity({
       clientId: inv.client_id, projectId: inv.project_id, actorType: "operator", actorName: operator.name,
       eventType: "invoice.paid", summary: `Invoice ${inv.invoice_number} marked paid`,
     });
   } else if (action === "resolve_dispute") {
     if (inv.status !== "Disputed") return new Response("Invoice is not disputed", { status: 409 });
-    db.prepare("UPDATE invoices SET status = 'Unpaid', dispute_reason = NULL WHERE id = ?").run(id);
+    await sql("UPDATE invoices SET status = 'Unpaid', dispute_reason = NULL WHERE id = ?", [id]);
     await notifyClient(
       inv.client_id,
       `Dispute resolved on invoice ${inv.invoice_number}`,
@@ -36,7 +34,7 @@ export async function POST(request, { params }) {
     );
   } else if (action === "mark_overdue") {
     if (inv.status !== "Unpaid") return new Response("Only unpaid invoices can be marked overdue", { status: 409 });
-    db.prepare("UPDATE invoices SET status = 'Overdue' WHERE id = ?").run(id);
+    await sql("UPDATE invoices SET status = 'Overdue' WHERE id = ?", [id]);
   } else {
     return new Response("Unknown action", { status: 400 });
   }

@@ -1,8 +1,9 @@
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { requireOperator, redirectBack } from "@/lib/admin";
-import { ensureAvailability, addBlackout } from "@/lib/calendar";
+import { addBlackout } from "@/lib/calendar";
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 // Operator availability. _action:
 //   add        — block a date, whole-day or a time range
@@ -11,9 +12,6 @@ const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 export async function POST(request) {
   const { error } = await requireOperator();
   if (error) return error;
-
-  const db = getDb();
-  ensureAvailability(db);
 
   const form = await request.formData();
   const action = form.get("_action");
@@ -29,13 +27,10 @@ export async function POST(request) {
     if (startTime && endTime && startTime >= endTime) {
       return new Response("End time must be after start time", { status: 400 });
     }
-    addBlackout({ date, startTime, endTime, note: str("note") || null });
+    await addBlackout({ date, startTime, endTime, note: str("note") || null });
   } else if (action === "delete") {
-    db.prepare("DELETE FROM blackout_dates WHERE id = ?").run(str("blackout_id"));
+    await sql("DELETE FROM blackout_dates WHERE id = ?", [str("blackout_id")]);
   } else if (action === "set_hours") {
-    const upd = db.prepare(
-      "UPDATE weekly_hours SET enabled = ?, start_time = ?, end_time = ? WHERE weekday = ?"
-    );
     for (let d = 0; d < 7; d++) {
       const enabled = form.get(`enabled_${d}`) ? 1 : 0;
       const start = TIME_RE.test(str(`start_${d}`)) ? str(`start_${d}`) : "09:00";
@@ -43,12 +38,13 @@ export async function POST(request) {
       if (enabled && start >= end) {
         return new Response(`End time must be after start time (${DAY_NAMES[d]})`, { status: 400 });
       }
-      upd.run(enabled, start, end, d);
+      await sql(
+        "UPDATE weekly_hours SET enabled = ?, start_time = ?, end_time = ? WHERE weekday = ?",
+        [enabled, start, end, d]
+      );
     }
   } else {
     return new Response("Unknown action", { status: 400 });
   }
   return redirectBack(request, form);
 }
-
-const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];

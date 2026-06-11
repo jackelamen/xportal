@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { getDb } from "@/lib/db";
+import { sql } from "@/lib/db";
 import { requireOperator } from "@/lib/admin";
 
 // Enter / exit "preview as client". The cookie makes getClientSession return
@@ -18,7 +18,7 @@ export async function POST(request) {
   }
 
   const clientId = String(form.get("client_id") || "");
-  if (!getDb().prepare("SELECT id FROM clients WHERE id = ?").get(clientId)) {
+  if (!(await sql("SELECT id FROM clients WHERE id = ?", [clientId]))[0]) {
     return new Response("Client not found", { status: 404 });
   }
   store.set("xportal_preview", clientId, {
@@ -26,7 +26,7 @@ export async function POST(request) {
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 60 * 60, // an hour of previewing is plenty
+    maxAge: 60 * 60,
   });
   return NextResponse.redirect(new URL("/portal", request.url), 303);
 }
