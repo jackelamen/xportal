@@ -13,7 +13,7 @@ const fmtRange = (a, b) => {
   return a && b ? `${f(a)} – ${f(b)}` : f(a) || "";
 };
 
-const FALLBACK = ["Discovery", "Design", "Development", "QA", "Launch"];
+const FALLBACK = ["Research", "Optimize", "Unify", "Test", "Execute"];
 
 export default function PhaseStatusBar({ phases, currentPhase, progress }) {
   const items =

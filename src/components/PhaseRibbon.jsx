@@ -1,8 +1,6 @@
-const PHASES = ["Discovery", "Design", "Development", "QA", "Launch"];
+const PHASES = ["Research", "Optimize", "Unify", "Test", "Execute"];
 
-// xPM phases map onto the ribbon loosely ("Dev" -> "Development", "Complete" -> "Launch").
-const normalize = (p) =>
-  ({ Dev: "Development", Complete: "Launch" })[p] || p;
+const normalize = (p) => p;
 
 export default function PhaseRibbon({ currentPhase }) {
   const idx = Math.max(0, PHASES.indexOf(normalize(currentPhase)));

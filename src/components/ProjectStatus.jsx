@@ -6,7 +6,7 @@ import { Check, Flag } from "lucide-react";
 const fmtDate = (s) =>
   s ? new Date(s + "T00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) : null;
 
-const FALLBACK = ["Discovery", "Design", "Development", "QA", "Launch"];
+const FALLBACK = ["Research", "Optimize", "Unify", "Test", "Execute"];
 
 export default function ProjectStatus({ phases, currentPhase, progress, targetDate }) {
   const items =

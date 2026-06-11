@@ -7,7 +7,7 @@ import { sql } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-const PHASES = ["Discovery", "Design", "Development", "QA", "Launch", "Complete"];
+const PHASES = ["Research", "Optimize", "Unify", "Test", "Execute"];
 const MS_STATUS = ["upcoming", "active", "blocked", "done"];
 const TABS = ["overview", "plan", "deliverables", "documents", "billing", "messages", "notes", "internal"];
 

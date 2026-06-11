@@ -61,7 +61,7 @@ export async function POST(request) {
   await sql(
     `INSERT INTO portal_projects (id, xpm_project_id, client_id, title, current_phase, progress_percentage, target_date)
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [id, body.xpm_project_id, client.id, body.title, body.current_phase || "Discovery",
+    [id, body.xpm_project_id, client.id, body.title, body.current_phase || "Research",
       body.progress_percentage ?? 0, body.target_date ?? null]
   );
   await syncHub(id, body);
@@ -140,7 +140,7 @@ async function linkSpace(body) {
             progress_percentage, target_date, hidden_from_client)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
         [projectId, p.xpm_project_id, client.id, p.title, p.description ?? null,
-          p.current_phase || "Discovery", p.progress_percentage ?? 0, p.target_date ?? null]
+          p.current_phase || "Research", p.progress_percentage ?? 0, p.target_date ?? null]
       );
     }
     await syncHub(projectId, p);
