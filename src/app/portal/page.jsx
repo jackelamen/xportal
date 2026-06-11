@@ -14,33 +14,33 @@ const fmtDate = (s) =>
 export default async function Home() {
   const { user, client } = await getClientSession();
 
-  const projects = await sql(
+  const projectsQ = sql(
     "SELECT * FROM portal_projects WHERE client_id = ? AND hidden_from_client = 0 ORDER BY updated_at DESC",
     [client.id]
   );
-  const phasesByProject = {};
-  for (const p of projects) {
-    phasesByProject[p.id] = await sql(
-      "SELECT * FROM project_milestones WHERE project_id = ? AND kind = 'phase' ORDER BY sort_order",
-      [p.id]
-    );
-  }
+  // One query for all phases across the client's projects, grouped in JS.
+  const phasesQ = sql(
+    `SELECT m.* FROM project_milestones m JOIN portal_projects p ON p.id = m.project_id
+     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND m.kind = 'phase'
+     ORDER BY m.sort_order`,
+    [client.id]
+  );
 
   // Attention items: the reason the client logged in.
-  const pending = await sql(
+  const pendingQ = sql(
     `SELECT d.id, d.title, p.id AS project_id, p.title AS project_title
      FROM deliverables_approvals d JOIN portal_projects p ON p.id = d.project_id
      WHERE p.client_id = ? AND p.hidden_from_client = 0 AND d.status = 'Pending' ORDER BY d.submitted_at ASC`,
     [client.id]
   );
-  const openInvoices = await sql(
+  const openInvoicesQ = sql(
     `SELECT i.* FROM invoices i JOIN portal_projects p ON p.id = i.project_id
      WHERE p.client_id = ? AND p.hidden_from_client = 0 AND i.status IN ('Unpaid','Overdue') ORDER BY i.due_date ASC`,
     [client.id]
   );
   // The earliest unread message per project, so the attention link can jump
   // straight to where the catching-up starts.
-  const unreadByProject = await sql(
+  const unreadByProjectQ = sql(
     `SELECT p.id AS project_id, p.title AS project_title, COUNT(*)::int AS n,
        (array_agg(t.id ORDER BY t.created_at ASC))[1] AS first_unread_id,
        (array_agg(t.sender_name ORDER BY t.created_at ASC))[1] AS first_sender,
@@ -50,22 +50,28 @@ export default async function Home() {
      GROUP BY p.id, p.title ORDER BY first_at DESC`,
     [client.id]
   );
-  const nextMeeting = (await sql(
+  const nextMeetingQ = sql(
     `SELECT * FROM bookings WHERE client_id = ? AND status = 'confirmed' AND starts_at > NOW()
      ORDER BY starts_at ASC LIMIT 1`,
     [client.id]
-  ))[0];
-  const openRequests = await sql(
+  );
+  const openRequestsQ = sql(
     `SELECT f.title, p.id AS project_id, p.title AS project_title
      FROM file_requests f JOIN portal_projects p ON p.id = f.project_id
      WHERE p.client_id = ? AND p.hidden_from_client = 0 AND f.status = 'open' ORDER BY f.created_at ASC`,
     [client.id]
   );
-  const recentActivity = await sql(
+  const recentActivityQ = sql(
     `SELECT * FROM activity_log WHERE client_id = ? AND actor_type = 'operator'
      ORDER BY created_at DESC LIMIT 5`,
     [client.id]
   );
+
+  const [projects, phases, pending, openInvoices, unreadByProject, nextMeetings, openRequests, recentActivity] =
+    await Promise.all([projectsQ, phasesQ, pendingQ, openInvoicesQ, unreadByProjectQ, nextMeetingQ, openRequestsQ, recentActivityQ]);
+  const nextMeeting = nextMeetings[0];
+  const phasesByProject = {};
+  for (const m of phases) (phasesByProject[m.project_id] ||= []).push(m);
 
   const unreadMap = Object.fromEntries(unreadByProject.map((m) => [m.project_id, m.n]));
 

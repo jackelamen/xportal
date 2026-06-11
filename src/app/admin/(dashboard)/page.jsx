@@ -7,7 +7,7 @@ import { InfoTip } from "@/components/Tip";
 export const dynamic = "force-dynamic";
 
 export default async function AdminHome() {
-  const clients = await sql(
+  const clientsQ = sql(
     `SELECT c.*,
       (SELECT COUNT(*)::int FROM portal_projects p WHERE p.client_id = c.id) AS project_count,
       (SELECT COUNT(*)::int FROM deliverables_approvals d JOIN portal_projects p ON p.id = d.project_id
@@ -25,20 +25,82 @@ export default async function AdminHome() {
         WHERE p.client_id = c.id AND t.sender_type = 'Client' AND t.operator_read = 0) AS unread_messages
      FROM clients c ORDER BY c.company_name`
   );
-  const bookings = await sql(
+  const bookingsQ = sql(
     `SELECT b.*, c.company_name, u.name AS booked_by FROM bookings b
      JOIN clients c ON c.id = b.client_id
      LEFT JOIN client_users u ON u.id = b.client_user_id
      WHERE b.status = 'confirmed' AND b.starts_at > NOW()
      ORDER BY b.starts_at ASC LIMIT 10`
   );
-  const activity = await sql(
+  const activityQ = sql(
     `SELECT a.*, c.company_name FROM activity_log a JOIN clients c ON c.id = a.client_id
      ORDER BY a.created_at DESC LIMIT 15`
   );
+  const inboxQ = sql(
+    `SELECT a.*, c.company_name FROM activity_log a JOIN clients c ON c.id = a.client_id
+     WHERE a.actor_type = 'client'
+     ORDER BY a.created_at DESC LIMIT 12`
+  );
+  const [clients, bookings, activity, inbox, hours, blackouts, settings, seenSetting] =
+    await Promise.all([
+      clientsQ,
+      bookingsQ,
+      activityQ,
+      inboxQ,
+      getWeeklyHours(),
+      getBlackoutDates(),
+      getSettings(INVOICE_SETTING_KEYS),
+      getSettings(["operator_seen_activity_at"]),
+    ]);
+  // created_at comes back in pg text form, the seen marker as an ISO string —
+  // compare as epoch ms, not lexically.
+  const seenTs = Date.parse(seenSetting.operator_seen_activity_at) || 0;
+  const unseen = inbox.filter((a) => (Date.parse(a.created_at) || 0) > seenTs);
 
   return (
     <div className="space-y-10">
+      <section className="rounded-xl border border-line bg-bg-secondary p-5">
+        <div className="flex items-center justify-between">
+          <h1 className="flex items-center gap-2 text-lg font-semibold">
+            Notifications
+            {unseen.length > 0 && (
+              <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-white">
+                {unseen.length} new
+              </span>
+            )}
+            <InfoTip side="bottom" text="Everything clients did recently — meeting requests, approvals, messages, uploads. New items since you last cleared are highlighted." />
+          </h1>
+          {unseen.length > 0 && (
+            <form action="/api/admin/notifications" method="post">
+              <input type="hidden" name="_redirect" value="/admin" />
+              <button className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink-soft hover:text-ink">
+                Mark all read
+              </button>
+            </form>
+          )}
+        </div>
+        <ul className="mt-3 space-y-1.5 text-sm">
+          {inbox.length === 0 && <li className="text-ink-muted">No client activity yet.</li>}
+          {inbox.map((a) => {
+            const isNew = (Date.parse(a.created_at) || 0) > seenTs;
+            return (
+              <li
+                key={a.id}
+                className={`flex items-baseline gap-2 rounded-lg px-2 py-1 ${
+                  isNew ? "bg-accent/10 font-medium text-ink" : "text-ink-soft"
+                }`}
+              >
+                {isNew && <span className="h-1.5 w-1.5 shrink-0 self-center rounded-full bg-accent" />}
+                <span className="font-data text-xs text-ink-muted">{String(a.created_at).slice(0, 16)}</span>
+                <Link href={`/admin/clients/${a.client_id}`} className="hover:underline">
+                  [{a.company_name}] {a.summary}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
       <section>
         <h1 className="flex items-center gap-2 text-xl font-semibold">Clients <InfoTip side="bottom" text="One card per client. The chips are health signals: unread messages, reviews sitting more than 5 days, open file requests, and how recently the client was active." /></h1>
         <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -101,7 +163,7 @@ export default async function AdminHome() {
         </details>
       </section>
 
-      <Availability hours={await getWeeklyHours()} blackouts={await getBlackoutDates()} />
+      <Availability hours={hours} blackouts={blackouts} />
 
       <section>
         <h2 className="text-lg font-medium">Upcoming meetings</h2>
@@ -126,7 +188,7 @@ export default async function AdminHome() {
         </form>
       </section>
 
-      <InvoiceSettings settings={await getSettings(INVOICE_SETTING_KEYS)} />
+      <InvoiceSettings settings={settings} />
 
       <section>
         <h2 className="text-lg font-medium">Recent activity</h2>
