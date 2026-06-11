@@ -10,7 +10,7 @@ export async function sendEmail({ to, subject, text }) {
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: "xPortal <portal@yourdomain.com>", to, subject, text }),
+      body: JSON.stringify({ from: "xPortal <xportal@theedgex.com>", to, subject, text }),
     });
     if (!res.ok) throw new Error(`Resend dispatch failed: ${res.status}`);
     return;
