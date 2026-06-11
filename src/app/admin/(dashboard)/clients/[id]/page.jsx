@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ChevronRight } from "lucide-react";
 import FilePicker from "@/components/FilePicker";
 import { EditableRow } from "@/components/admin/EditableRow";
 import { InfoTip } from "@/components/Tip";
@@ -29,13 +29,19 @@ export default async function AdminClientPage({ params, searchParams }) {
 
   return (
     <div>
-      <header className="flex flex-wrap items-start justify-between gap-3">
+      <nav className="flex items-center gap-1 text-sm text-ink-muted">
+        <Link href="/admin" className="hover:text-ink">Dashboard</Link>
+        <ChevronRight size={14} className="shrink-0" />
+        <span className="text-ink">{client.company_name}</span>
+      </nav>
+
+      <header className="mt-2 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">{client.company_name}</h1>
           <p className="mt-1 text-sm text-ink-soft">
             {client.primary_email}
             {client.slug && (
-              <> · branded login: <Link href={`/p/${client.slug}`} className="text-accent hover:underline">/p/{client.slug}</Link></>
+              <> · <Link href={`/p/${client.slug}`} className="text-accent hover:underline">/p/{client.slug}</Link></>
             )}
           </p>
         </div>
@@ -130,9 +136,7 @@ export default async function AdminClientPage({ params, searchParams }) {
             </section>
 
             <section className="rounded-xl border border-warn/30 bg-bg-secondary p-5">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-warn">
-                Internal notes — never shown to the client
-              </h2>
+              <h2 className="font-medium text-warn">Internal notes — never shown to the client</h2>
               <ul className="mt-3 space-y-2">
                 {notes.length === 0 && <li className="py-2 text-sm text-ink-muted">No notes yet.</li>}
                 {notes.map((n) => (
@@ -169,7 +173,7 @@ export default async function AdminClientPage({ params, searchParams }) {
         {tab === "settings" && (
           <>
             <section className="rounded-xl border border-line bg-bg-secondary p-5">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-ink-soft">Branding <InfoTip side="bottom" text="Makes the portal look like it was built for this client. The accent color recolors buttons, links, and badges throughout their portal; the logo replaces the text mark; the slug gives them a branded sign-in page at /p/<slug>." /></h2>
+              <h2 className="flex items-center gap-1.5 font-medium text-ink">Branding <InfoTip side="bottom" text="Makes the portal look like it was built for this client. The accent color recolors buttons, links, and badges throughout their portal; the logo replaces the text mark; the slug gives them a branded sign-in page at /p/<slug>." /></h2>
               <form
                 action={`/api/admin/clients/${id}`}
                 method="post"
@@ -212,7 +216,7 @@ export default async function AdminClientPage({ params, searchParams }) {
             </section>
 
             <section className="rounded-xl border border-line bg-bg-secondary p-5">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-ink-soft">Contacts <InfoTip side="bottom" text="Everyone who can sign in to this client's portal. Each contact gets their own magic-link login and receives email notifications." /></h2>
+              <h2 className="flex items-center gap-1.5 font-medium text-ink">Contacts <InfoTip side="bottom" text="Everyone who can sign in to this client's portal. Each contact gets their own magic-link login and receives email notifications." /></h2>
               <ul className="mt-3 space-y-2 text-sm">
                 {users.map((u) => (
                   <li key={u.id} className="flex items-center gap-3">

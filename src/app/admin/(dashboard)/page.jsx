@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { sql } from "@/lib/db";
-import { getBlackoutDates, getWeeklyHours } from "@/lib/calendar";
-import { getSettings, INVOICE_SETTING_KEYS } from "@/lib/settings";
+import { getSettings } from "@/lib/settings";
 import { InfoTip } from "@/components/Tip";
 
 export const dynamic = "force-dynamic";
@@ -30,306 +29,234 @@ export default async function AdminHome() {
      JOIN clients c ON c.id = b.client_id
      LEFT JOIN client_users u ON u.id = b.client_user_id
      WHERE b.status = 'confirmed' AND b.starts_at > NOW()
-     ORDER BY b.starts_at ASC LIMIT 10`
+     ORDER BY b.starts_at ASC LIMIT 8`
   );
   const activityQ = sql(
     `SELECT a.*, c.company_name FROM activity_log a JOIN clients c ON c.id = a.client_id
-     ORDER BY a.created_at DESC LIMIT 15`
+     ORDER BY a.created_at DESC LIMIT 12`
   );
   const inboxQ = sql(
     `SELECT a.*, c.company_name FROM activity_log a JOIN clients c ON c.id = a.client_id
      WHERE a.actor_type = 'client'
-     ORDER BY a.created_at DESC LIMIT 12`
+     ORDER BY a.created_at DESC LIMIT 20`
   );
-  const [clients, bookings, activity, inbox, hours, blackouts, settings, seenSetting] =
-    await Promise.all([
-      clientsQ,
-      bookingsQ,
-      activityQ,
-      inboxQ,
-      getWeeklyHours(),
-      getBlackoutDates(),
-      getSettings(INVOICE_SETTING_KEYS),
-      getSettings(["operator_seen_activity_at"]),
-    ]);
-  // created_at comes back in pg text form, the seen marker as an ISO string —
-  // compare as epoch ms, not lexically.
+
+  const [clients, bookings, activity, inbox, seenSetting] = await Promise.all([
+    clientsQ,
+    bookingsQ,
+    activityQ,
+    inboxQ,
+    getSettings(["operator_seen_activity_at"]),
+  ]);
+
   const seenTs = Date.parse(seenSetting.operator_seen_activity_at) || 0;
   const unseen = inbox.filter((a) => (Date.parse(a.created_at) || 0) > seenTs);
 
   return (
-    <div className="space-y-10">
-      <section className="rounded-xl border border-line bg-bg-secondary p-5">
-        <div className="flex items-center justify-between">
-          <h1 className="flex items-center gap-2 text-lg font-semibold">
-            Notifications
+    <div className="grid gap-6 lg:grid-cols-[1fr_288px]">
+      {/* ── LEFT: notifications + clients ───────────────────────────── */}
+      <div className="space-y-6 min-w-0">
+
+        {/* Notifications */}
+        <section className="rounded-xl border border-line bg-bg-secondary">
+          <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+            <h2 className="flex items-center gap-2 font-medium text-ink">
+              Notifications
+              {unseen.length > 0 && (
+                <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-white">
+                  {unseen.length} new
+                </span>
+              )}
+              <InfoTip side="bottom" text="Client activity since you last cleared. New items are highlighted." />
+            </h2>
             {unseen.length > 0 && (
-              <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-white">
-                {unseen.length} new
-              </span>
+              <form action="/api/admin/notifications" method="post">
+                <input type="hidden" name="_redirect" value="/admin" />
+                <button className="rounded-md border border-line px-2.5 py-1 text-xs text-ink-soft hover:border-accent-2/50 hover:text-ink">
+                  Mark all read
+                </button>
+              </form>
             )}
-            <InfoTip side="bottom" text="Everything clients did recently — meeting requests, approvals, messages, uploads. New items since you last cleared are highlighted." />
+          </div>
+          <ul className="divide-y divide-line/60 text-sm">
+            {inbox.length === 0 && (
+              <li className="px-5 py-4 text-ink-muted">No client activity yet.</li>
+            )}
+            {inbox.map((a) => {
+              const isNew = (Date.parse(a.created_at) || 0) > seenTs;
+              return (
+                <li
+                  key={a.id}
+                  className={`flex items-start gap-3 px-5 py-3 ${
+                    isNew ? "bg-accent/5" : ""
+                  }`}
+                >
+                  {isNew ? (
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                  ) : (
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/admin/clients/${a.client_id}`}
+                      className={`hover:text-accent ${isNew ? "font-medium text-ink" : "text-ink-soft"}`}
+                    >
+                      <span className="text-ink-muted">[{a.company_name}]</span> {a.summary}
+                    </Link>
+                    <p className="font-data mt-0.5 text-xs text-ink-muted">
+                      {String(a.created_at).slice(0, 16)}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+
+        {/* Clients */}
+        <section>
+          <h1 className="flex items-center gap-2 text-lg font-semibold">
+            Clients
+            <InfoTip side="bottom" text="Health chips: unread messages (blue), stale reviews &gt;5d (amber), open file requests (indigo), last client activity." />
           </h1>
-          {unseen.length > 0 && (
-            <form action="/api/admin/notifications" method="post">
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {clients.map((c) => (
+              <Link
+                key={c.id}
+                href={`/admin/clients/${c.id}`}
+                className="group rounded-xl border border-line bg-bg-secondary p-4 hover:border-accent-2/60 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-medium text-ink group-hover:text-accent-2 transition-colors">
+                    {c.company_name}
+                  </p>
+                  <span className="shrink-0 text-xs text-ink-muted">
+                    {c.project_count} project{c.project_count === 1 ? "" : "s"}
+                  </span>
+                </div>
+                {(c.revision_count > 0 || c.dispute_count > 0) && (
+                  <p className="mt-1 text-sm">
+                    {c.revision_count > 0 && (
+                      <span className="text-danger">{c.revision_count} revision{c.revision_count > 1 ? "s" : ""} </span>
+                    )}
+                    {c.dispute_count > 0 && (
+                      <span className="text-dispute">{c.dispute_count} disputed invoice{c.dispute_count > 1 ? "s" : ""}</span>
+                    )}
+                  </p>
+                )}
+                <div className="mt-2.5 flex flex-wrap gap-1.5 text-[11px]">
+                  {c.unread_messages > 0 && (
+                    <span className="rounded-full bg-accent/15 px-2 py-0.5 font-semibold text-accent">
+                      {c.unread_messages} unread
+                    </span>
+                  )}
+                  {c.stale_reviews > 0 && (
+                    <span className="rounded-full bg-warn/15 px-2 py-0.5 text-warn">
+                      {c.stale_reviews} review{c.stale_reviews > 1 ? "s" : ""} &gt;5d
+                    </span>
+                  )}
+                  {c.open_requests > 0 && (
+                    <span className="rounded-full bg-accent/10 px-2 py-0.5 text-accent">
+                      {c.open_requests} file request{c.open_requests > 1 ? "s" : ""}
+                    </span>
+                  )}
+                  <span className={`rounded-full px-2 py-0.5 ${
+                    c.last_client_activity
+                      ? "bg-bg-tertiary text-ink-muted"
+                      : "bg-danger/15 text-danger"
+                  }`}>
+                    {c.last_client_activity
+                      ? `active ${String(c.last_client_activity).slice(0, 10)}`
+                      : "never active"}
+                  </span>
+                </div>
+              </Link>
+            ))}
+            {clients.length === 0 && (
+              <p className="text-sm text-ink-muted col-span-2">No clients yet. Add one below.</p>
+            )}
+          </div>
+
+          <details className="mt-4 rounded-xl border border-line bg-bg-secondary p-4">
+            <summary className="cursor-pointer text-sm font-medium text-ink-soft hover:text-ink">
+              + New client
+            </summary>
+            <form action="/api/admin/clients" method="post" className="mt-3 flex flex-wrap items-end gap-3 text-sm">
               <input type="hidden" name="_redirect" value="/admin" />
-              <button className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-ink-soft hover:text-ink">
-                Mark all read
+              <Field name="company_name" label="Company" required />
+              <Field name="contact_name" label="Contact name" required />
+              <Field name="email" label="Contact email" type="email" required />
+              <button className="rounded-lg bg-accent-2 px-4 py-2 font-medium text-white">
+                Create client
               </button>
             </form>
-          )}
-        </div>
-        <ul className="mt-3 space-y-1.5 text-sm">
-          {inbox.length === 0 && <li className="text-ink-muted">No client activity yet.</li>}
-          {inbox.map((a) => {
-            const isNew = (Date.parse(a.created_at) || 0) > seenTs;
-            return (
-              <li
-                key={a.id}
-                className={`flex items-baseline gap-2 rounded-lg px-2 py-1 ${
-                  isNew ? "bg-accent/10 font-medium text-ink" : "text-ink-soft"
-                }`}
-              >
-                {isNew && <span className="h-1.5 w-1.5 shrink-0 self-center rounded-full bg-accent" />}
-                <span className="font-data text-xs text-ink-muted">{String(a.created_at).slice(0, 16)}</span>
-                <Link href={`/admin/clients/${a.client_id}`} className="hover:underline">
-                  [{a.company_name}] {a.summary}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </section>
+          </details>
+        </section>
+      </div>
 
-      <section>
-        <h1 className="flex items-center gap-2 text-xl font-semibold">Clients <InfoTip side="bottom" text="One card per client. The chips are health signals: unread messages, reviews sitting more than 5 days, open file requests, and how recently the client was active." /></h1>
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          {clients.map((c) => (
-            <Link
-              key={c.id}
-              href={`/admin/clients/${c.id}`}
-              className="rounded-xl border border-line bg-bg-secondary p-4 hover:border-accent-2"
-            >
-              <div className="flex items-center justify-between">
-                <p className="font-medium">{c.company_name}</p>
-                <span className="text-xs text-ink-muted">/p/{c.slug || "—"}</span>
-              </div>
-              <p className="mt-1 text-sm text-ink-soft">
-                {c.project_count} project{c.project_count === 1 ? "" : "s"}
-                {c.revision_count > 0 && (
-                  <span className="ml-2 text-danger">{c.revision_count} revision request{c.revision_count > 1 ? "s" : ""}</span>
-                )}
-                {c.dispute_count > 0 && (
-                  <span className="ml-2 text-dispute">{c.dispute_count} disputed invoice{c.dispute_count > 1 ? "s" : ""}</span>
-                )}
-              </p>
-              <p className="mt-1.5 flex flex-wrap gap-1.5 text-[11px]">
-                {c.unread_messages > 0 && (
-                  <span className="rounded-full bg-accent px-2 py-0.5 font-semibold text-white">
-                    {c.unread_messages} unread message{c.unread_messages > 1 ? "s" : ""}
-                  </span>
-                )}
-                {c.stale_reviews > 0 && (
-                  <span className="rounded-full bg-warn/15 px-2 py-0.5 text-warn">
-                    {c.stale_reviews} review{c.stale_reviews > 1 ? "s" : ""} sitting &gt;5d
-                  </span>
-                )}
-                {c.open_requests > 0 && (
-                  <span className="rounded-full bg-accent/15 px-2 py-0.5 text-accent">
-                    {c.open_requests} open file request{c.open_requests > 1 ? "s" : ""}
-                  </span>
-                )}
-                <span className={`rounded-full px-2 py-0.5 ${
-                  c.last_client_activity ? "bg-bg-tertiary text-ink-muted" : "bg-danger/15 text-danger"
-                }`}>
-                  {c.last_client_activity
-                    ? `last client activity ${c.last_client_activity.slice(0, 10)}`
-                    : "client never active"}
-                </span>
-              </p>
-            </Link>
-          ))}
-        </div>
+      {/* ── RIGHT: meetings, activity, digest ───────────────────────── */}
+      <div className="space-y-5">
 
-        <details className="mt-4 rounded-xl border border-line bg-bg-secondary p-4">
-          <summary className="cursor-pointer text-sm font-medium text-ink-soft">+ New client</summary>
-          <form action="/api/admin/clients" method="post" className="mt-3 flex flex-wrap items-end gap-3 text-sm">
-            <input type="hidden" name="_redirect" value="/admin" />
-            <Field name="company_name" label="Company" required />
-            <Field name="contact_name" label="Contact name" required />
-            <Field name="email" label="Contact email" type="email" required />
-            <button className="rounded-lg bg-accent-2 px-4 py-2 font-medium text-white">Create</button>
-          </form>
-        </details>
-      </section>
-
-      <Availability hours={hours} blackouts={blackouts} />
-
-      <section>
-        <h2 className="text-lg font-medium">Upcoming meetings</h2>
-        <ul className="mt-3 space-y-1.5 text-sm">
-          {bookings.length === 0 && <li className="text-ink-muted">None scheduled.</li>}
-          {bookings.map((b) => (
-            <li key={b.id} className="text-ink-soft">
-              <span className="font-data text-ink">{b.starts_at.slice(0, 16)}</span> · {b.topic} ({b.duration_minutes} min)
-              — {b.company_name}{b.booked_by ? `, ${b.booked_by}` : ""}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="rounded-xl border border-line bg-bg-secondary p-4">
-        <form action="/api/cron/digest" method="post" className="flex items-center justify-between text-sm">
-          <p className="text-ink-soft">
-            Weekly digest — emails every client a summary of progress, deliveries, and what's waiting on them.
-            <span className="block text-xs text-ink-muted">Phase 2: schedule this via Vercel Cron.</span>
-          </p>
-          <button className="rounded-lg bg-accent-2 px-4 py-2 font-medium text-white">Send digests now</button>
-        </form>
-      </section>
-
-      <InvoiceSettings settings={settings} />
-
-      <section>
-        <h2 className="text-lg font-medium">Recent activity</h2>
-        <ul className="mt-3 space-y-1.5 text-sm">
-          {activity.map((a) => (
-            <li key={a.id} className="text-ink-soft">
-              <span className="font-data text-xs text-ink-muted">{a.created_at}</span> · [{a.company_name}] {a.summary}
-            </li>
-          ))}
-        </ul>
-      </section>
-    </div>
-  );
-}
-
-const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const timeInput =
-  "rounded-lg border border-line bg-bg-tertiary px-2 py-1.5 text-xs text-ink outline-none focus:border-accent-2 disabled:opacity-40";
-
-function Availability({ hours, blackouts }) {
-  return (
-    <section className="rounded-xl border border-line bg-bg-secondary p-5">
-      <h2 className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-ink-soft">
-        Availability
-        <InfoTip side="bottom" text="Weekly hours are the default window clients can book meetings in. Date overrides block specific days entirely or for a time range — they win over weekly hours." />
-      </h2>
-
-      <div className="mt-4 grid gap-8 lg:grid-cols-2">
-        {/* Default weekly hours, Calendly-style */}
-        <form action="/api/admin/blackouts" method="post">
-          <input type="hidden" name="_action" value="set_hours" />
-          <input type="hidden" name="_redirect" value="/admin" />
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Weekly hours</p>
-          <div className="mt-2 space-y-1.5 text-sm">
-            {hours.map((h) => (
-              <div key={h.weekday} className="flex items-center gap-3">
-                <label className="flex w-28 items-center gap-2 text-ink">
-                  <input
-                    type="checkbox"
-                    name={`enabled_${h.weekday}`}
-                    defaultChecked={!!h.enabled}
-                    className="h-4 w-4 accent-[var(--color-accent)]"
-                  />
-                  {DAY_NAMES[h.weekday]}
-                </label>
-                <input type="time" name={`start_${h.weekday}`} defaultValue={h.start_time} className={`font-data ${timeInput}`} />
-                <span className="text-ink-muted">–</span>
-                <input type="time" name={`end_${h.weekday}`} defaultValue={h.end_time} className={`font-data ${timeInput}`} />
-              </div>
-            ))}
+        {/* Upcoming meetings */}
+        <section className="rounded-xl border border-line bg-bg-secondary">
+          <div className="border-b border-line px-4 py-3.5">
+            <h2 className="font-medium text-ink">Upcoming meetings</h2>
           </div>
-          <button className="mt-3 rounded-lg bg-accent-2 px-4 py-2 text-sm font-medium text-white">
-            Save weekly hours
-          </button>
-        </form>
-
-        {/* Date-specific overrides */}
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Date overrides</p>
-          <ul className="mt-2 space-y-1.5 text-sm">
-            {blackouts.map((b) => (
-              <li key={b.id} className="flex items-center gap-2 rounded-lg border border-line bg-bg-tertiary px-3 py-1.5">
-                <span className="font-data text-xs text-ink">{b.on_date}</span>
-                <span className="font-data text-xs text-danger">
-                  {b.start_time || b.end_time
-                    ? `${b.start_time || "00:00"} – ${b.end_time || "end of day"}`
-                    : "all day"}
-                </span>
-                {b.note && <span className="truncate text-xs text-ink-muted">{b.note}</span>}
-                <form action="/api/admin/blackouts" method="post" className="ml-auto">
-                  <input type="hidden" name="_action" value="delete" />
-                  <input type="hidden" name="blackout_id" value={b.id} />
-                  <input type="hidden" name="_redirect" value="/admin" />
-                  <button aria-label={`Remove ${b.on_date} block`} className="px-1 text-ink-muted hover:text-danger">×</button>
-                </form>
+          <ul className="divide-y divide-line/60 text-sm">
+            {bookings.length === 0 && (
+              <li className="px-4 py-4 text-ink-muted">None scheduled.</li>
+            )}
+            {bookings.map((b) => (
+              <li key={b.id} className="px-4 py-3">
+                <p className="font-data text-xs text-accent-2">{String(b.starts_at).slice(0, 16)}</p>
+                <p className="mt-0.5 font-medium text-ink leading-snug">{b.topic}</p>
+                <p className="text-xs text-ink-muted">
+                  {b.company_name}{b.booked_by ? ` · ${b.booked_by}` : ""} · {b.duration_minutes} min
+                </p>
               </li>
             ))}
-            {blackouts.length === 0 && (
-              <li className="text-ink-muted">No overrides — weekly hours apply every week.</li>
+          </ul>
+        </section>
+
+        {/* Weekly digest */}
+        <section className="rounded-xl border border-line bg-bg-secondary px-4 py-4">
+          <h2 className="font-medium text-ink">Weekly digest</h2>
+          <p className="mt-1 text-xs text-ink-muted leading-relaxed">
+            Emails every client a summary of progress, deliveries, and action items.
+          </p>
+          <form action="/api/cron/digest" method="post" className="mt-3">
+            <button className="w-full rounded-lg bg-accent-2 px-4 py-2 text-sm font-medium text-white">
+              Send digests now
+            </button>
+          </form>
+        </section>
+
+        {/* Recent activity */}
+        <section className="rounded-xl border border-line bg-bg-secondary">
+          <div className="border-b border-line px-4 py-3.5">
+            <h2 className="font-medium text-ink">Recent activity</h2>
+          </div>
+          <ul className="divide-y divide-line/60 text-sm">
+            {activity.map((a) => (
+              <li key={a.id} className="px-4 py-3">
+                <p className="text-ink-soft leading-snug">
+                  <Link href={`/admin/clients/${a.client_id}`} className="font-medium text-ink hover:text-accent">
+                    {a.company_name}
+                  </Link>{" "}
+                  {a.summary}
+                </p>
+                <p className="font-data mt-0.5 text-xs text-ink-muted">
+                  {String(a.created_at).slice(0, 16)}
+                </p>
+              </li>
+            ))}
+            {activity.length === 0 && (
+              <li className="px-4 py-4 text-ink-muted">No activity yet.</li>
             )}
           </ul>
-          <form action="/api/admin/blackouts" method="post" className="mt-3 flex flex-wrap items-end gap-2 text-sm">
-            <input type="hidden" name="_action" value="add" />
-            <input type="hidden" name="_redirect" value="/admin" />
-            <label className="block text-ink-soft">
-              Date
-              <input name="on_date" type="date" required className={`mt-1 block ${timeInput} px-3 py-2 text-sm`} />
-            </label>
-            <label className="block text-ink-soft">
-              From
-              <input name="start_time" type="time" className={`font-data mt-1 block ${timeInput} py-2`} />
-            </label>
-            <label className="block text-ink-soft">
-              To
-              <input name="end_time" type="time" className={`font-data mt-1 block ${timeInput} py-2`} />
-            </label>
-            <label className="block text-ink-soft">
-              Note
-              <input name="note" placeholder="e.g. conference" className={`mt-1 block w-32 ${timeInput} px-3 py-2 text-sm`} />
-            </label>
-            <button className="rounded-lg border border-line px-4 py-2 text-ink-soft hover:text-ink">Block</button>
-          </form>
-          <p className="mt-2 text-xs text-ink-muted">Leave the times empty to block the whole day.</p>
-        </div>
+        </section>
       </div>
-    </section>
-  );
-}
-
-function InvoiceSettings({ settings }) {
-  const area =
-    "mt-1 block w-full rounded-lg border border-line bg-bg-tertiary px-3 py-2 text-sm text-ink outline-none focus:border-accent-2";
-  return (
-    <section className="rounded-xl border border-line bg-bg-secondary p-5">
-      <h2 className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-ink-soft">
-        Invoice branding
-        <InfoTip side="bottom" text="Printed on every invoice PDF clients download: your business identity at the top, payment instructions and footer at the bottom." />
-      </h2>
-      <form action="/api/admin/invoice-settings" method="post" className="mt-3 grid gap-3 text-sm md:grid-cols-2">
-        <input type="hidden" name="_redirect" value="/admin" />
-        <label className="block text-ink-soft">
-          Business name
-          <input name="invoice_business_name" defaultValue={settings.invoice_business_name} placeholder="Acme Studio LLC" className={area} />
-        </label>
-        <label className="block text-ink-soft">
-          Business address
-          <textarea name="invoice_business_address" rows={2} defaultValue={settings.invoice_business_address} placeholder={"123 Main St\nSpringfield, ST 00000"} className={area} />
-        </label>
-        <label className="block text-ink-soft">
-          Payment instructions
-          <textarea name="invoice_payment_instructions" rows={2} defaultValue={settings.invoice_payment_instructions} placeholder={"Wire to … / Pay via …"} className={area} />
-        </label>
-        <label className="block text-ink-soft">
-          Footer note
-          <textarea name="invoice_footer" rows={2} defaultValue={settings.invoice_footer} placeholder="Thank you for your business. Net-15 terms." className={area} />
-        </label>
-        <div>
-          <button className="rounded-lg bg-accent-2 px-4 py-2 font-medium text-white">Save invoice branding</button>
-        </div>
-      </form>
-    </section>
+    </div>
   );
 }
 

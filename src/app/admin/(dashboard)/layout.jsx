@@ -3,6 +3,8 @@ import Link from "next/link";
 import { LogOut } from "lucide-react";
 import Logo from "@/components/Logo";
 import { getOperatorSession } from "@/lib/auth";
+import { sql } from "@/lib/db";
+import AdminNav from "@/components/admin/AdminNav";
 import ThemeToggle from "@/components/ThemeToggle";
 
 export const dynamic = "force-dynamic";
@@ -11,23 +13,47 @@ export default async function AdminLayout({ children }) {
   const operator = await getOperatorSession();
   if (!operator) redirect("/admin/login");
 
+  const seenRows = await sql(
+    "SELECT value FROM app_settings WHERE key = 'operator_seen_activity_at'"
+  );
+  const seenTs = Date.parse(seenRows[0]?.value) || 0;
+  const unreadRows = await sql(
+    "SELECT COUNT(*)::int AS n FROM activity_log WHERE actor_type = 'client' AND created_at > ?",
+    [new Date(seenTs).toISOString()]
+  );
+  const unreadCount = unreadRows[0]?.n ?? 0;
+
   return (
-    <div className="mx-auto min-h-screen max-w-6xl">
-      <header className="flex items-center justify-between border-b border-line px-6 py-4">
-        <Link href="/admin">
-          <Logo size={26} tile="emerald" sub="Operator console" />
-        </Link>
-        <div className="flex items-center gap-4 text-sm text-ink-soft">
-          <ThemeToggle />
-          <span>{operator.name}</span>
-          <form action="/api/auth/logout?kind=operator" method="post">
-            <button className="flex items-center gap-1.5 text-ink-muted hover:text-ink">
-              <LogOut size={15} /> Sign out
-            </button>
-          </form>
+    <div className="flex min-h-screen">
+      <aside className="fixed inset-y-0 left-0 z-20 flex w-56 flex-col border-r border-line bg-bg-secondary">
+        <div className="flex h-14 shrink-0 items-center border-b border-line px-4">
+          <Link href="/admin">
+            <Logo size={22} tile="emerald" sub="Operator console" />
+          </Link>
         </div>
-      </header>
-      <main className="p-6">{children}</main>
+
+        <div className="flex-1 overflow-y-auto p-2">
+          <AdminNav unreadCount={unreadCount} />
+        </div>
+
+        <div className="shrink-0 border-t border-line p-3">
+          <div className="flex items-center gap-2 rounded-lg px-2 py-1.5">
+            <span className="flex-1 truncate text-xs font-medium text-ink-soft">
+              {operator.name}
+            </span>
+            <ThemeToggle />
+            <form action="/api/auth/logout?kind=operator" method="post">
+              <button title="Sign out" className="flex items-center text-ink-muted hover:text-danger">
+                <LogOut size={14} />
+              </button>
+            </form>
+          </div>
+        </div>
+      </aside>
+
+      <div className="ml-56 flex-1 min-w-0">
+        <main className="mx-auto max-w-5xl p-6">{children}</main>
+      </div>
     </div>
   );
 }

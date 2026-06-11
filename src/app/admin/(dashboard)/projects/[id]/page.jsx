@@ -1,5 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  LayoutDashboard, CalendarDays, FileCheck2, FolderOpen,
+  Receipt, MessageSquare, ClipboardList, Lock, ChevronRight,
+} from "lucide-react";
 import FilePicker from "@/components/FilePicker";
 import { EditableRow, RowButton } from "@/components/admin/EditableRow";
 import { InfoTip } from "@/components/Tip";
@@ -83,51 +87,62 @@ export default async function AdminProjectPage({ params, searchParams }) {
   const hub = `/api/admin/projects/${id}/hub`;
 
   const tabs = [
-    { key: "overview", label: "Overview" },
-    { key: "plan", label: "Plan" },
-    { key: "deliverables", label: "Deliverables", badge: revisionCount },
-    { key: "documents", label: "Documents" },
-    { key: "billing", label: "Billing", badge: disputeCount },
-    { key: "messages", label: "Messages", badge: unreadMessages },
-    { key: "notes", label: "Work & decisions" },
-    { key: "internal", label: "Internal notes" },
+    { key: "overview", label: "Overview", icon: LayoutDashboard },
+    { key: "plan", label: "Plan", icon: CalendarDays },
+    { key: "deliverables", label: "Deliverables", icon: FileCheck2, badge: revisionCount, badgeColor: "bg-danger" },
+    { key: "documents", label: "Documents", icon: FolderOpen },
+    { key: "billing", label: "Billing", icon: Receipt, badge: disputeCount, badgeColor: "bg-dispute" },
+    { key: "messages", label: "Messages", icon: MessageSquare, badge: unreadMessages, badgeColor: "bg-accent" },
+    { key: "notes", label: "Log", icon: ClipboardList },
+    { key: "internal", label: "Internal", icon: Lock },
   ];
 
   return (
     <div>
-      <header>
-        <p className="text-sm text-ink-muted">
-          <Link href={`/admin/clients/${project.cid}`} className="hover:text-ink">{project.company_name}</Link> /
-        </p>
-        <h1 className="text-xl font-semibold">{project.title}</h1>
-      </header>
-
-      <nav className="mt-6 flex gap-1 overflow-x-auto border-b border-line text-sm">
-        {tabs.map((t) => (
-          <Link
-            key={t.key}
-            href={`/admin/projects/${id}${t.key === "overview" ? "" : `?tab=${t.key}`}`}
-            className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 px-4 py-2.5 -mb-px ${
-              tab === t.key
-                ? "border-accent-2 font-medium text-ink"
-                : "border-transparent text-ink-soft hover:text-ink"
-            }`}
-          >
-            {t.label}
-            {t.badge > 0 && (
-              <span className="rounded-full bg-accent px-1.5 text-xs font-semibold text-white">
-                {t.badge}
-              </span>
-            )}
-          </Link>
-        ))}
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-1 text-sm text-ink-muted">
+        <Link href="/admin" className="hover:text-ink">Dashboard</Link>
+        <ChevronRight size={14} className="shrink-0" />
+        <Link href={`/admin/clients/${project.cid}`} className="hover:text-ink">
+          {project.company_name}
+        </Link>
+        <ChevronRight size={14} className="shrink-0" />
+        <span className="text-ink">{project.title}</span>
       </nav>
+      <h1 className="mt-2 text-xl font-semibold text-ink">{project.title}</h1>
+
+      <div className="sticky top-0 z-10 -mx-6 mt-5 border-b border-line bg-bg-primary px-6">
+        <nav className="flex gap-0.5 overflow-x-auto text-sm">
+          {tabs.map((t) => {
+            const Icon = t.icon;
+            return (
+              <Link
+                key={t.key}
+                href={`/admin/projects/${id}${t.key === "overview" ? "" : `?tab=${t.key}`}`}
+                className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-2.5 border-b-2 -mb-px transition-colors ${
+                  tab === t.key
+                    ? "border-accent-2 font-medium text-ink"
+                    : "border-transparent text-ink-muted hover:text-ink-soft"
+                }`}
+              >
+                <Icon size={13} />
+                {t.label}
+                {t.badge > 0 && (
+                  <span className={`rounded-full px-1.5 text-[10px] font-bold leading-tight text-white ${t.badgeColor || "bg-accent"}`}>
+                    {t.badge}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
 
       <div className="mt-6 space-y-8">
         {tab === "overview" && (
           <>
             <section className="rounded-xl border border-line bg-bg-secondary p-5">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-ink-soft">Status <InfoTip side="bottom" text="What the client sees at the top of their portal: current phase, percent complete, and target date." /></h2>
+              <h2 className="flex items-center gap-1.5 font-medium text-ink">Status <InfoTip side="bottom" text="What the client sees at the top of their portal: current phase, percent complete, and target date." /></h2>
               <form action={post()} method="post" className="mt-3 flex flex-wrap items-end gap-3 text-sm">
                 <input type="hidden" name="_action" value="status" />
                 <input type="hidden" name="_redirect" value={here} />
@@ -150,7 +165,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
             </section>
 
             <section className="rounded-xl border border-line bg-bg-secondary p-5">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-ink-soft">Project hub <InfoTip side="bottom" text="The client-facing overview: brief, KPIs, key links, and people. Everything here is visible to the client." /></h2>
+              <h2 className="flex items-center gap-1.5 font-medium text-ink">Project hub <InfoTip side="bottom" text="The client-facing overview: brief, KPIs, key links, and people. Everything here is visible to the client." /></h2>
 
               <form action={hub} method="post" className="mt-3 text-sm">
                 <input type="hidden" name="_action" value="description" />
@@ -163,7 +178,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
               </form>
 
               <div className="mt-5">
-                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">KPIs <InfoTip text="Shown to the client as health-colored cards: green when the target is met, amber within 15%, red when off. 'Better' sets whether higher or lower numbers win." /></p>
+                <p className="flex items-center gap-1.5 text-xs font-medium text-ink-muted">KPIs <InfoTip text="Shown to the client as health-colored cards: green when the target is met, amber within 15%, red when off. 'Better' sets whether higher or lower numbers win." /></p>
                 <table className="mt-2 w-full text-sm">
                   <tbody>
                     {kpis.map((k) => (
@@ -212,7 +227,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
 
               <div className="mt-5 grid gap-5 md:grid-cols-2">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Key links</p>
+                  <p className="text-xs font-medium text-ink-muted">Key links</p>
                   <ul className="mt-2 space-y-1 text-sm">
                     {links.map((l) => (
                       <li key={l.id} className="flex items-center gap-2">
@@ -235,7 +250,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
                   </form>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">People</p>
+                  <p className="text-xs font-medium text-ink-muted">People</p>
                   <ul className="mt-2 space-y-1 text-sm">
                     {people.map((p) => (
                       <li key={p.id} className="flex items-center gap-2">
@@ -268,7 +283,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
 
         {tab === "plan" && (
           <section className="rounded-xl border border-line bg-bg-secondary p-5">
-            <h2 className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-ink-soft">Phases &amp; milestones <InfoTip side="bottom" text="Phases draw as bars on the client's status bar and timeline; milestones draw as diamond markers. Statuses color them: done = green, active = blue, blocked = red." /></h2>
+            <h2 className="flex items-center gap-1.5 font-medium text-ink">Phases &amp; milestones <InfoTip side="bottom" text="Phases draw as bars on the client's status bar and timeline; milestones draw as diamond markers. Statuses color them: done = green, active = blue, blocked = red." /></h2>
             <table className="mt-3 w-full text-sm">
               <tbody>
                 {milestones.map((m) => (
@@ -323,7 +338,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
 
         {tab === "deliverables" && (
           <section className="rounded-xl border border-line bg-bg-secondary p-5">
-            <h2 className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-ink-soft">Deliverables <InfoTip side="bottom" text="Work submitted for client sign-off. The client can approve (locks it) or request revisions. Uploading a new version reopens it for review and notifies them." /></h2>
+            <h2 className="flex items-center gap-1.5 font-medium text-ink">Deliverables <InfoTip side="bottom" text="Work submitted for client sign-off. The client can approve (locks it) or request revisions. Uploading a new version reopens it for review and notifies them." /></h2>
             <div className="mt-3 space-y-4">
               {deliverables.map((d) => (
                 <div key={d.id} className="rounded-lg border border-line bg-bg-tertiary p-3 text-sm">
@@ -385,7 +400,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
 
         {tab === "documents" && (
           <section className="rounded-xl border border-line bg-bg-secondary p-5">
-            <h2 className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-ink-soft">Documents &amp; file requests <InfoTip side="bottom" text="The shared document library. Clients see everything here, organized by category, and can add their own reference documents." /></h2>
+            <h2 className="flex items-center gap-1.5 font-medium text-ink">Documents &amp; file requests <InfoTip side="bottom" text="The shared document library. Clients see everything here, organized by category, and can add their own reference documents." /></h2>
             <table className="mt-3 w-full text-sm">
               <tbody>
                 {documents.map((d) => (
@@ -436,7 +451,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
             </form>
 
             <div className="mt-5 border-t border-line pt-4">
-              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">File requests <InfoTip text="Ask the client for a file. The request appears at the top of their Documents tab and on their dashboard, and they get an email. It closes automatically when they upload." /></p>
+              <p className="flex items-center gap-1.5 text-xs font-medium text-ink-muted">File requests <InfoTip text="Ask the client for a file. The request appears at the top of their Documents tab and on their dashboard, and they get an email. It closes automatically when they upload." /></p>
               <ul className="mt-2 space-y-1 text-sm">
                 {fileRequests.map((fr) => (
                   <li key={fr.id} className="text-ink-soft">
@@ -460,7 +475,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
 
         {tab === "billing" && (
           <section className="rounded-xl border border-line bg-bg-secondary p-5">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-soft">Invoices</h2>
+            <h2 className="font-medium text-ink">Invoices</h2>
             <table className="mt-3 w-full text-sm">
               <tbody>
                 {invoices.map((inv) => (
@@ -514,7 +529,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
 
         {tab === "messages" && (
           <section className="rounded-xl border border-line bg-bg-secondary p-5">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-soft">Messages</h2>
+            <h2 className="font-medium text-ink">Messages</h2>
             <div className="mt-3 space-y-2 text-sm">
               {messages.length === 0 && <p className="text-ink-muted">No messages yet.</p>}
               {messages.map((m) => {
@@ -560,7 +575,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
         {tab === "notes" && (
           <>
             <section className="rounded-xl border border-line bg-bg-secondary p-5">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-ink-soft">We're working on (shown to client) <InfoTip side="bottom" text="A live list on the client's project overview showing what the team is doing right now. Mark items done as you finish them." /></h2>
+              <h2 className="flex items-center gap-1.5 font-medium text-ink">We're working on (shown to client) <InfoTip side="bottom" text="A live list on the client's project overview showing what the team is doing right now. Mark items done as you finish them." /></h2>
               <ul className="mt-3 divide-y divide-line/60">
                 {working.length === 0 && <li className="py-2 text-sm text-ink-muted">No items yet.</li>}
                 {working.map((w) => (
@@ -595,7 +610,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
             </section>
 
             <section className="rounded-xl border border-line bg-bg-secondary p-5">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-ink-soft">Decision log (shown to client) <InfoTip side="bottom" text="The agreed record of key decisions. Client deliverable approvals are added automatically; record anything else decided in meetings or email." /></h2>
+              <h2 className="flex items-center gap-1.5 font-medium text-ink">Decision log (shown to client) <InfoTip side="bottom" text="The agreed record of key decisions. Client deliverable approvals are added automatically; record anything else decided in meetings or email." /></h2>
               <ul className="mt-3 divide-y divide-line/60">
                 {decisions.length === 0 && <li className="py-2 text-sm text-ink-muted">No decisions recorded.</li>}
                 {decisions.map((d) => (
@@ -629,7 +644,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
 
         {tab === "internal" && (
           <section className="rounded-xl border border-warn/30 bg-bg-secondary p-5">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-warn">Internal notes — never shown to the client</h2>
+            <h2 className="font-medium text-warn">Internal notes — never shown to the client</h2>
               <ul className="mt-3 space-y-2">
                 {notes.length === 0 && <li className="py-2 text-sm text-ink-muted">No notes yet.</li>}
                 {notes.map((n) => (
