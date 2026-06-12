@@ -31,7 +31,7 @@ export default async function PortalLayout({ children }) {
 
   return (
     // Per-client branding: accent color cascades into every bg-accent/text-accent utility.
-    <div style={client.accent_color ? { "--color-accent": client.accent_color } : undefined}>
+    <div style={client.accent_color ? { "--accent": client.accent_color } : undefined}>
       {session.preview && (
         <div className="sticky top-0 z-40 flex items-center justify-center gap-3 bg-warn px-4 py-2 text-sm font-medium text-white">
           Previewing as {client.company_name} ({user.name}) — read-only, actions are disabled
