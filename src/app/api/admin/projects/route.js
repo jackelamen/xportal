@@ -16,7 +16,7 @@ export async function POST(request) {
      VALUES (?, ?, ?, ?, ?, ?)`,
     [
       uuid(), clientId, title,
-      String(form.get("current_phase") || "Research"),
+      String(form.get("current_phase") || ""),
       String(form.get("target_date") || "") || null,
       String(form.get("xpm_project_id") || "").trim() || null,
     ]

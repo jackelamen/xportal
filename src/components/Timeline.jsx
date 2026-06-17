@@ -1,6 +1,8 @@
 // Horizontal Gantt strip rendered from project_milestones. Phases draw as
 // bars, point milestones as diamonds, with a "today" line.
 
+import { numberPhases, phaseLabel } from "@/lib/phases";
+
 const BAR_COLOR = {
   done: "bg-accent-2/70",
   active: "bg-accent",
@@ -12,8 +14,9 @@ const dayMs = 86_400_000;
 const toT = (s) => new Date(s + "T00:00").getTime();
 
 export default function Timeline({ milestones, today = Date.now() }) {
-  const phases = milestones.filter((m) => m.kind === "phase" && m.starts_on && m.ends_on);
-  const points = milestones.filter((m) => m.kind === "milestone" && m.starts_on);
+  const numbered = numberPhases(milestones);
+  const phases = numbered.filter((m) => m.kind === "phase" && m.starts_on && m.ends_on);
+  const points = numbered.filter((m) => m.kind === "milestone" && m.starts_on);
   if (phases.length === 0) return null;
 
   const min = Math.min(...phases.map((p) => toT(p.starts_on)));
@@ -46,9 +49,9 @@ export default function Timeline({ milestones, today = Date.now() }) {
             <div
               className={`absolute flex h-full items-center overflow-hidden rounded px-2 text-[11px] font-medium text-white ${BAR_COLOR[p.status] || BAR_COLOR.upcoming}`}
               style={{ left: `${pct(toT(p.starts_on))}%`, width: `${Math.max(pct(toT(p.ends_on)) - pct(toT(p.starts_on)), 3)}%` }}
-              title={`${p.title}: ${p.starts_on} → ${p.ends_on} (${p.status})`}
+              title={`${phaseLabel(p.phaseNo, p.title)}: ${p.starts_on} → ${p.ends_on} (${p.status})`}
             >
-              <span className={`truncate ${p.status === "upcoming" ? "text-ink-soft" : ""}`}>{p.title}</span>
+              <span className={`truncate ${p.status === "upcoming" ? "text-ink-soft" : ""}`}>{phaseLabel(p.phaseNo, p.title)}</span>
             </div>
           </div>
         ))}

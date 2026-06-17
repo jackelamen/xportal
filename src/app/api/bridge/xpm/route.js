@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sql, uuid } from "@/lib/db";
 import { verifyBridgeSecret } from "@/lib/xpm-bridge";
+import { upsertKpis, replaceWorkingItems, appendDecisions } from "@/lib/project-import";
 
 // Inbound sync from xPM, authenticated by X-XPM-Bridge-Secret. Only top-level
 // status fields cross the boundary — granular xPM tasks never reach the portal.
@@ -159,57 +160,9 @@ async function linkSpace(body) {
 //   kpis: [{ name, target_value?, current_value?, unit?, direction? }] (upsert by name)
 //   working_items: ["..."] (replaces the active list)
 //   decisions: [{ decided_on?, summary, recorded_by? }] (appends, deduped by summary)
+// Shares its writers with the CSV importer — see lib/project-import.js.
 async function syncHub(projectId, body) {
-  if (Array.isArray(body.kpis)) {
-    for (const k of body.kpis) {
-      if (!k?.name) continue;
-      const existing = (await sql(
-        "SELECT id FROM project_kpis WHERE project_id = ? AND name = ?",
-        [projectId, k.name]
-      ))[0];
-      if (existing) {
-        await sql(
-          `UPDATE project_kpis SET
-             current_value = COALESCE(?, current_value),
-             target_value = COALESCE(?, target_value),
-             unit = COALESCE(?, unit),
-             updated_at = NOW()
-           WHERE id = ?`,
-          [k.current_value ?? null, k.target_value ?? null, k.unit ?? null, existing.id]
-        );
-      } else {
-        await sql(
-          `INSERT INTO project_kpis (id, project_id, name, target_value, current_value, unit, direction)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [uuid(), projectId, k.name, k.target_value ?? null, k.current_value ?? null,
-            k.unit ?? null, k.direction === "down" ? "down" : "up"]
-        );
-      }
-    }
-  }
-  if (Array.isArray(body.working_items)) {
-    await sql("UPDATE working_items SET status = 'done' WHERE project_id = ? AND status = 'active'", [projectId]);
-    for (const title of body.working_items) {
-      if (typeof title === "string" && title.trim()) {
-        await sql("INSERT INTO working_items (id, project_id, title) VALUES (?, ?, ?)",
-          [uuid(), projectId, title.trim()]);
-      }
-    }
-  }
-  if (Array.isArray(body.decisions)) {
-    for (const d of body.decisions) {
-      if (!d?.summary) continue;
-      const dupe = (await sql(
-        "SELECT id FROM decision_log WHERE project_id = ? AND summary = ?",
-        [projectId, d.summary]
-      ))[0];
-      if (!dupe) {
-        await sql(
-          "INSERT INTO decision_log (id, project_id, decided_on, summary, recorded_by, source) VALUES (?, ?, ?, ?, ?, 'xpm')",
-          [uuid(), projectId, d.decided_on || new Date().toISOString().slice(0, 10),
-            d.summary, d.recorded_by || "xPM"]
-        );
-      }
-    }
-  }
+  await upsertKpis(projectId, body.kpis);
+  await replaceWorkingItems(projectId, body.working_items);
+  await appendDecisions(projectId, body.decisions, { recordedBy: "xPM", source: "xpm" });
 }

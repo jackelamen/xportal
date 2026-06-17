@@ -1,4 +1,5 @@
 import { Check, Flag } from "lucide-react";
+import { phaseLabel } from "@/lib/phases";
 
 // The first thing a client checks. Answers three questions without thought:
 // where are we now, how far along is the whole project, and what's next.
@@ -6,36 +7,35 @@ import { Check, Flag } from "lucide-react";
 const fmtDate = (s) =>
   s ? new Date(s + "T00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) : null;
 
-const FALLBACK = ["Research", "Optimize", "Unify", "Test", "Execute"];
-
 export default function ProjectStatus({ phases, currentPhase, progress, targetDate }) {
-  const items =
-    phases?.length > 0
-      ? phases
-      : FALLBACK.map((title, i) => ({
-          id: title,
-          title,
-          status:
-            i < FALLBACK.indexOf(currentPhase) ? "done" : title === currentPhase ? "active" : "upcoming",
-          starts_on: null,
-          ends_on: null,
-        }));
+  const items = phases?.length > 0 ? phases : [];
 
   const activeIdx = items.findIndex((p) => p.status === "active");
   const active = activeIdx >= 0 ? items[activeIdx] : null;
   const blocked = items.find((p) => p.status === "blocked");
+  const blockedIdx = blocked ? items.indexOf(blocked) : -1;
   const next = items.slice(activeIdx + 1).find((p) => p.status === "upcoming");
+  const nextIdx = next ? items.indexOf(next) : -1;
+
+  // Headline name with its "Phase N:" prefix. Falls back to the raw stored
+  // current_phase string when no phases are defined yet.
+  const headline = blocked
+    ? phaseLabel(blockedIdx, blocked.title)
+    : active
+    ? phaseLabel(activeIdx, active.title)
+    : currentPhase;
 
   return (
     <div>
       {/* The headline answer: where are we, how far along. */}
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+        {(items.length > 0 || currentPhase) && (
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
             Current phase{active && ` · ${activeIdx + 1} of ${items.length}`}
           </p>
           <p className="mt-1 text-3xl font-bold tracking-tight text-ink">
-            {blocked ? blocked.title : active ? active.title : currentPhase}
+            {headline}
             {blocked && <span className="ml-3 align-middle rounded-full bg-danger/10 px-2.5 py-1 text-xs font-semibold text-danger">blocked — needs attention</span>}
           </p>
           {active?.starts_on && active?.ends_on && (
@@ -44,6 +44,7 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
             </p>
           )}
         </div>
+        )}
         {typeof progress === "number" && (
           <div className="text-right">
             <p className="font-data text-4xl font-semibold tracking-tight text-accent">{progress}%</p>
@@ -53,8 +54,9 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
       </div>
 
       {/* The track: one connected bar, each segment a phase. */}
+      {items.length > 0 && (
       <div className="mt-6 flex gap-1">
-        {items.map((ph) => (
+        {items.map((ph, i) => (
           <div key={ph.id} className="min-w-0 flex-1">
             <div
               className={`h-2 first:rounded-l-full last:rounded-r-full ${
@@ -71,7 +73,7 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
                   ph.status === "blocked" ? "font-semibold text-danger" :
                   ph.status === "done" ? "text-ink-soft" : "text-ink-muted"
                 }`}>
-                  {ph.title}
+                  {phaseLabel(i, ph.title)}
                 </p>
                 {ph.starts_on && (
                   <p className="font-data truncate text-[10px] text-ink-muted">
@@ -83,13 +85,14 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
           </div>
         ))}
       </div>
+      )}
 
       {/* What's next — the question clients would otherwise email about. */}
       {(next || targetDate) && (
         <p className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-line pt-4 text-sm text-ink-soft">
           {next && (
             <span>
-              Up next: <span className="font-medium text-ink">{next.title}</span>
+              Up next: <span className="font-medium text-ink">{phaseLabel(nextIdx, next.title)}</span>
               {next.starts_on && <span className="font-data text-xs text-ink-muted"> · starts {fmtDate(next.starts_on)}</span>}
             </span>
           )}

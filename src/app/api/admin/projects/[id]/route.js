@@ -23,15 +23,31 @@ export async function POST(request, { params }) {
       summary: `${operator.name} ${next ? "hid" : "published"} "${project.title}" ${next ? "from" : "to"} the client portal`,
     });
   } else if (action === "status") {
+    const currentPhase = String(form.get("current_phase") || project.current_phase);
     await sql(
       "UPDATE portal_projects SET current_phase = ?, progress_percentage = ?, target_date = ?, updated_at = NOW() WHERE id = ?",
       [
-        String(form.get("current_phase") || project.current_phase),
+        currentPhase,
         Math.min(100, Math.max(0, Number(form.get("progress_percentage")) || 0)),
         String(form.get("target_date") || "") || null,
         id,
       ]
     );
+    // Picking a phase advances the bar: earlier phases done, this one active,
+    // later ones upcoming. Skips silently if the value isn't a defined phase.
+    const phases = await sql(
+      "SELECT id, title FROM project_milestones WHERE project_id = ? AND kind = 'phase' ORDER BY sort_order",
+      [id]
+    );
+    const selIdx = phases.findIndex((p) => p.title === currentPhase);
+    if (selIdx >= 0) {
+      for (let i = 0; i < phases.length; i++) {
+        await sql("UPDATE project_milestones SET status = ? WHERE id = ?", [
+          i < selIdx ? "done" : i === selIdx ? "active" : "upcoming",
+          phases[i].id,
+        ]);
+      }
+    }
   } else if (action === "add_milestone") {
     const title = String(form.get("title") || "").trim();
     if (!title) return new Response("Milestone title required", { status: 400 });

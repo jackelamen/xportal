@@ -5,13 +5,14 @@ import {
   Receipt, MessageSquare, ClipboardList, Lock, ChevronRight,
 } from "lucide-react";
 import FilePicker from "@/components/FilePicker";
+import CsvImport from "@/components/admin/CsvImport";
 import { EditableRow, RowButton } from "@/components/admin/EditableRow";
 import { InfoTip } from "@/components/Tip";
 import { sql } from "@/lib/db";
+import { numberPhases, phaseLabel } from "@/lib/phases";
 
 export const dynamic = "force-dynamic";
 
-const PHASES = ["Research", "Optimize", "Unify", "Test", "Execute"];
 const MS_STATUS = ["upcoming", "active", "blocked", "done"];
 const TABS = ["overview", "plan", "deliverables", "documents", "billing", "messages", "notes", "internal"];
 
@@ -30,9 +31,10 @@ export default async function AdminProjectPage({ params, searchParams }) {
   ))[0];
   if (!project) notFound();
 
-  const milestones = await sql(
+  const milestones = numberPhases(await sql(
     "SELECT * FROM project_milestones WHERE project_id = ? ORDER BY sort_order", [id]
-  );
+  ));
+  const phaseList = milestones.filter((m) => m.kind === "phase");
   const deliverableRows = await sql(
     "SELECT * FROM deliverables_approvals WHERE project_id = ? ORDER BY submitted_at DESC", [id]
   );
@@ -148,9 +150,19 @@ export default async function AdminProjectPage({ params, searchParams }) {
                 <input type="hidden" name="_redirect" value={here} />
                 <label className="block text-ink-soft">
                   Phase
-                  <select name="current_phase" defaultValue={project.current_phase} className={input}>
-                    {PHASES.map((p) => <option key={p}>{p}</option>)}
-                  </select>
+                  {phaseList.length > 0 ? (
+                    <select name="current_phase" defaultValue={project.current_phase} className={input}>
+                      {phaseList.map((m) => (
+                        <option key={m.id} value={m.title}>{phaseLabel(m.phaseNo, m.title)}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <p className="mt-1 max-w-xs text-xs text-ink-muted">
+                      No phases yet. Add them in the{" "}
+                      <Link href={`/admin/projects/${id}?tab=plan`} className="text-accent hover:underline">Plan tab</Link>{" "}
+                      to set how many phases there are and name them.
+                    </p>
+                  )}
                 </label>
                 <label className="block text-ink-soft">
                   Progress %
@@ -278,6 +290,13 @@ export default async function AdminProjectPage({ params, searchParams }) {
                 </div>
               </div>
             </section>
+
+            <section className="rounded-xl border border-line bg-bg-secondary p-5">
+              <h2 className="flex items-center gap-1.5 font-medium text-ink">Import from CSV <InfoTip side="bottom" text="Pull project data in from a CSV instead of typing it: phases & milestones, KPIs, links, people, working items, and decisions are added to this project. New items are appended; matching KPIs update in place." /></h2>
+              <div className="mt-3">
+                <CsvImport mode="merge" projectId={id} />
+              </div>
+            </section>
           </>
         )}
 
@@ -289,7 +308,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
                 {milestones.map((m) => (
                   <tr key={m.id} className="border-t border-line/60">
                     <td className="py-2 pr-3">
-                      <span className="font-medium">{m.title}</span>
+                      <span className="font-medium">{phaseLabel(m.phaseNo, m.title)}</span>
                       <span className="ml-2 text-xs text-ink-muted">{m.kind}</span>
                     </td>
                     <td className="py-2 pr-3 text-ink-soft">

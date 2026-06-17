@@ -1,0 +1,19 @@
+section,a,b,c,d,e
+project,title,Horizon Rebrand,,,
+project,description,"Mid-sized B2B SaaS rebrand: new visual identity, messaging, and marketing site.",,,
+project,target_date,2026-09-30,,,
+project,progress,40,,,
+phase,Contract,2026-01-05,2026-01-19,done,
+phase,Compliance,2026-01-20,2026-02-16,active,
+phase,Build,2026-02-17,2026-04-30,upcoming,
+milestone,Kickoff call,2026-01-06,done,,
+milestone,Brand sign-off,2026-02-16,upcoming,,
+kpi,Page load,2.0,2.5,s,down
+kpi,Signups,1000,730,,up
+link,Figma file,https://figma.com/file/example,,,
+link,Staging site,https://staging.example.com,,,
+person,Jane Doe,Designer,operator,jane@agency.com,
+person,Sam Client,Stakeholder,client,sam@client.com,
+working,Wireframe the homepage,,,,
+working,Draft messaging pillars,,,,
+decision,Approved brand direction A,2026-01-10,,,

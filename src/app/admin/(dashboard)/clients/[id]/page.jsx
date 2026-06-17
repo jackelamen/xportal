@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Eye, EyeOff, ChevronRight } from "lucide-react";
 import FilePicker from "@/components/FilePicker";
+import CsvImport from "@/components/admin/CsvImport";
 import { EditableRow } from "@/components/admin/EditableRow";
 import { InfoTip } from "@/components/Tip";
 import { sql } from "@/lib/db";
@@ -132,6 +133,15 @@ export default async function AdminClientPage({ params, searchParams }) {
                   </label>
                   <button className="rounded-lg bg-accent-2 px-4 py-2 font-medium text-white">Create</button>
                 </form>
+              </details>
+              <details className="mt-2 rounded-xl border border-line bg-bg-secondary p-4">
+                <summary className="flex cursor-pointer items-center gap-1.5 text-sm font-medium text-ink-soft">
+                  Import from CSV
+                  <InfoTip text="Create a whole project from one CSV — overview, phases & milestones, KPIs, links, people, working items, and decisions. Download the template to see the format." />
+                </summary>
+                <div className="mt-3">
+                  <CsvImport mode="create" clientId={id} />
+                </div>
               </details>
             </section>
 

@@ -5,6 +5,7 @@ import {
 import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { InfoTip } from "@/components/Tip";
+import { phaseLabel } from "@/lib/phases";
 
 export const dynamic = "force-dynamic";
 
@@ -180,12 +181,12 @@ export default async function Home() {
 
               <p className="mt-2 text-sm">
                 {blocked ? (
-                  <span className="font-medium text-danger">Blocked: {blocked.title}</span>
+                  <span className="font-medium text-danger">Blocked: {phaseLabel(phases.indexOf(blocked), blocked.title)}</span>
                 ) : (
                   <>
-                    <span className="font-medium text-accent">{active?.title || p.current_phase}</span>
+                    <span className="font-medium text-accent">{active ? phaseLabel(activeIdx, active.title) : p.current_phase}</span>
                     <span className="text-ink-muted">
-                      {active ? ` · phase ${activeIdx + 1} of ${phases.length}` : ""}
+                      {active ? ` · ${activeIdx + 1} of ${phases.length}` : ""}
                       {active?.ends_on ? ` · through ${fmtDate(active.ends_on)}` : ""}
                     </span>
                   </>
