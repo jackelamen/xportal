@@ -57,6 +57,17 @@ export default async function AdminClientPage({ params, searchParams }) {
         </form>
       </header>
 
+      {client.archived_at && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm">
+          <span className="font-medium text-warn">This client is archived — they can&apos;t sign in to their portal.</span>
+          <form action={`/api/admin/clients/${id}`} method="post">
+            <input type="hidden" name="_action" value="unarchive" />
+            <input type="hidden" name="_redirect" value={here} />
+            <button className="rounded-lg border border-warn/50 px-3 py-1.5 font-medium text-warn hover:bg-warn/15">Unarchive</button>
+          </form>
+        </div>
+      )}
+
       <nav className="mt-6 flex gap-1 border-b border-line text-sm">
         {[
           { key: "projects", label: "Projects" },
@@ -256,6 +267,40 @@ export default async function AdminClientPage({ params, searchParams }) {
                 </label>
                 <button className="rounded-lg border border-line px-4 py-2 text-ink-soft hover:text-ink">Add contact</button>
               </form>
+            </section>
+
+            <section className="rounded-xl border border-danger/30 bg-bg-secondary p-5">
+              <h2 className="font-medium text-danger">Danger zone</h2>
+
+              {!client.archived_at && (
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+                  <div className="max-w-md">
+                    <p className="text-sm font-medium text-ink">Archive this client</p>
+                    <p className="text-xs text-ink-muted">Hides them from the active list and blocks their portal sign-in. Reversible — all data is kept.</p>
+                  </div>
+                  <form action={`/api/admin/clients/${id}`} method="post">
+                    <input type="hidden" name="_action" value="archive" />
+                    <input type="hidden" name="_redirect" value={here} />
+                    <button className="rounded-lg border border-warn/50 px-4 py-2 text-sm font-medium text-warn hover:bg-warn/10">Archive</button>
+                  </form>
+                </div>
+              )}
+
+              <div className="mt-4">
+                <p className="text-sm font-medium text-ink">Delete permanently</p>
+                <p className="max-w-xl text-xs text-ink-muted">
+                  Removes this client and <span className="text-danger">everything under them</span> — projects, invoices, deliverables, messages, and documents. This can&apos;t be undone.
+                </p>
+                <form action={`/api/admin/clients/${id}`} method="post" className="mt-3 flex flex-wrap items-end gap-3 text-sm">
+                  <input type="hidden" name="_action" value="delete" />
+                  <input type="hidden" name="_redirect" value="/admin" />
+                  <label className="block text-ink-soft">
+                    Type <span className="font-medium text-ink">{client.company_name}</span> to confirm
+                    <input name="confirm_name" required autoComplete="off" className="mt-1 block w-64 rounded-lg border border-line bg-bg-tertiary px-3 py-2 text-ink outline-none focus:border-danger" />
+                  </label>
+                  <button className="rounded-lg bg-danger px-4 py-2 font-medium text-white hover:opacity-90">Delete client</button>
+                </form>
+              </div>
             </section>
           </>
         )}

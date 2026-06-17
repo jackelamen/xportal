@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 export default async function BrandedLoginPage({ params }) {
   const { slug } = await params;
   const client = (await sql(
-    "SELECT company_name, logo_path, accent_color FROM clients WHERE slug = ?",
+    "SELECT company_name, logo_path, accent_color FROM clients WHERE slug = ? AND archived_at IS NULL",
     [slug]
   ))[0];
   if (!client) notFound();

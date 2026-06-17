@@ -22,7 +22,10 @@ export default async function AdminHome() {
         WHERE a.client_id = c.id AND a.actor_type = 'client') AS last_client_activity,
       (SELECT COUNT(*)::int FROM communication_threads t JOIN portal_projects p ON p.id = t.project_id
         WHERE p.client_id = c.id AND t.sender_type = 'Client' AND t.operator_read = 0) AS unread_messages
-     FROM clients c ORDER BY c.company_name`
+     FROM clients c WHERE c.archived_at IS NULL ORDER BY c.company_name`
+  );
+  const archivedQ = sql(
+    "SELECT id, company_name FROM clients WHERE archived_at IS NOT NULL ORDER BY company_name"
   );
   const bookingsQ = sql(
     `SELECT b.*, c.company_name, u.name AS booked_by FROM bookings b
@@ -41,8 +44,9 @@ export default async function AdminHome() {
      ORDER BY a.created_at DESC LIMIT 20`
   );
 
-  const [clients, bookings, activity, inbox, seenSetting] = await Promise.all([
+  const [clients, archivedClients, bookings, activity, inbox, seenSetting] = await Promise.all([
     clientsQ,
+    archivedQ,
     bookingsQ,
     activityQ,
     inboxQ,
@@ -191,6 +195,28 @@ export default async function AdminHome() {
               </button>
             </form>
           </details>
+
+          {archivedClients.length > 0 && (
+            <details className="mt-2 rounded-xl border border-line bg-bg-secondary p-4">
+              <summary className="cursor-pointer text-sm font-medium text-ink-soft hover:text-ink">
+                Archived ({archivedClients.length})
+              </summary>
+              <ul className="mt-3 space-y-1.5">
+                {archivedClients.map((c) => (
+                  <li key={c.id} className="flex items-center justify-between gap-3 text-sm">
+                    <Link href={`/admin/clients/${c.id}`} className="truncate text-ink-soft hover:text-ink">
+                      {c.company_name}
+                    </Link>
+                    <form action={`/api/admin/clients/${c.id}`} method="post" className="shrink-0">
+                      <input type="hidden" name="_action" value="unarchive" />
+                      <input type="hidden" name="_redirect" value="/admin" />
+                      <button className="text-xs text-ink-muted hover:text-accent">Unarchive</button>
+                    </form>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
         </section>
       </div>
 

@@ -1,15 +1,18 @@
 import { sql, uuid } from "@/lib/db";
 import { requireOperator, redirectBack, uniqueViolation } from "@/lib/admin";
+import { logActivity } from "@/lib/activity";
 import { saveUpload } from "@/lib/storage";
 
 // Branding + contact management for one client. Multipart because of the logo.
 // _action: branding | add_user | remove_user | add_note | update_note | delete_note
+//          | archive | unarchive | delete
 export async function POST(request, { params }) {
-  const { error } = await requireOperator();
+  const { error, operator } = await requireOperator();
   if (error) return error;
 
   const { id } = await params;
-  if (!(await sql("SELECT id FROM clients WHERE id = ?", [id]))[0]) {
+  const client = (await sql("SELECT id, company_name FROM clients WHERE id = ?", [id]))[0];
+  if (!client) {
     return new Response("Not found", { status: 404 });
   }
 
@@ -81,6 +84,28 @@ export async function POST(request, { params }) {
       "DELETE FROM internal_notes WHERE id = ? AND client_id = ? AND project_id IS NULL",
       [String(form.get("note_id")), id]
     );
+  } else if (action === "archive") {
+    await sql("UPDATE clients SET archived_at = NOW() WHERE id = ?", [id]);
+    await logActivity({
+      clientId: id, actorType: "operator", actorName: operator.name,
+      eventType: "client.archived", summary: `${operator.name} archived ${client.company_name}`,
+    });
+  } else if (action === "unarchive") {
+    await sql("UPDATE clients SET archived_at = NULL WHERE id = ?", [id]);
+    await logActivity({
+      clientId: id, actorType: "operator", actorName: operator.name,
+      eventType: "client.unarchived", summary: `${operator.name} restored ${client.company_name}`,
+    });
+  } else if (action === "delete") {
+    // Guarded: the operator must type the exact company name. The delete cascades
+    // to every project, invoice, deliverable, message, document, etc.
+    const confirm = String(form.get("confirm_name") || "").trim().toLowerCase();
+    if (confirm !== client.company_name.trim().toLowerCase()) {
+      return new Response("Type the client's exact company name to confirm deletion.", { status: 400 });
+    }
+    await sql("DELETE FROM clients WHERE id = ?", [id]);
+    // No activity_log entry — it's client-scoped and would cascade away with the row.
+    return redirectBack(request, form);
   } else {
     return new Response("Unknown action", { status: 400 });
   }

@@ -9,8 +9,17 @@ const SESSION_TTL_DAYS = 60;
 const sha256 = (s) => createHash("sha256").update(s).digest("hex");
 
 export async function findUserByEmail(userType, email) {
-  const table = userType === "operator" ? "operator_users" : "client_users";
-  const rows = await sql(`SELECT * FROM ${table} WHERE email = $1`, [email.trim().toLowerCase()]);
+  const addr = email.trim().toLowerCase();
+  if (userType === "operator") {
+    return (await sql("SELECT * FROM operator_users WHERE email = $1", [addr]))[0] ?? null;
+  }
+  // Clients: don't resolve contacts of an archived client, so no magic link is
+  // issued to a deactivated client.
+  const rows = await sql(
+    `SELECT u.* FROM client_users u JOIN clients c ON c.id = u.client_id
+     WHERE u.email = $1 AND c.archived_at IS NULL`,
+    [addr]
+  );
   return rows[0] ?? null;
 }
 
@@ -86,7 +95,8 @@ export async function getClientSession() {
      FROM active_sessions s
      JOIN client_users u ON u.id = s.user_id
      JOIN clients c ON c.id = u.client_id
-     WHERE s.user_type = 'client' AND s.token_hash = ? AND s.expires_at > NOW()`,
+     WHERE s.user_type = 'client' AND s.token_hash = ? AND s.expires_at > NOW()
+       AND c.archived_at IS NULL`,
     [sha256(raw)]
   );
   const row = rows[0];
