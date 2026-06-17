@@ -1,5 +1,5 @@
 import { sql, uuid } from "@/lib/db";
-import { requireOperator, redirectBack } from "@/lib/admin";
+import { requireOperator, redirectBack, uniqueViolation } from "@/lib/admin";
 import { saveUpload } from "@/lib/storage";
 
 // Branding + contact management for one client. Multipart because of the logo.
@@ -28,22 +28,34 @@ export async function POST(request, { params }) {
       if (logo.size > 2_000_000) return new Response("Logo must be under 2 MB", { status: 400 });
       logoPath = (await saveUpload(logo, "logos")).storedPath;
     }
-    await sql(
-      `UPDATE clients SET
-         accent_color = COALESCE(NULLIF(?, ''), accent_color),
-         slug = COALESCE(NULLIF(?, ''), slug),
-         logo_path = COALESCE(?, logo_path)
-       WHERE id = ?`,
-      [accent, slug, logoPath ?? null, id]
-    );
+    try {
+      await sql(
+        `UPDATE clients SET
+           accent_color = COALESCE(NULLIF(?, ''), accent_color),
+           slug = COALESCE(NULLIF(?, ''), slug),
+           logo_path = COALESCE(?, logo_path)
+         WHERE id = ?`,
+        [accent, slug, logoPath ?? null, id]
+      );
+    } catch (e) {
+      const msg = uniqueViolation(e);
+      if (msg) return new Response(msg, { status: 409 });
+      throw e;
+    }
   } else if (action === "add_user") {
     const name = String(form.get("name") || "").trim();
     const email = String(form.get("email") || "").trim().toLowerCase();
     if (!name || !email) return new Response("Name and email are required", { status: 400 });
-    await sql(
-      "INSERT INTO client_users (id, client_id, name, email) VALUES (?, ?, ?, ?)",
-      [uuid(), id, name, email]
-    );
+    try {
+      await sql(
+        "INSERT INTO client_users (id, client_id, name, email) VALUES (?, ?, ?, ?)",
+        [uuid(), id, name, email]
+      );
+    } catch (e) {
+      const msg = uniqueViolation(e);
+      if (msg) return new Response(msg, { status: 409 });
+      throw e;
+    }
   } else if (action === "remove_user") {
     await sql("DELETE FROM client_users WHERE id = ? AND client_id = ?", [
       String(form.get("user_id")), id,

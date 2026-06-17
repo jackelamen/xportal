@@ -1,5 +1,5 @@
 import { sql, uuid } from "@/lib/db";
-import { requireOperator, redirectBack } from "@/lib/admin";
+import { requireOperator, redirectBack, uniqueViolation } from "@/lib/admin";
 import { logActivity, notifyClient } from "@/lib/activity";
 
 export async function POST(request) {
@@ -18,10 +18,16 @@ export async function POST(request) {
     return new Response("project, invoice_number, positive amount, issued and due dates required", { status: 400 });
   }
 
-  await sql(
-    "INSERT INTO invoices (id, project_id, invoice_number, amount, issued_date, due_date) VALUES (?, ?, ?, ?, ?, ?)",
-    [uuid(), projectId, number, amount, issued, due]
-  );
+  try {
+    await sql(
+      "INSERT INTO invoices (id, project_id, invoice_number, amount, issued_date, due_date) VALUES (?, ?, ?, ?, ?, ?)",
+      [uuid(), projectId, number, amount, issued, due]
+    );
+  } catch (e) {
+    const msg = uniqueViolation(e);
+    if (msg) return new Response(msg, { status: 409 });
+    throw e;
+  }
 
   await logActivity({
     clientId: project.client_id, projectId, actorType: "operator", actorName: operator.name,
