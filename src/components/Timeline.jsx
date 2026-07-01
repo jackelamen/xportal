@@ -13,6 +13,24 @@ const BAR_COLOR = {
 const dayMs = 86_400_000;
 const toT = (s) => new Date(s + "T00:00").getTime();
 
+// Milestone labels are ~90px wide; on a typical container that's roughly this
+// many percentage-points, so two labels closer than this would overlap. Greedy
+// lane assignment stacks close-together milestones into extra rows instead of
+// letting their labels collide into unreadable text.
+const MIN_LABEL_GAP_PCT = 11;
+
+function layoutPoints(points, pct) {
+  const sorted = [...points].sort((a, b) => toT(a.starts_on) - toT(b.starts_on));
+  const laneEnds = []; // last-claimed pct per lane
+  return sorted.map((m) => {
+    const p = pct(toT(m.starts_on));
+    let lane = laneEnds.findIndex((end) => p - end >= MIN_LABEL_GAP_PCT);
+    if (lane === -1) lane = laneEnds.length;
+    laneEnds[lane] = p;
+    return { ...m, pct: p, lane };
+  });
+}
+
 export default function Timeline({ milestones, today = Date.now() }) {
   const numbered = numberPhases(milestones);
   const phases = numbered.filter((m) => m.kind === "phase" && m.starts_on && m.ends_on);
@@ -28,6 +46,10 @@ export default function Timeline({ milestones, today = Date.now() }) {
   for (let d = new Date(min); d.getTime() <= max; d.setMonth(d.getMonth() + 1, 1)) {
     months.push({ label: d.toLocaleDateString("en-US", { month: "short" }), at: pct(d.getTime()) });
   }
+
+  const laidOutPoints = layoutPoints(points, pct);
+  const pointLanes = laidOutPoints.reduce((n, p) => Math.max(n, p.lane + 1), 0);
+  const POINT_ROW_PX = 34;
 
   return (
     <div className="select-none">
@@ -55,17 +77,17 @@ export default function Timeline({ milestones, today = Date.now() }) {
             </div>
           </div>
         ))}
-        {points.length > 0 && (
-          <div className="relative h-6">
-            {points.map((m) => (
+        {laidOutPoints.length > 0 && (
+          <div className="relative" style={{ height: pointLanes * POINT_ROW_PX }}>
+            {laidOutPoints.map((m) => (
               <div
                 key={m.id}
-                className="absolute top-1 flex flex-col items-center"
-                style={{ left: `${pct(toT(m.starts_on))}%` }}
+                className="absolute flex -translate-x-1/2 flex-col items-center"
+                style={{ left: `${m.pct}%`, top: m.lane * POINT_ROW_PX }}
                 title={`${m.title} — ${m.starts_on}`}
               >
                 <div className="h-2.5 w-2.5 rotate-45 bg-warn" />
-                <span className="mt-0.5 max-w-24 truncate text-[10px] text-ink-soft">{m.title}</span>
+                <span className="mt-0.5 max-w-20 truncate text-[10px] text-ink-soft">{m.title}</span>
               </div>
             ))}
           </div>

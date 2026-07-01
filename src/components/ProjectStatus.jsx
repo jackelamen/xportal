@@ -12,18 +12,21 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
 
   const activeIdx = items.findIndex((p) => p.status === "active");
   const active = activeIdx >= 0 ? items[activeIdx] : null;
+  // "blocked" is a status on whichever phase it's set on — not necessarily the
+  // one currently active — so it's surfaced as its own warning line rather than
+  // hijacking the headline (a future phase can be flagged blocked while a
+  // different phase is actively being worked today).
   const blocked = items.find((p) => p.status === "blocked");
   const blockedIdx = blocked ? items.indexOf(blocked) : -1;
   const next = items.slice(activeIdx + 1).find((p) => p.status === "upcoming");
   const nextIdx = next ? items.indexOf(next) : -1;
 
-  // Headline name with its "Phase N:" prefix. Falls back to the raw stored
-  // current_phase string when no phases are defined yet.
-  const headline = blocked
-    ? phaseLabel(blockedIdx, blocked.title)
-    : active
-    ? phaseLabel(activeIdx, active.title)
-    : currentPhase;
+  // Headline always describes the same phase as the "N of M" count and the date
+  // range below it: the active phase, falling back to the blocked one only if
+  // nothing is active, and finally to the raw stored current_phase string.
+  const headlinePhase = active || blocked || null;
+  const headlineIdx = active ? activeIdx : blocked ? blockedIdx : -1;
+  const headline = headlinePhase ? phaseLabel(headlineIdx, headlinePhase.title) : currentPhase;
 
   return (
     <div>
@@ -32,15 +35,19 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
         {(items.length > 0 || currentPhase) && (
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
-            Current phase{active && ` · ${activeIdx + 1} of ${items.length}`}
+            Current phase{headlinePhase && ` · ${headlineIdx + 1} of ${items.length}`}
           </p>
           <p className="mt-1 text-3xl font-bold tracking-tight text-ink">
             {headline}
-            {blocked && <span className="ml-3 align-middle rounded-full bg-danger/10 px-2.5 py-1 text-xs font-semibold text-danger">blocked — needs attention</span>}
           </p>
-          {active?.starts_on && active?.ends_on && (
+          {headlinePhase?.starts_on && headlinePhase?.ends_on && (
             <p className="font-data mt-1 text-xs text-ink-soft">
-              {fmtDate(active.starts_on)} – {fmtDate(active.ends_on)}
+              {fmtDate(headlinePhase.starts_on)} – {fmtDate(headlinePhase.ends_on)}
+            </p>
+          )}
+          {blocked && (
+            <p className="mt-2 inline-flex items-center rounded-full bg-danger/10 px-2.5 py-1 text-xs font-semibold text-danger">
+              {phaseLabel(blockedIdx, blocked.title)} is blocked — needs attention
             </p>
           )}
         </div>
