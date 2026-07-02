@@ -46,7 +46,7 @@ export default async function BillingPage() {
         <div className="p-4">
           <p className="text-xs font-semibold text-ink">Next due</p>
           <p className="font-data mt-2.5 text-[1.6rem] font-medium leading-none tracking-tight text-ink">
-            {nextDue ? new Date(nextDue.due_date + "T00:00").toLocaleDateString("en-US", { month: "short", day: "2-digit" }) : "—"}
+            {nextDue ? new Date(nextDue.due_date + "T00:00").toLocaleDateString("en-US", { month: "short", day: "2-digit" }) : "–"}
           </p>
           <p className="mt-2 text-[11.5px] text-ink-muted">
             {nextDue ? `${nextDue.invoice_number} · $${Number(nextDue.amount).toFixed(2)}` : "Nothing due"}

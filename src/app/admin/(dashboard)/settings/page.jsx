@@ -33,7 +33,7 @@ export default async function AdminSettings() {
           Availability
           <InfoTip
             side="bottom"
-            text="Weekly hours define your default booking window. Date overrides block specific days or time ranges — they take precedence over weekly hours."
+            text="Weekly hours define your default booking window. Date overrides block specific days or time ranges; they take precedence over weekly hours."
           />
         </h2>
 
@@ -108,7 +108,7 @@ export default async function AdminSettings() {
                 </li>
               ))}
               {blackouts.length === 0 && (
-                <li className="text-ink-muted">No overrides — weekly hours apply every week.</li>
+                <li className="text-ink-muted">No overrides. Weekly hours apply every week.</li>
               )}
             </ul>
             <form

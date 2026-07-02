@@ -6,7 +6,7 @@ import { Sun, Moon } from "lucide-react";
 // Light is the default; the choice persists in localStorage and is applied
 // pre-hydration by the inline script in the root layout (no flash).
 export default function ThemeToggle({ className = "" }) {
-  const [dark, setDark] = useState(null); // null until mounted — avoids hydration mismatch
+  const [dark, setDark] = useState(null); // null until mounted - avoids hydration mismatch
 
   useEffect(() => {
     setDark(document.documentElement.classList.contains("dark"));

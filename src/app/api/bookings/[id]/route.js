@@ -8,7 +8,7 @@ import { logActivity, notifyOperators } from "@/lib/activity";
 export async function DELETE(request, { params }) {
   const session = await getClientSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.preview) return NextResponse.json({ error: "Read-only preview — actions are disabled" }, { status: 403 });
+  if (session.preview) return NextResponse.json({ error: "Read-only preview. Actions are disabled" }, { status: 403 });
   const { user, client } = session;
 
   const { id } = await params;
@@ -25,7 +25,7 @@ export async function DELETE(request, { params }) {
   });
   await notifyOperators(
     `[${client.company_name}] Meeting cancelled`,
-    `${user.name} cancelled "${booking.topic}" — ${booking.starts_at}.`
+    `${user.name} cancelled "${booking.topic}" for ${booking.starts_at}.`
   );
   await notifyXpm("meeting.cancelled", { booking_id: id, starts_at: booking.starts_at });
   return NextResponse.json({ ok: true });

@@ -7,11 +7,12 @@ import {
 } from "lucide-react";
 import { toast } from "@/components/Toaster";
 
-// Status pills use the colored-glass treatment so state reads instantly.
-const STATUS_PILL = {
-  Pending: "border-warn/30 bg-warn/10 text-warn",
-  Approved: "border-accent-2/30 bg-accent-2/10 text-accent-2",
-  "Revisions Requested": "border-danger/30 bg-danger/10 text-danger",
+// A colored dot plus a status label in the status color reads state instantly
+// without the generic filled-pill look.
+const STATUS = {
+  Pending: { dot: "bg-warn", text: "text-warn", label: "Pending review" },
+  Approved: { dot: "bg-accent-2", text: "text-accent-2", label: "Approved" },
+  "Revisions Requested": { dot: "bg-danger", text: "text-danger", label: "Changes requested" },
 };
 
 const assetHref = (v) =>
@@ -53,7 +54,7 @@ export default function DeliverableCard({ deliverable }) {
     }
     toast(
       action === "approve"
-        ? "Approved — the team has been notified."
+        ? "Approved. The team has been notified."
         : "Revision request sent to the team."
     );
     setChoice(null);
@@ -97,10 +98,16 @@ export default function DeliverableCard({ deliverable }) {
           </p>
           {current?.note && <p className="mt-1 text-sm text-ink-soft">{current.note}</p>}
         </div>
-        <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold ${STATUS_PILL[deliverable.status] || "border-line text-ink-soft"}`}>
-          {deliverable.status}
-          {deliverable.actioned_by ? ` · ${deliverable.actioned_by}` : ""}
-        </span>
+        {(() => {
+          const s = STATUS[deliverable.status];
+          return (
+            <span className={`inline-flex shrink-0 items-center gap-2 text-xs font-medium ${s?.text || "text-ink-soft"}`}>
+              <span className={`h-2 w-2 rounded-full ${s?.dot || "bg-ink-muted"}`} />
+              {s?.label || deliverable.status}
+              {deliverable.actioned_by ? <span className="text-ink-muted">· {deliverable.actioned_by}</span> : ""}
+            </span>
+          );
+        })()}
       </div>
 
       {/* The thing to review, as an obvious button. */}
@@ -136,7 +143,7 @@ export default function DeliverableCard({ deliverable }) {
           {choice === "approve" && (
             <div className="mt-3 rounded-lg border border-accent-2/30 bg-accent-2/5 p-3 text-sm">
               <p className="text-ink-soft">
-                Approving is final — it locks this deliverable and notifies the team.
+                Approving is final. It locks this deliverable and notifies the team.
               </p>
               <div className="mt-2.5 flex gap-2">
                 <button
@@ -156,7 +163,7 @@ export default function DeliverableCard({ deliverable }) {
           {choice === "revise" && (
             <div className="mt-3 rounded-lg border border-danger/30 bg-danger/5 p-3 text-sm">
               <label className="block text-ink-soft">
-                What should change? <span className="text-ink-muted">(required — the team sees this verbatim)</span>
+                What should change? <span className="text-ink-muted">(required; the team sees this verbatim)</span>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -197,7 +204,7 @@ export default function DeliverableCard({ deliverable }) {
                   <a href={assetHref(v)} target="_blank" rel="noreferrer" className="text-accent hover:underline">
                     {v.kind === "file" ? v.original_name || "document" : "link"}
                   </a>
-                  {v.note && <span className="truncate">— {v.note}</span>}
+                  {v.note && <span className="truncate">· {v.note}</span>}
                   {v.viewed_at && (
                     <span className="ml-auto flex items-center gap-1 text-ink-muted"><Eye size={11} /> viewed</span>
                   )}

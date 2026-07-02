@@ -38,7 +38,7 @@ const TONE = {
   none: { chip: "bg-bg-tertiary text-ink-muted", Icon: Minus },
 };
 
-const fmt = (v) => (v == null ? "—" : Number(v) % 1 === 0 ? String(v) : Number(v).toFixed(1));
+const fmt = (v) => (v == null ? "–" : Number(v) % 1 === 0 ? String(v) : Number(v).toFixed(1));
 
 export default function KpiGrid({ kpis }) {
   if (!kpis?.length) return null;

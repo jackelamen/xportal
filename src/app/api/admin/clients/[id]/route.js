@@ -104,7 +104,7 @@ export async function POST(request, { params }) {
       return new Response("Type the client's exact company name to confirm deletion.", { status: 400 });
     }
     await sql("DELETE FROM clients WHERE id = ?", [id]);
-    // No activity_log entry — it's client-scoped and would cascade away with the row.
+    // No activity_log entry - it's client-scoped and would cascade away with the row.
     return redirectBack(request, form);
   } else {
     return new Response("Unknown action", { status: 400 });

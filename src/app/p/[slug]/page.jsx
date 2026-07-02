@@ -22,7 +22,7 @@ export default async function BrandedLoginPage({ params }) {
       logoAlt={client.company_name}
       eyebrow={`Client portal · powered by xPortal`}
       headline="Your project, your progress, in one place."
-      blurb="Review deliverables, follow progress, and stay in sync with your team — all in real time."
+      blurb="Review deliverables, follow progress, and stay in sync with your team, all in real time."
     >
       {!client.logo_path && (
         <p

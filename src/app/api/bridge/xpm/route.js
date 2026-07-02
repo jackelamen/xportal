@@ -4,7 +4,7 @@ import { verifyBridgeSecret } from "@/lib/xpm-bridge";
 import { upsertKpis, replaceWorkingItems, appendDecisions } from "@/lib/project-import";
 
 // Inbound sync from xPM, authenticated by X-XPM-Bridge-Secret. Only top-level
-// status fields cross the boundary — granular xPM tasks never reach the portal.
+// status fields cross the boundary - granular xPM tasks never reach the portal.
 export async function POST(request) {
   if (!verifyBridgeSecret(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -160,7 +160,7 @@ async function linkSpace(body) {
 //   kpis: [{ name, target_value?, current_value?, unit?, direction? }] (upsert by name)
 //   working_items: ["..."] (replaces the active list)
 //   decisions: [{ decided_on?, summary, recorded_by? }] (appends, deduped by summary)
-// Shares its writers with the CSV importer — see lib/project-import.js.
+// Shares its writers with the CSV importer - see lib/project-import.js.
 async function syncHub(projectId, body) {
   await upsertKpis(projectId, body.kpis);
   await replaceWorkingItems(projectId, body.working_items);

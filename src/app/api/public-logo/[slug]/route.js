@@ -2,7 +2,7 @@ import fs from "node:fs";
 import { sql } from "@/lib/db";
 import { resolveUpload, contentTypeFor } from "@/lib/storage";
 
-// Logo for the branded login page — the one upload served pre-auth, looked up
+// Logo for the branded login page - the one upload served pre-auth, looked up
 // strictly via the client's slug so arbitrary paths can't be probed.
 export async function GET(request, { params }) {
   const { slug } = await params;

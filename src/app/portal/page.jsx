@@ -142,7 +142,7 @@ export default async function Home() {
         </section>
       ) : (
         <p className="mt-6 rounded-xl border border-line bg-bg-secondary p-5 text-sm text-ink-soft">
-          You're all caught up — nothing needs your attention right now.
+          You're all caught up. Nothing needs your attention right now.
         </p>
       )}
 
@@ -152,7 +152,7 @@ export default async function Home() {
       </div>
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         {projects.length === 0 && (
-          <p className="text-ink-soft">No active projects yet — your workspace is ready for kickoff.</p>
+          <p className="text-ink-soft">No active projects yet. Your workspace is ready for kickoff.</p>
         )}
         {projects.map((p) => {
           const phases = phasesByProject[p.id] || [];

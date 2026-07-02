@@ -42,7 +42,7 @@ export default function SchedulePage() {
       load();
       return;
     }
-    toast(`Booked "${topic.trim()}" — ${slot.slice(0, 16)}.`);
+    toast(`Booked "${topic.trim()}" for ${slot.slice(0, 16)}.`);
     setTopic("");
     load();
   }

@@ -6,7 +6,7 @@ import { parseProjectImport, summarizeImport } from "@/lib/csv";
 
 // Operator widget for importing a project from a section-keyed CSV (see
 // lib/csv.js). Previews counts/warnings client-side, then POSTs the raw text to
-// /api/admin/imports — which re-parses as the trust boundary.
+// /api/admin/imports - which re-parses as the trust boundary.
 export default function CsvImport({ mode, clientId, projectId }) {
   const [csv, setCsv] = useState("");
   const [fileName, setFileName] = useState("");
@@ -73,9 +73,9 @@ export default function CsvImport({ mode, clientId, projectId }) {
       {preview && (
         <div className="mt-3 rounded-lg border border-line bg-bg-tertiary p-3">
           <p className="text-ink-soft">
-            {mode === "create" ? "Will create project " : "Will import into this project — "}
+            {mode === "create" ? "Will create project " : "Will import into this project: "}
             {preview.project.title && <span className="font-medium text-ink">“{preview.project.title}” </span>}
-            {noTitle && <span className="text-danger">(no title — add a “project,title,…” row) </span>}
+            {noTitle && <span className="text-danger">(no title; add a “project,title,…” row) </span>}
             {mode === "create" && (preview.project.title || noTitle) ? "with " : ""}
             {summarizeImport(preview)}.
           </p>

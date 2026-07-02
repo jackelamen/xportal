@@ -14,7 +14,7 @@ export async function POST(request) {
   }
 
   // Email is globally unique across clients (primary_email) and client_users
-  // (email) — check up front so a duplicate returns a clear message instead of
+  // (email) - check up front so a duplicate returns a clear message instead of
   // an unhandled 500.
   const emailTaken =
     (await sql("SELECT 1 FROM clients WHERE lower(primary_email) = ? LIMIT 1", [email]))[0] ||
@@ -23,7 +23,7 @@ export async function POST(request) {
     return new Response(`A client or contact with the email ${email} already exists.`, { status: 409 });
   }
 
-  // Slug is unique — derive a base and add a numeric suffix on collision so
+  // Slug is unique - derive a base and add a numeric suffix on collision so
   // re-using a company name (e.g. two "Test" clients) doesn't error.
   const base = company.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
   let slug = base || null;

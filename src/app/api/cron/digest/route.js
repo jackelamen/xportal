@@ -22,7 +22,7 @@ export async function POST(request) {
 
     const sections = [];
     for (const p of projects) {
-      const lines = [`${p.title} — ${p.current_phase}, ${p.progress_percentage}% complete`];
+      const lines = [`${p.title}: ${p.current_phase}, ${p.progress_percentage}% complete`];
 
       const delivered = await sql(
         "SELECT title FROM deliverables_approvals WHERE project_id = ? AND submitted_at > (NOW() - INTERVAL '7 days')",
@@ -62,7 +62,7 @@ export async function POST(request) {
     );
     if (meetings.length) {
       sections.push(
-        `Upcoming meetings:\n${meetings.map((m) => `  ${String(m.starts_at).slice(0, 16)} — ${m.topic}`).join("\n")}`
+        `Upcoming meetings:\n${meetings.map((m) => `  ${String(m.starts_at).slice(0, 16)} · ${m.topic}`).join("\n")}`
       );
     }
 

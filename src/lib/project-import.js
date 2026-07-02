@@ -132,7 +132,7 @@ export async function addPeople(projectId, people) {
   }
 }
 
-// Append working items (importer semantics — unlike the bridge's replace), skipping
+// Append working items (importer semantics - unlike the bridge's replace), skipping
 // titles already active so a re-import doesn't duplicate them.
 export async function addWorkingItems(projectId, items) {
   if (!items?.length) return;

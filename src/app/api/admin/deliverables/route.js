@@ -3,7 +3,7 @@ import { requireOperator, redirectBack } from "@/lib/admin";
 import { logActivity, notifyClient } from "@/lib/activity";
 import { buildVersion } from "@/lib/deliverable-version";
 
-// Create a deliverable with its first version — uploaded document or link.
+// Create a deliverable with its first version - uploaded document or link.
 export async function POST(request) {
   const { error, operator } = await requireOperator();
   if (error) return error;

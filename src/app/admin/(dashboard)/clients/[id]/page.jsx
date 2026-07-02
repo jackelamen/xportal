@@ -55,7 +55,7 @@ export default async function AdminClientPage({ params, searchParams }) {
         <form action="/api/admin/preview" method="post">
           <input type="hidden" name="client_id" value={client.id} />
           <button
-            title="Open the client portal exactly as this client sees it — read-only"
+            title="Open the client portal exactly as this client sees it (read-only)"
             className="flex items-center gap-1.5 rounded-lg border border-line bg-bg-secondary px-3.5 py-2 text-sm font-medium text-ink-soft hover:border-accent-2 hover:text-accent-2"
           >
             <Eye size={14} /> Preview their portal
@@ -65,7 +65,7 @@ export default async function AdminClientPage({ params, searchParams }) {
 
       {client.archived_at && (
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm">
-          <span className="font-medium text-warn">This client is archived — they can&apos;t sign in to their portal.</span>
+          <span className="font-medium text-warn">This client is archived. They can&apos;t sign in to their portal.</span>
           <form action={`/api/admin/clients/${id}`} method="post">
             <input type="hidden" name="_action" value="unarchive" />
             <input type="hidden" name="_redirect" value={here} />
@@ -154,7 +154,7 @@ export default async function AdminClientPage({ params, searchParams }) {
               <details className="mt-2 rounded-xl border border-line bg-bg-secondary p-4">
                 <summary className="flex cursor-pointer items-center gap-1.5 text-sm font-medium text-ink-soft">
                   Import from CSV
-                  <InfoTip text="Create a whole project from one CSV — overview, phases & milestones, KPIs, links, people, working items, and decisions. Download the template to see the format." />
+                  <InfoTip text="Create a whole project from one CSV: overview, phases & milestones, KPIs, links, people, working items, and decisions. Download the template to see the format." />
                 </summary>
                 <div className="mt-3">
                   <CsvImport mode="create" clientId={id} />
@@ -163,7 +163,7 @@ export default async function AdminClientPage({ params, searchParams }) {
             </section>
 
             <section className="rounded-xl border border-warn/30 bg-bg-secondary p-5">
-              <h2 className="font-medium text-warn">Internal notes — never shown to the client</h2>
+              <h2 className="font-medium text-warn">Internal notes (never shown to the client)</h2>
               <ul className="mt-3 space-y-2">
                 {notes.length === 0 && <li className="py-2 text-sm text-ink-muted">No notes yet.</li>}
                 {notes.map((n) => (
@@ -282,7 +282,7 @@ export default async function AdminClientPage({ params, searchParams }) {
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
                   <div className="max-w-md">
                     <p className="text-sm font-medium text-ink">Archive this client</p>
-                    <p className="text-xs text-ink-muted">Hides them from the active list and blocks their portal sign-in. Reversible — all data is kept.</p>
+                    <p className="text-xs text-ink-muted">Hides them from the active list and blocks their portal sign-in. Reversible; all data is kept.</p>
                   </div>
                   <form action={`/api/admin/clients/${id}`} method="post">
                     <input type="hidden" name="_action" value="archive" />
@@ -295,7 +295,7 @@ export default async function AdminClientPage({ params, searchParams }) {
               <div className="mt-4">
                 <p className="text-sm font-medium text-ink">Delete permanently</p>
                 <p className="max-w-xl text-xs text-ink-muted">
-                  Removes this client and <span className="text-danger">everything under them</span> — projects, invoices, deliverables, messages, and documents. This can&apos;t be undone.
+                  Removes this client and <span className="text-danger">everything under them</span>: projects, invoices, deliverables, messages, and documents. This can&apos;t be undone.
                 </p>
                 <form action={`/api/admin/clients/${id}`} method="post" className="mt-3 flex flex-wrap items-end gap-3 text-sm">
                   <input type="hidden" name="_action" value="delete" />

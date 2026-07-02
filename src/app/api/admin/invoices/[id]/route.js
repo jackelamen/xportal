@@ -30,7 +30,7 @@ export async function POST(request, { params }) {
     await notifyClient(
       inv.client_id,
       `Dispute resolved on invoice ${inv.invoice_number}`,
-      `We've reviewed your dispute on invoice ${inv.invoice_number} (${inv.project_title}). The invoice is now active again — check the project thread for details.`
+      `We've reviewed your dispute on invoice ${inv.invoice_number} (${inv.project_title}). The invoice is now active again. Check the project thread for details.`
     );
   } else if (action === "mark_overdue") {
     if (inv.status !== "Unpaid") return new Response("Only unpaid invoices can be marked overdue", { status: 409 });

@@ -6,7 +6,7 @@ import { getClientSession } from "@/lib/auth";
 export async function POST(request, { params }) {
   const session = await getClientSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.preview) return NextResponse.json({ error: "Read-only preview — actions are disabled" }, { status: 403 });
+  if (session.preview) return NextResponse.json({ error: "Read-only preview. Actions are disabled" }, { status: 403 });
 
   const { id } = await params;
   const { read } = await request.json().catch(() => ({}));

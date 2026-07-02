@@ -77,7 +77,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
   const revisionCount = deliverables.filter((d) => d.status === "Revisions Requested").length;
   const disputeCount = invoices.filter((i) => i.status === "Disputed").length;
 
-  // Operators don't need manual read controls — opening the messages tab is reading.
+  // Operators don't need manual read controls - opening the messages tab is reading.
   if (tab === "messages" && unreadMessages > 0) {
     await sql(
       "UPDATE communication_threads SET operator_read = 1 WHERE project_id = ? AND sender_type = 'Client'", [id]
@@ -201,7 +201,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
                   {kpis.map((k) => (
                     <div key={k.id} className="flex flex-wrap items-center gap-3 px-3.5 py-2.5 text-sm">
                       <span className="w-40 font-semibold">{k.name}</span>
-                      <span className="font-data text-xs text-ink-muted">target {k.target_value ?? "—"}{k.unit || ""} ({k.direction})</span>
+                      <span className="font-data text-xs text-ink-muted">target {k.target_value ?? "–"}{k.unit || ""} ({k.direction})</span>
                       <form action={hub} method="post" className="ml-auto flex items-center gap-2">
                         <input type="hidden" name="_action" value="update_kpi" />
                         <input type="hidden" name="kpi_id" value={k.id} />
@@ -267,7 +267,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
                   <ul className="mt-2 space-y-1 text-sm">
                     {people.map((p) => (
                       <li key={p.id} className="flex items-center gap-2">
-                        <span>{p.name} <span className="text-ink-muted">— {p.role || p.side}</span></span>
+                        <span>{p.name} <span className="text-ink-muted">· {p.role || p.side}</span></span>
                         <form action={hub} method="post">
                           <input type="hidden" name="_action" value="delete_person" />
                           <input type="hidden" name="person_id" value={p.id} />
@@ -313,7 +313,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
                   <span className="font-semibold">{phaseLabel(m.phaseNo, m.title)}</span>
                   <span className="font-data text-xs text-ink-muted">{m.kind}</span>
                   <span className="font-data text-xs text-ink-soft">
-                    {m.starts_on || "—"}{m.ends_on ? ` → ${m.ends_on}` : ""}
+                    {m.starts_on || "–"}{m.ends_on ? ` → ${m.ends_on}` : ""}
                   </span>
                   <form action={post()} method="post" className="ml-auto flex items-center gap-2">
                     <input type="hidden" name="_action" value="set_milestone_status" />
@@ -466,7 +466,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
               <ul className="mt-2 space-y-1 text-sm">
                 {fileRequests.map((fr) => (
                   <li key={fr.id} className="text-ink-soft">
-                    {fr.title} —{" "}
+                    {fr.title}:{" "}
                     <span className={fr.status === "open" ? "text-warn" : "text-accent-2"}>{fr.status}</span>
                     {fr.fulfilled_at && <span className="text-ink-muted"> ({fr.fulfilled_at.slice(0, 10)})</span>}
                   </li>
@@ -652,7 +652,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
 
         {tab === "internal" && (
           <section className="rounded-xl border border-warn/30 bg-bg-secondary p-5">
-            <h2 className="font-medium text-warn">Internal notes — never shown to the client</h2>
+            <h2 className="font-medium text-warn">Internal notes (never shown to the client)</h2>
               <ul className="mt-3 space-y-2">
                 {notes.length === 0 && <li className="py-2 text-sm text-ink-muted">No notes yet.</li>}
                 {notes.map((n) => (

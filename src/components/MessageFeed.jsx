@@ -85,7 +85,7 @@ export default function MessageFeed({ projectId, invoiceId = null, messages }) {
       <div className="space-y-4">
         {messages.length === 0 && (
           <p className="rounded-xl border border-line bg-bg-secondary p-5 text-sm text-ink-soft">
-            No messages yet — anything you send here goes straight to the project team.
+            No messages yet. Anything you send here goes straight to the project team.
           </p>
         )}
         {messages.map((m) => {

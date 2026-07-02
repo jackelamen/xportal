@@ -8,7 +8,7 @@ import {
 
 const ICONS = { LayoutDashboard, Receipt, CalendarClock, CalendarDays, History };
 
-// Client nav with an active state — the current page is always visible.
+// Client nav with an active state - the current page is always visible.
 export default function PortalNav({ items, unread, variant = "sidebar" }) {
   const pathname = usePathname();
   const isActive = (href) =>

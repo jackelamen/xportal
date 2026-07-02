@@ -9,7 +9,7 @@ import { logActivity, notifyOperators } from "@/lib/activity";
 export async function POST(request, { params }) {
   const session = await getClientSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.preview) return NextResponse.json({ error: "Read-only preview — actions are disabled" }, { status: 403 });
+  if (session.preview) return NextResponse.json({ error: "Read-only preview. Actions are disabled" }, { status: 403 });
   const { user, client } = session;
 
   const { id } = await params;
@@ -26,7 +26,7 @@ export async function POST(request, { params }) {
   ))[0];
   if (!inv) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (inv.status === "Paid") {
-    return NextResponse.json({ error: "Paid invoices cannot be disputed here — message the team instead" }, { status: 409 });
+    return NextResponse.json({ error: "Paid invoices cannot be disputed here. Message the team instead" }, { status: 409 });
   }
   if (inv.status === "Disputed") {
     return NextResponse.json({ error: "This invoice is already under dispute" }, { status: 409 });

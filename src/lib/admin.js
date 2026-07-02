@@ -23,7 +23,7 @@ export function redirectBack(request, form) {
 const UNIQUE_MESSAGES = {
   client_users_email_key: "A contact with that email already exists.",
   clients_primary_email_key: "A client with that email already exists.",
-  clients_slug_key: "That login slug is already taken — pick another.",
+  clients_slug_key: "That login slug is already taken. Pick another.",
   clients_xpm_space_id_key: "That xPM space is already linked to a client.",
   invoices_invoice_number_key: "That invoice number is already in use.",
   portal_projects_xpm_project_id_key: "That xPM project is already linked to a portal project.",

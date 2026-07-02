@@ -7,7 +7,7 @@ import { logActivity, notifyOperators } from "@/lib/activity";
 export async function POST(request) {
   const session = await getClientSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.preview) return NextResponse.json({ error: "Read-only preview — actions are disabled" }, { status: 403 });
+  if (session.preview) return NextResponse.json({ error: "Read-only preview. Actions are disabled" }, { status: 403 });
   const { user, client } = session;
 
   const { project_id, invoice_id, message_content } = await request.json().catch(() => ({}));

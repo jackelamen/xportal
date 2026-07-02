@@ -8,7 +8,7 @@ export default function AdminLoginPage() {
       tile="emerald"
       eyebrow="Operator console"
       headline="Run every client engagement from one place."
-      blurb="Status, deliverables, billing, and messages for every client — updated the moment you touch them."
+      blurb="Status, deliverables, billing, and messages for every client, updated the moment you touch them."
     >
       <div className="mb-8">
         <Logo size={30} tile="emerald" sub="Operator console" />

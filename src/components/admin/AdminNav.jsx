@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, Settings } from "lucide-react";
 
 // Dark sidebar: caps labels, emerald active state with a right-edge accent
-// tab — mirrors the client portal's PortalNav, but accent-2 (emerald) instead
+// tab - mirrors the client portal's PortalNav, but accent-2 (emerald) instead
 // of accent (indigo), since admin keeps its own identity color.
 function NavItem({ href, icon: Icon, label, badge, exact = false }) {
   const pathname = usePathname();

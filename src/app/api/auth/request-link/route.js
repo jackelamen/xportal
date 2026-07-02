@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { findUserByEmail, createLoginToken } from "@/lib/auth";
 import { sendEmail } from "@/lib/mailer";
 
-// Clients only — operators sign in with their xPM password at /admin/login.
+// Clients only - operators sign in with their xPM password at /admin/login.
 export async function POST(request) {
   const { email } = await request.json().catch(() => ({}));
   const userType = "client";

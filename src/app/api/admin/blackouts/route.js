@@ -6,9 +6,9 @@ const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 const DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 // Operator availability. _action:
-//   add        — block a date, whole-day or a time range
-//   delete     — remove a block
-//   set_hours  — save the default weekly bookable window (Calendly-style)
+//   add        - block a date, whole-day or a time range
+//   delete     - remove a block
+//   set_hours  - save the default weekly bookable window (Calendly-style)
 export async function POST(request) {
   const { error } = await requireOperator();
   if (error) return error;

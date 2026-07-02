@@ -64,7 +64,7 @@ export default async function ProjectPage({ params, searchParams }) {
   );
 
   // Attention counts drive the tab badges. Messages stay unread until the
-  // client marks them read (or replies) — no silent auto-read on page visit.
+  // client marks them read (or replies) - no silent auto-read on page visit.
   const unreadCount = messages.filter((m) => m.sender_type === "Internal_Operator" && !m.is_read).length;
   const pendingCount = deliverables.filter((d) => d.status === "Pending").length;
   const requestCount = fileRequests.length;
@@ -83,16 +83,17 @@ export default async function ProjectPage({ params, searchParams }) {
       {/* Hero: status + serif project title */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {milestones.some((m) => m.kind === "phase" && m.status === "blocked") ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-danger/12 px-2.5 py-1 text-[11px] font-semibold text-danger">
-                <span className="h-1.5 w-1.5 rounded-full bg-danger" /> NEEDS ATTENTION
+              <span className="inline-flex items-center gap-2 text-[13px] font-medium text-danger">
+                <span className="h-2 w-2 rounded-full bg-danger ring-4 ring-danger/15" /> Needs attention
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-2/12 px-2.5 py-1 text-[11px] font-semibold text-accent-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-accent-2" /> ON TRACK
+              <span className="inline-flex items-center gap-2 text-[13px] font-medium text-accent-2">
+                <span className="h-2 w-2 rounded-full bg-accent-2 ring-4 ring-accent-2/15" /> On track
               </span>
             )}
+            <span className="text-ink-muted/40">·</span>
             <span className="font-mono text-[11px] text-ink-muted">Updated {project.updated_at?.slice(0, 10)}</span>
           </div>
           <h1 className="mt-2 text-[2.9rem] leading-[1.02] text-ink">{project.title}</h1>
@@ -178,7 +179,7 @@ export default async function ProjectPage({ params, searchParams }) {
                         {people.map((p) => (
                           <li key={p.id} className="text-ink">
                             {p.name}
-                            <span className="text-ink-muted"> — {p.role || (p.side === "operator" ? "Our team" : "Your team")}</span>
+                            <span className="text-ink-muted"> · {p.role || (p.side === "operator" ? "Our team" : "Your team")}</span>
                           </li>
                         ))}
                       </ul>
@@ -207,7 +208,7 @@ export default async function ProjectPage({ params, searchParams }) {
               <section className="rounded-2xl border border-line bg-bg-secondary p-5 shadow-[0_1px_2px_rgb(16_16_29_/_0.04)]">
                 <h2 className="flex items-center gap-2 text-[15px]">
                   <Gavel size={15} className="text-accent" /> Decision log
-                  <InfoTip text="A running record of the key decisions made on this project — including your deliverable approvals — so there's never a question about what was agreed and when." />
+                  <InfoTip text="A running record of the key decisions made on this project, including your deliverable approvals, so there's never a question about what was agreed and when." />
                 </h2>
                 <ul className="mt-4 space-y-4 text-[13.5px]">
                   {decisions.length === 0 && <li className="text-ink-muted">No recorded decisions yet.</li>}

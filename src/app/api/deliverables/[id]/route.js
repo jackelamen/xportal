@@ -5,11 +5,11 @@ import { notifyXpm } from "@/lib/xpm-bridge";
 import { logActivity, notifyOperators } from "@/lib/activity";
 
 // Approve or request revisions. Ownership is enforced by joining through to
-// the session's client_id — clients can never action another entity's rows.
+// the session's client_id - clients can never action another entity's rows.
 export async function POST(request, { params }) {
   const session = await getClientSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.preview) return NextResponse.json({ error: "Read-only preview — actions are disabled" }, { status: 403 });
+  if (session.preview) return NextResponse.json({ error: "Read-only preview. Actions are disabled" }, { status: 403 });
   const { user, client } = session;
 
   const { id } = await params;

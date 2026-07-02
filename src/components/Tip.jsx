@@ -2,8 +2,8 @@ import { Info } from "lucide-react";
 
 // Dependency-free tooltips, server-component friendly (pure CSS hover/focus).
 //
-//   <Tip text="What this does"><button>…</button></Tip>   — wraps any element
-//   <InfoTip text="What this section means" />             — small ⓘ next to headings/labels
+//   <Tip text="What this does"><button>…</button></Tip>   - wraps any element
+//   <InfoTip text="What this section means" />             - small ⓘ next to headings/labels
 
 export function Tip({ text, children, side = "top" }) {
   const pos =

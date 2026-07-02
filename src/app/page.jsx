@@ -8,7 +8,7 @@ export default function LoginPage() {
       tile="indigo"
       eyebrow="Client portal"
       headline="Your project, your progress, in one place."
-      blurb="Review deliverables, follow progress, and stay in sync with your team — all in real time."
+      blurb="Review deliverables, follow progress, and stay in sync with your team, all in real time."
     >
       <div className="mb-8">
         <Logo size={30} sub="Client portal" />

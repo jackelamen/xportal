@@ -1,7 +1,7 @@
 import { LogoMark } from "./Logo";
 
 // Shared split-panel login shell: a dark brand panel (always-dark regardless
-// of site theme — wrapped in a locally-scoped "dark" class so bg/ink tokens
+// of site theme - wrapped in a locally-scoped "dark" class so bg/ink tokens
 // resolve to their dark values) plus a form panel on the right. Used by the
 // operator, root client, and per-client-branded sign-in pages.
 export default function LoginShell({ tile = "indigo", eyebrow, headline, blurb, logoSrc, logoAlt, accentColor, children }) {

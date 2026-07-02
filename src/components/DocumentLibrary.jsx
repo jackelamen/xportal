@@ -43,7 +43,7 @@ export default function DocumentLibrary({ projectId, documents, fileRequests }) 
       toast.error((await res.json()).error || "Upload failed");
       return;
     }
-    toast(fileRequestId ? "Thanks — file request fulfilled." : "Document uploaded.");
+    toast(fileRequestId ? "File request fulfilled." : "Document uploaded.");
     setTitle("");
     if (input) input.value = "";
     router.refresh();

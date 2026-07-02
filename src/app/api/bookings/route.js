@@ -20,7 +20,7 @@ export async function GET(request) {
 export async function POST(request) {
   const session = await getClientSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.preview) return NextResponse.json({ error: "Read-only preview — actions are disabled" }, { status: 403 });
+  if (session.preview) return NextResponse.json({ error: "Read-only preview. Actions are disabled" }, { status: 403 });
   const { user, client } = session;
 
   const { starts_at, topic, duration_minutes } = await request.json().catch(() => ({}));
@@ -47,7 +47,7 @@ export async function POST(request) {
   });
   await notifyOperators(
     `[${client.company_name}] Meeting booked`,
-    `${user.name} booked "${topic.trim()}" — ${starts_at}, ${duration} minutes.`
+    `${user.name} booked "${topic.trim()}" for ${starts_at}, ${duration} minutes.`
   );
   await notifyXpm("meeting.booked", { client_id: client.id, starts_at, duration_minutes: duration, topic: topic.trim() });
   return NextResponse.json({ ok: true, id, starts_at, duration_minutes: duration });

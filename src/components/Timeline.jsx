@@ -15,8 +15,8 @@ const fmtDate = (t) => new Date(t).toLocaleDateString("en-US", { month: "short",
 
 // Fixed widths keep the track column's coordinate space identical to the
 // Today-line overlay and the ruler, so nothing drifts out of alignment.
-const LABEL_W = 176; // px — phase name + date range column
-const CHART_MIN_W = 560; // px — track never crushes below this; scrolls instead
+const LABEL_W = 176; // px - phase name + date range column
+const CHART_MIN_W = 560; // px - track never crushes below this; scrolls instead
 
 const BAR = {
   done: "bg-accent-2/70",
@@ -82,7 +82,7 @@ export default function Timeline({ milestones, today = Date.now() }) {
 
   return (
     <div className="select-none">
-      {/* Legend + milestone toggle — explains the visual language up front. */}
+      {/* Legend + milestone toggle - explains the visual language up front. */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-ink-muted">
           {LEGEND.map((l) => (
@@ -159,7 +159,7 @@ export default function Timeline({ milestones, today = Date.now() }) {
                     <div
                       className={`absolute top-1/2 h-6 -translate-y-1/2 overflow-hidden rounded-md ${BAR[p.status] || BAR.upcoming}`}
                       style={{ left: `${left}%`, width: `${width}%` }}
-                      title={`${phaseLabel(p.phaseNo, p.title)} — ${p.status}`}
+                      title={`${phaseLabel(p.phaseNo, p.title)} · ${p.status}`}
                     >
                       {p.status === "active" && <div className="absolute inset-0" style={activeStripes} />}
                     </div>

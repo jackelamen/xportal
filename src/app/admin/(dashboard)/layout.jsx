@@ -39,7 +39,7 @@ export default async function AdminLayout({ children }) {
         </Link>
       </header>
 
-      {/* Desktop sidebar: always-dark surface, pinned to the viewport edge — mirrors PortalLayout. */}
+      {/* Desktop sidebar: always-dark surface, pinned to the viewport edge - mirrors PortalLayout. */}
       <aside className="hidden w-[250px] shrink-0 flex-col bg-[#0b0d13] text-white md:sticky md:top-0 md:flex md:h-screen">
         <div className="px-5 py-5">
           <Link href="/admin" className="flex items-center gap-2.5">

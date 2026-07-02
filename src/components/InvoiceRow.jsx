@@ -30,7 +30,7 @@ export default function InvoiceRow({ invoice }) {
       toast.error((await res.json()).error || "Could not submit dispute");
       return;
     }
-    toast("Dispute submitted — the team will follow up with you.");
+    toast("Dispute submitted. The team will follow up with you.");
     setDisputing(false);
     router.refresh();
   }
@@ -65,7 +65,7 @@ export default function InvoiceRow({ invoice }) {
       </div>
       {invoice.status === "Disputed" && invoice.dispute_reason && (
         <p className="bg-dispute/5 px-4 pb-3 text-xs text-dispute">
-          Under dispute: {invoice.dispute_reason} — escalation is paused while we review.
+          Under dispute: {invoice.dispute_reason}. Escalation is paused while we review.
         </p>
       )}
       {disputing && (

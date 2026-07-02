@@ -31,11 +31,11 @@ export default async function PortalLayout({ children }) {
 
   return (
     // Per-client branding: accent color cascades into every bg-accent/text-accent
-    // utility — including inside the always-dark sidebar.
+    // utility - including inside the always-dark sidebar.
     <div style={client.accent_color ? { "--accent": client.accent_color } : undefined}>
       {session.preview && (
         <div className="sticky top-0 z-40 flex items-center justify-center gap-3 bg-warn px-4 py-2 text-sm font-medium text-white">
-          Previewing as {client.company_name} ({user.name}) — read-only, actions are disabled
+          Previewing as {client.company_name} ({user.name}). Read-only, actions are disabled
           <form action="/api/admin/preview" method="post">
             <input type="hidden" name="_action" value="exit" />
             <button className="rounded-md bg-white/20 px-2.5 py-1 text-xs font-semibold hover:bg-white/30">
@@ -86,7 +86,7 @@ export default async function PortalLayout({ children }) {
   );
 }
 
-// xPortal identity on top; the client's identity right under it — their
+// xPortal identity on top; the client's identity right under it - their
 // uploaded logo when they have one, their name otherwise. Rendered on the
 // dark sidebar surface.
 function BrandMark({ client, compact = false }) {

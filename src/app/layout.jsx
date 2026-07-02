@@ -3,12 +3,12 @@ import PwaRegister from "@/components/PwaRegister";
 import "./globals.css";
 
 // Type strategy:
-//  - Instrument Serif — reserved for the one editorial moment per page: the
+//  - Instrument Serif - reserved for the one editorial moment per page: the
 //    page-title hero (h1) and big KPI numbers. High-contrast and elegant; a
 //    single restrained serif note against an otherwise-sans system.
-//  - Geist — everything else: section headings, body, UI, labels, buttons.
-//  - Geist Mono — data: dates, IDs, units, eyebrows.
-//  - Space Grotesk — the xPortal wordmark only.
+//  - Geist - everything else: section headings, body, UI, labels, buttons.
+//  - Geist Mono - data: dates, IDs, units, eyebrows.
+//  - Space Grotesk - the xPortal wordmark only.
 const sans = Geist({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -35,7 +35,7 @@ const serif = Instrument_Serif({
 });
 
 export const metadata = {
-  title: "xPortal — Client Workspace",
+  title: "xPortal · Client Workspace",
   description: "Project status, deliverables, files, and billing in one place.",
   applicationName: "xPortal",
   manifest: "/manifest.webmanifest",

@@ -3,7 +3,7 @@ import { findUserByEmail, createSession, setSessionCookie } from "@/lib/auth";
 
 // Operator sign-in with the shared xPM account: credentials are verified by
 // Supabase Auth (same project as xPM), then gated by the operator_users
-// allowlist — a valid xPM login alone does not grant operator access.
+// allowlist - a valid xPM login alone does not grant operator access.
 export async function POST(request) {
   const { email, password } = await request.json().catch(() => ({}));
   if (typeof email !== "string" || typeof password !== "string" || !email || !password) {

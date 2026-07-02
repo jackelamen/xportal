@@ -16,7 +16,7 @@ export default function LoginForm({ kind = "client", accent }) {
       body: JSON.stringify({ email, kind }),
     });
     setBusy(false);
-    setSent(true); // always confirm — never reveal whether the email exists
+    setSent(true); // always confirm - never reveal whether the email exists
   }
 
   if (sent) {
@@ -47,7 +47,7 @@ export default function LoginForm({ kind = "client", accent }) {
       >
         {busy ? "Sending…" : "Email me a sign-in link"}
       </button>
-      <p className="text-xs text-ink-soft">No password — we'll email you a link that signs you in for 15 minutes.</p>
+      <p className="text-xs text-ink-soft">No password. We'll email you a link that signs you in for 15 minutes.</p>
     </form>
   );
 }

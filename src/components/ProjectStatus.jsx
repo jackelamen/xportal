@@ -41,7 +41,7 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
               <div
                 key={ph.id}
                 className={`relative flex-1 border-r border-line last:border-r-0 ${SEG[ph.status] || SEG.upcoming}`}
-                title={`${phaseLabel(i, ph.title)} — ${ph.status}`}
+                title={`${phaseLabel(i, ph.title)} · ${ph.status}`}
               >
                 {ph.status === "active" && <div className="absolute inset-0" style={stripes} />}
               </div>
@@ -87,7 +87,7 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
             <p className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-ink-soft">
               {blocked && (
                 <span className="font-medium text-danger">
-                  {phaseLabel(blockedIdx, blocked.title)} is blocked — needs attention
+                  {phaseLabel(blockedIdx, blocked.title)} is blocked and needs attention
                 </span>
               )}
               {next && (

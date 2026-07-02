@@ -25,7 +25,7 @@ export async function POST(request) {
 
   const data = parseProjectImport(body.csv);
   if (clientId && !data.project.title) {
-    data.errors.push("A project title is required to create a project — add a “project,title,…” row.");
+    data.errors.push("A project title is required to create a project. Add a “project,title,…” row.");
   }
   if (data.errors.length) {
     return NextResponse.json(

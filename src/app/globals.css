@@ -3,7 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* Theme tokens resolve through plain CSS vars so .dark can swap the palette.
-   Light is the default: bold editorial — true white canvas, near-black ink,
+   Light is the default: bold editorial - true white canvas, near-black ink,
    electric indigo used decisively. */
 @theme inline {
   --font-sans: var(--font-sans), system-ui, -apple-system, sans-serif;
@@ -71,7 +71,7 @@ button, a, summary, input, select, textarea {
   transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
 }
 
-/* Solid buttons dim slightly on hover — one rule instead of per-button utilities. */
+/* Solid buttons dim slightly on hover - one rule instead of per-button utilities. */
 button.bg-accent:hover:not(:disabled),
 button.bg-accent-2:hover:not(:disabled),
 button.bg-danger:hover:not(:disabled),
@@ -88,7 +88,7 @@ button.bg-warn:hover:not(:disabled) {
 
 /* One editorial serif moment per page: the page-title hero (h1) is Instrument
    Serif, kept at its natural 400 weight and large. Section/card headings
-   (h2, h3) stay on Geist — the restraint of a single serif note against an
+   (h2, h3) stay on Geist - the restraint of a single serif note against an
    otherwise-sans system is what carries the editorial, high-end feel. */
 h1 {
   font-family: var(--font-serif), Georgia, serif;
@@ -109,7 +109,7 @@ h2, h3 {
   box-shadow: var(--shadow-card);
 }
 
-/* Solid buttons are tactile — inner highlight + grounded shadow, and they
+/* Solid buttons are tactile - inner highlight + grounded shadow, and they
    lift a hair on hover. */
 button.bg-accent, button.bg-accent-2, button.bg-danger, button.bg-warn {
   box-shadow: var(--shadow-button);
@@ -124,7 +124,7 @@ button.bg-accent-2:active:not(:disabled) {
 }
 button { transition-property: background-color, border-color, color, opacity, transform, box-shadow; }
 
-/* A whisper of grain over everything — texture is what separates "rendered"
+/* A whisper of grain over everything - texture is what separates "rendered"
    from "printed". Imperceptible as an effect, felt as quality. */
 body::before {
   content: "";
