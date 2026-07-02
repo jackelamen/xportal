@@ -2,56 +2,39 @@
 name: xPortal
 description: White-label client portal for agencies — project status, deliverables, billing, and communication in one branded workspace.
 colors:
-  # Light theme (default) — bold editorial: true white canvas, near-black ink,
-  # electric indigo used decisively. Dark values noted in prose; the .dark
-  # class swaps the full palette via CSS vars in globals.css.
-  canvas: "#ffffff"
-  surface: "#f8f8fb"
-  surface-raised: "#efeff4"
-  accent-indigo: "#5b48ee"
-  accent-emerald: "#059669"
+  # Light theme (default). Dark values are the .dark override — see prose.
+  # Both live as CSS custom properties in globals.css; never hardcode hex.
+  bg-primary: "#f5f5f9"
+  bg-secondary: "#ffffff"
+  bg-tertiary: "#efeff5"
+  accent: "#5b48ee"      # indigo — client portal primary, per-client overridable
+  accent-2: "#059669"    # emerald — admin console primary, confirmation/success
   ink: "#16161d"
   ink-soft: "#4d4d59"
   ink-muted: "#6e6e7a"
-  line: "#e4e4ec"
-  state-warning: "#b45309"
-  state-error: "#be123c"
-  state-dispute: "#7e22ce"
+  line: "#e5e5ee"
+  warn: "#b45309"
+  danger: "#be123c"
+  dispute: "#7e22ce"
 typography:
-  headline:
-    fontFamily: "Hanken Grotesk, system-ui, sans-serif"
-    fontSize: "1.25rem"
-    fontWeight: 600
-    lineHeight: 1.3
-    letterSpacing: "normal"
-  title:
-    fontFamily: "Hanken Grotesk, system-ui, sans-serif"
-    fontSize: "1rem"
-    fontWeight: 500
-    lineHeight: 1.4
-    letterSpacing: "normal"
-  body:
-    fontFamily: "Hanken Grotesk, system-ui, sans-serif"
-    fontSize: "0.875rem"
+  serif:
+    fontFamily: "Instrument Serif, Georgia, serif"
     fontWeight: 400
-    lineHeight: 1.5
-    letterSpacing: "normal"
-  label:
-    fontFamily: "Hanken Grotesk, system-ui, sans-serif"
-    fontSize: "0.75rem"
-    fontWeight: 500
-    lineHeight: 1.4
-    letterSpacing: "normal"
-  micro:
-    fontFamily: "Hanken Grotesk, system-ui, sans-serif"
-    fontSize: "0.6875rem"
-    fontWeight: 400
-    lineHeight: 1.4
-    letterSpacing: "normal"
+    usage: "h1 page-title hero + big KPI numbers only — one editorial moment per page"
+  sans:
+    fontFamily: "Geist, system-ui, sans-serif"
+    usage: "everything else — h2/h3, body, UI, labels, buttons"
+  mono:
+    fontFamily: "Geist Mono, ui-monospace, monospace"
+    usage: "data — dates, IDs, units, caps eyebrow labels"
+  display:
+    fontFamily: "Space Grotesk, system-ui, sans-serif"
+    usage: "the xPortal wordmark only"
 rounded:
   sm: "6px"
   md: "8px"
   lg: "12px"
+  xl: "16px"
   full: "9999px"
 spacing:
   xs: "4px"
@@ -59,47 +42,48 @@ spacing:
   md: "16px"
   lg: "20px"
   xl: "32px"
+shadow:
+  card: "0 1px 2px rgb(22 22 29 / 0.04), 0 12px 32px -16px rgb(22 22 29 / 0.14)"
+  card-dark: "none — borders carry the separation in dark mode"
+  button: "inset 0 1px 0 rgb(255 255 255 / 0.16), 0 1px 2px rgb(22 22 29 / 0.24)"
 components:
-  button-primary:
-    backgroundColor: "{colors.accent-emerald}"
+  button-primary-admin:
+    backgroundColor: "{colors.accent-2}"
     textColor: "#ffffff"
-    rounded: "{rounded.md}"
+    rounded: "{rounded.lg}"
     padding: "8px 16px"
-  button-primary-hover:
-    backgroundColor: "{colors.accent-emerald}"
+  button-primary-client:
+    backgroundColor: "{colors.accent}"
+    textColor: "#ffffff"
+    rounded: "{rounded.lg}"
+    padding: "8px 16px"
   button-ghost:
     backgroundColor: "transparent"
     textColor: "{colors.ink-soft}"
-    rounded: "{rounded.md}"
+    rounded: "{rounded.lg}"
     padding: "8px 16px"
-  button-ghost-hover:
-    backgroundColor: "{colors.surface-raised}"
-    textColor: "{colors.ink}"
   button-destructive:
-    backgroundColor: "{colors.state-error-strong}"
+    backgroundColor: "{colors.danger}"
     textColor: "#ffffff"
-    rounded: "{rounded.md}"
+    rounded: "{rounded.lg}"
     padding: "8px 16px"
   input:
-    backgroundColor: "{colors.surface-raised}"
+    backgroundColor: "{colors.bg-tertiary}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.md}"
-    padding: "8px 12px"
-  input-focus:
-    backgroundColor: "{colors.surface-raised}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.md}"
+    rounded: "{rounded.lg}"
     padding: "8px 12px"
   card:
-    backgroundColor: "{colors.surface}"
-    rounded: "{rounded.lg}"
-    padding: "16px 20px"
+    backgroundColor: "{colors.bg-secondary}"
+    rounded: "{rounded.xl}"
+    padding: "20px 24px"
+    shadow: "{shadow.card}"
   kpi-card:
-    backgroundColor: "{colors.surface-raised}"
-    rounded: "{rounded.md}"
-    padding: "12px"
+    backgroundColor: "{colors.bg-secondary}"
+    rounded: "{rounded.lg}"
+    padding: "16px"
+    shadow: "{shadow.card}"
   chip:
-    backgroundColor: "transparent"
+    backgroundColor: "tinted (color/10-14%)"
     rounded: "{rounded.full}"
     padding: "2px 8px"
 ---
@@ -108,148 +92,253 @@ components:
 
 ## 1. Overview
 
-**Creative North Star: "The Mission Control Room"**
+xPortal is two apps under one brand, split by who's looking:
 
-xPortal is built on the premise that every screen is a dashboard of consequence. The operator is in command; the client is always informed. Information density is deliberate — not sparse for the sake of breathing room, not cluttered for the sake of completeness, but precisely calibrated to what each user needs at this moment. Status reads at a glance. Actions are never ambiguous. The system disappears into the task.
+- **Admin console** (`/admin/*`) — the operator's tool. Light canvas, **emerald**
+  (`accent-2`) as the primary interactive color, dense information, no
+  editorial flourish. It's the cockpit.
+- **Client portal** (`/portal/*`) — what clients see. Light canvas, an
+  **always-dark sidebar**, **indigo** (`accent`, per-client overridable) as
+  the primary color, and one deliberate serif moment per page. It's the
+  presentation.
 
-The palette is Void-dark: a near-black with a faint blue tint (`#0b0f19`) that reads as depth, not darkness. Surfaces lift in discrete tonal steps — Secondary (`#111827`) floats above Void, Raised (`#1f2937`) above Secondary — creating a layered depth that feels structural, not decorative. Two accent colors carry deliberate semantic weight: Electric Blue for interactive state and navigation focus; Emerald for confirmation, progress, and success. They are never decorative. They are signal.
+Both surfaces share the same token system (colors, shadows, radii) so they
+never diverge accidentally — only the *role* each token plays changes.
 
-This system explicitly rejects: generic SaaS dashboard aesthetics (Asana/Jira flatness, no identity); cookie-cutter agency presentation (warm cream, big serif heroes, stock-photo softness); startup-landing-page decoration (gradient text, glassmorphism, hero metrics for their own sake); and corporate intranet density (grey, bureaucratic, premium-absent). xPortal should feel like the tool was made specifically for professionals who run or receive high-stakes project work — not a template someone installed.
+**Creative point of view:** precise, editorial, quietly expensive. Not a
+generic SaaS dashboard (Asana/Jira flatness), not a startup-landing-page
+(gradients, glassmorphism), not a brochure (stock photography, decorative
+serif everywhere). One serif headline, one dark sidebar, soft real shadows,
+mono data — restraint is the signal, not decoration.
 
-**Key Characteristics:**
-- Void-dark base with structural tonal layering — depth comes from surface steps, not shadows
-- Two-accent semantic vocabulary: blue = interactive/navigation, emerald = progress/success/confirmation
-- Information-first layout: status is always visible without scrolling
-- Flat-by-default elevation — borders and tonal backgrounds carry structure, not box-shadows
-- System font stack: no display font, zero ego, full legibility at density
-- Per-client branding via CSS custom property override — accent color cascades into every surface that carries brand signal
+**Key characteristics:**
+- Light canvas by default; full dark-mode palette via the `.dark` class
+  (client sidebar is dark *regardless* of theme — see Navigation).
+- Two-role accent vocabulary: indigo = client-portal primary / notification
+  badges everywhere; emerald = admin-console primary / success-confirmation
+  everywhere.
+- One restrained serif moment per page (page-title hero, KPI numbers) —
+  never a section heading, never body text.
+- Soft, layered card shadow (not flat) in light mode; borders alone carry
+  separation in dark mode.
+- Per-client branding via CSS custom property override — `accent` cascades
+  into every surface that carries brand signal, on the client side only.
 
-## 2. Colors: The Void Palette
+## 2. Colors
 
-A deep, tinted-dark palette where light carries information — the two accent colors are the brightest things on any screen, which makes them reliable signals.
+All colors are CSS custom properties in `src/app/globals.css`, consumed via
+Tailwind utilities (`bg-accent`, `text-ink-soft`, `border-line`, and opacity
+variants like `bg-accent-2/12`). **Never hardcode a hex value in a component**
+— it silently breaks dark mode and per-client branding.
 
-### Primary
-- **Electric Blue** (`#3b82f6`): Interactive accent. Navigation active state, links, focus indicators, unread badges, version labels. Never used for decoration or background fill.
-
-### Secondary
-- **Confirmation Emerald** (`#10b981`): Progress and success accent. Primary action buttons ("Approve", "Save branding", "Create"), progress bars, KPI-good state, milestone completion. Signals forward motion and positive confirmation.
-
-### Tertiary
-- **Caution Amber** (`#fbbf24`): Warning state. Stale review chips, file request badges, "waiting on you" indicators. Uses tinted backgrounds (`amber-400/15`) rather than solid fill.
-- **Alert Rose** (`#f87171` / `#ef4444`): Error and destructive state. Revision requests, invoice disputes, destructive actions, "never active" client chips.
-
-### Neutral
-- **Void** (`#0b0f19`): Page background. The darkest layer — canvas for everything above it.
-- **Surface** (`#111827`): Card and panel background. Floats one step above Void.
-- **Surface Raised** (`#1f2937`): Input backgrounds, nested cards, KPI cards, version history panels. Two steps above Void.
-- **Ink** (`#f3f4f6`): Primary text. Headings, values, active nav items.
-- **Ink Soft** (`#9ca3af`): Secondary text. Labels, descriptions, nav items at rest.
-- **Ink Muted** (`#6b7280`): Tertiary text. Timestamps, version notes, placeholder text. Meets 4.5:1 against Surface Raised — do not go dimmer than this.
-- **Line** (`#374151`): Borders and dividers. Separates surfaces without weight.
+| Token | Light | Dark | Role |
+|---|---|---|---|
+| `bg-primary` | `#f5f5f9` | `#0b0f19` | Page canvas |
+| `bg-secondary` | `#ffffff` | `#111827` | Cards, panels |
+| `bg-tertiary` | `#efeff5` | `#1f2937` | Inputs, nested wells |
+| `accent` | `#5b48ee` | `#7c6cf6` | Client portal primary; per-client overridable |
+| `accent-2` | `#059669` | `#10b981` | Admin primary; success/confirmation everywhere |
+| `ink` / `ink-soft` / `ink-muted` | `#16161d` / `#4d4d59` / `#6e6e7a` | `#f3f4f6` / `#9ca3af` / `#6b7280` | Text, 3-step hierarchy |
+| `line` | `#e5e5ee` | `#374151` | Borders, dividers |
+| `warn` | `#b45309` | `#fbbf24` | Warning state |
+| `danger` | `#be123c` | `#fb7185` | Error, destructive, blocked |
+| `dispute` | `#7e22ce` | `#c084fc` | Invoice dispute state only |
 
 ### Named Rules
-**The Signal Rule.** Electric Blue and Confirmation Emerald appear only on interactive elements, state indicators, and progress — never as decorative color. Their scarcity is what makes them readable as signal. A blue element means "you can do something here or this needs your attention." An emerald element means "this is progressing or complete." Never use either for decoration.
 
-**The Ink Floor Rule.** `ink-muted` (`#6b7280`) is the minimum text contrast allowed on any surface. Against `surface-raised` (#1f2937) this meets WCAG AA. Going dimmer is prohibited.
+**The Two-Accent Split.** `accent` (indigo) is the client portal's primary
+color and the *only* one clients ever see recolored per-client. `accent-2`
+(emerald) is the admin console's primary color — buttons, active tab
+underline, active nav icon. Indigo notification-badge counts appear on
+*both* surfaces (including inside admin) — that's intentional, not a leak:
+badges are "something happened," which is always indigo regardless of whose
+console you're in.
 
-**The Per-Client Override.** Each client's `accent_color` overrides `--color-accent` via CSS custom property at the portal layout root. All `bg-accent`, `text-accent`, and `border-accent` utilities will reflect the client's brand automatically. Emerald (`accent-2`) remains the operator's confirmation color and is not client-overridable.
+**The Per-Client Override.** `client.accent_color` overrides `--accent`
+inline at `src/app/portal/layout.jsx`'s root. Every `bg-accent`/`text-accent`
+utility in the client portal — including inside the always-dark sidebar —
+reflects the client's brand automatically. `accent-2` is never
+client-overridable; it stays the operator's confirmation color everywhere.
+
+**The Ink Floor Rule.** `ink-muted` is the minimum text contrast allowed on
+any surface — it meets WCAG AA against both `bg-secondary` and
+`bg-tertiary` in both themes. Do not go dimmer.
 
 ## 3. Typography
 
-**Body / UI Font:** System UI stack (`system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`)
-**No display font.** One family, multiple weights. The tool disappears; the information speaks.
+Four families, each with exactly one job. Mixing jobs (serif on a section
+heading, mono on prose) is the fastest way to make this look generic again.
 
-**Character:** A tightly-tuned system font stack with no typographic ego — the kind of choice that signals "we care about legibility, not ornament." Weight and size carry the entire hierarchy. The one concession to brand expression: the admin mark uses `tracking-widest` uppercase at `text-xs`, which reads as a deliberate label, not a hero headline.
+- **Instrument Serif** (`font-serif`, weight 400) — the page-title `<h1>`
+  hero and large KPI numbers. Nowhere else. This is deliberately the *only*
+  serif moment on a page; that restraint is what reads premium instead of
+  "serif slapped everywhere."
+- **Geist** (`font-sans`, default) — everything else: `h2`/`h3` section
+  headings, body copy, buttons, form labels, nav labels.
+- **Geist Mono** (`font-mono`) — data: dates, IDs, dollar amounts, percentages,
+  and every caps "eyebrow" label (`text-[10.5px] uppercase tracking-[0.14em]`).
+- **Space Grotesk** (`font-display`) — the xPortal wordmark only, in
+  `Logo.jsx`/`LogoMark`. Never used for page content.
 
-### Hierarchy
-- **Headline** (600, 1.25rem/20px, 1.3 lh): Section headings on project pages, admin page titles. `text-wrap: balance` applied.
-- **Title** (500, 1rem/16px, 1.4 lh): Card titles, project names, deliverable names in context.
-- **Body** (400, 0.875rem/14px, 1.5 lh): The workhorse. All descriptive text, messages, feedback, meeting details. Max 65–75ch on prose blocks.
-- **Label** (500, 0.75rem/12px, 1.4 lh): Status tags, nav items, button text, KPI names, form labels.
-- **Micro** (400, 0.6875rem/11px, 1.4 lh): Timestamps, version numbers, chip content, file metadata. Never used for actionable text.
+Global rule (`globals.css`): semantic `h1` gets Instrument Serif at its
+natural weight (400); `h2`/`h3` get Geist at 600. `text-wrap: balance` is
+applied to all three so multi-word headings never leave a widow.
 
 ### Named Rules
-**The No-Display Rule.** No serif, script, or display typeface anywhere in the product. Product UI typography is weight contrast and size contrast only. Display fonts belong on brand surfaces; xPortal is a tool.
 
-**The Admin Mark Exception.** The single `tracking-widest uppercase text-xs` instance in the admin header is a deliberate label-as-brand-mark — not a section eyebrow. It appears once in the entire UI. Do not replicate this pattern as a section heading device.
+**The One-Serif-Moment Rule.** A page gets exactly one serif element: its
+`<h1>`. KPI values are the one sanctioned *second* use (they read as "the
+number that matters," which earns the same weight as a headline). Card
+titles, tab labels, button text, and body copy are always Geist.
+
+**The Eyebrow Convention.** Mono caps labels (`Phase timeline`, `Key
+metrics`, `Halden Aerospace`) sit above section content as context, not as a
+heading — they're `text-ink-muted`, never colored, never bold beyond the
+font's own weight.
 
 ## 4. Elevation
 
-xPortal is **flat-by-default**. There are no `box-shadow` values in the design system. Depth is conveyed entirely through tonal surface layering (Void → Surface → Surface Raised) and `border: 1px solid {colors.line}`. The three-step background ramp creates all necessary visual hierarchy without any shadow.
+Light mode uses a **soft, layered card shadow** (`--shadow-card`) on every
+`rounded-xl`/`rounded-2xl` panel sitting on `bg-secondary` — this is a real
+shadow, not flat borders-only. Dark mode sets `--shadow-card: none` and lets
+borders (`border-line`) carry the separation instead, since shadows read
+poorly against dark surfaces.
 
-**The Flat Rule.** If you reach for a box-shadow, stop. Use a surface step-up instead: promote the element from `bg-surface` to `bg-surface-raised`, or add `border-line`. Shadows appear only on externally-constrained components (browser-native dropdowns, `<dialog>` modals placed above the app shell).
+Buttons get their own `--shadow-button` (an inset highlight + a grounded
+drop shadow) and lift 1px on hover/press for solid (`bg-accent`/`bg-accent-2`)
+variants — see the `button.bg-accent` rules in `globals.css`.
 
-**The Tonal Ramp.** Void (`#0b0f19`) → Surface (`#111827`) → Surface Raised (`#1f2937`). That is the complete depth vocabulary. Nested cards use Surface Raised against a Surface parent. Never use Surface against Surface (same-tone nesting reads as flat clutter).
+### Named Rules
+
+**The Card Shadow Rule.** Any card-level container (`rounded-xl` or
+`rounded-2xl` on `bg-secondary`) should carry `shadow-card` in light mode —
+either via the global `.rounded-xl.bg-bg-secondary` rule or an explicit
+`shadow-[...]` utility matching its curve. Don't add a shadow to
+inline/inset elements (badges, chips, table rows).
+
+**The Dark Mode Exception.** Never hardcode a shadow that's meant to survive
+dark mode — `--shadow-card` already resolves to `none` there by design.
+Trust the token, don't fight it with an explicit dark: override.
 
 ## 5. Components
 
 ### Buttons
-Tactile and unambiguous. Every button communicates its consequence through color.
+- **Shape:** `rounded-lg` (8–9px). Nothing pill-shaped except chips/badges.
+- **Primary:** Solid `bg-accent-2` (admin) or `bg-accent` (client), white
+  text, `px-4 py-2`, font-medium/semibold. Carries `--shadow-button` +
+  1px hover lift. Used for "Save", "Create", "Send", "Approve".
+- **Ghost/Secondary:** `border border-line`, `bg-bg-secondary`,
+  `text-ink-soft`; hover moves border to the surface's accent and text to
+  `ink`. Used for "Cancel", "Preview", secondary actions.
+- **Destructive:** `bg-danger`, white text. Used for "Delete client",
+  "Request revisions", "Dispute". High-consequence actions (client delete)
+  require typing a confirmation string, not just a second click.
+- **Disabled:** 50% opacity, no pointer events.
 
-- **Shape:** Gently rounded (8px radius). Nothing pill-shaped except chips.
-- **Primary (Confirm / Advance):** Emerald background (`#10b981`), white text, `px-4 py-2`, 500 weight. Used for "Save", "Approve", "Create", "Send". Hover: 0.9 opacity.
-- **Ghost / Secondary:** Transparent background, `border border-line`, `text-ink-soft`, hover shifts to `bg-surface-raised text-ink`. Used for "Cancel", "View history", secondary actions.
-- **Destructive:** `bg-rose-500`, white text. Used for "Request revisions", "Dispute", "Remove". Requires one extra click to confirm on high-consequence actions.
-- **Disabled:** 50% opacity, no pointer events. No color change — the opacity signal is universal.
-- **All buttons:** 150ms `ease` transition on background, border, color, opacity.
-
-### Chips / Status Badges
-The semantic color vocabulary at small scale.
-
-- **Style:** `rounded-full`, `text-[11px]`, tinted background at 15% opacity (`bg-amber-400/15`, `bg-accent/15`), matching text color. Never solid-fill at full opacity.
-- **Health chips (KPI):** Border-colored (not background-colored) card borders: `border-accent-2/40` (good), `border-amber-400/40` (close), `border-rose-500/40` (off). The border carries the health signal; the interior stays neutral.
-- **Status text (Deliverables):** Plain colored text, no chip container — `text-amber-400` (Pending), `text-accent-2` (Approved), `text-rose-400` (Revisions Requested). The color is the affordance; a container would add noise.
+### Chips / Status Pills
+Colored-glass style throughout: `border-{color}/30 bg-{color}/10
+text-{color}`, `rounded-full`, small caps or mono text. Used for deliverable
+status, invoice status, KPI health, client health chips, "on track"/"needs
+attention" pills. Never solid-fill — the tint plus matching text color is
+the whole language.
 
 ### Cards / Containers
-- **Corner Style:** 12px radius (`rounded-xl`) for section containers and panels; 8px (`rounded-lg`) for items within a list.
-- **Background:** `bg-surface` (`#111827`) for outer panels; `bg-surface-raised` (`#1f2937`) for nested items (deliverables, KPI cards, version history).
-- **Shadow Strategy:** None. Border (`border border-line`) defines the edge.
-- **Internal Padding:** `p-4` (16px) for list items; `p-5` (20px) for section panels.
-- **The Nesting Rule.** Surface against Void is the only valid nesting — never Surface against Surface. Raised items live inside Surface containers.
+- **Section panels:** `rounded-xl`/`rounded-2xl`, `bg-bg-secondary`,
+  `border border-line`, `shadow-card`, `p-5`–`p-6`.
+- **List rows** (Plan, Documents, Billing, KPI rows): flat `div` rows inside
+  a `divide-y divide-line` container with a single outer border — not
+  `<table>`. This replaced the earlier plain-table pattern app-wide.
+- **Stat ribbons:** one bordered box, internal columns via
+  `border-r border-line`, each with a mono caps label + large value.
 
 ### Inputs / Fields
-- **Style:** `bg-surface-raised`, `border border-line`, 8px radius, `px-3 py-2` (12px / 8px).
-- **Focus:** `focus:border-accent-2` (Emerald border, no glow, no shadow). Keyboard users get the ring from the border shift.
-- **Placeholder:** Uses `text-ink-muted` (`#6b7280`) — meets 4.5:1 against `surface-raised`. Non-negotiable.
-- **Textarea:** Same treatment; `resize-none` by default; explicit row count.
-- **Error state:** Border shifts to `border-rose-500`. Error text below in `text-rose-400 text-xs`.
+- `bg-bg-tertiary`, `border border-line`, `rounded-lg`, `px-3 py-2`.
+- Focus: `focus:border-accent` (client) or `focus:border-accent-2` (admin).
+  No glow/ring — the border color shift is the whole signal.
+- Error: border shifts to `border-danger`; message below in
+  `text-danger text-xs`.
 
 ### Navigation
 
-**Client sidebar (desktop):** 240px fixed left panel, `border-r border-line`. Nav items: `rounded-lg px-3 py-2`, icon (16px) + label, `text-ink-soft hover:bg-surface-raised hover:text-ink`. Active state via URL match adds `bg-surface-raised text-ink`. Unread badge: `bg-accent rounded-full px-1.5 text-xs` floating at the item's right edge.
+**Client sidebar (desktop):** 250px fixed left panel, **always dark**
+(`#0b0d13`) regardless of the light/dark theme toggle — this is a deliberate
+brand frame, not a themed surface. xPortal mark + "Client portal" mono
+subtitle at top; nav items are caps mono-tracked labels with an indigo
+active state and a right-edge 3px accent tab; user chip (avatar-gradient +
+name + sign-out) pinned at the bottom, alongside the theme toggle.
 
-**Client top bar (mobile):** Icon-only nav, 18px icons, `p-2 rounded-lg`. Brand mark left, icons right. Collapses the label; preserves every destination.
+**Client top bar (mobile):** same dark surface, icon-only nav.
 
-**Admin header:** Top bar, `border-b border-line`, `px-6 py-4`. Brand mark left (Emerald Building2 icon + `text-xs font-semibold uppercase tracking-widest text-accent-2`). Operator name + sign-out right. Minimal — operators are always one click from the client list.
+**Admin sidebar (desktop):** light surface (`bg-bg-secondary`), 240–260px,
+`border-r border-line`. Section eyebrows ("Clients", "Console") in mono
+caps above nav groups. Active state: `bg-accent-2/10` tint + emerald icon +
+right-edge accent tab, same mechanism as the client sidebar but emerald and
+on a light surface.
+
+**Top bar (both):** sticky, `bg-{surface}/80` + `backdrop-blur` (glass),
+breadcrumb on the left, date/status on the right.
 
 ### Signature Components
 
-**PhaseStatusBar:** A horizontal array of pill segments, one per project phase. Each pill is `h-2.5 rounded-full` colored by status: Emerald (done), Electric Blue (active, with `animate-pulse`), Rose (blocked), Surface Raised (upcoming). Phase label below in proportional weight: bold ink (active) → ink-soft (done) → ink-muted (upcoming). Progress meter below: 4px track `bg-surface-raised`, fill `bg-accent`, percentage label right.
+**Phase timeline** (`ProjectStatus.jsx`): a connected, single-row segmented
+bar — one flex-1 segment per phase, `border-r border-line` between
+segments, tinted by status (`bg-accent-2/25` done, `bg-accent/12` active
+with a diagonal accent-tinted stripe overlay, `bg-danger/15` blocked,
+`bg-bg-secondary` upcoming). Labels centered beneath each segment. Below
+the bar: a slim progress track + percentage + target date, and an
+"up next" / "blocked — needs attention" line.
 
-**KpiGrid:** `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`. Each card: `bg-surface-raised rounded-lg p-3`, border colored by health (Emerald/Amber/Rose at 40% opacity). KPI value in `text-xl font-semibold` with health color. Name in `text-xs text-ink-soft` with trend icon. Target in `text-xs text-ink-muted`.
+**KpiGrid:** `grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`. Each card: tinted
+icon tile top-left, health-status chip top-right (`text-[10px] uppercase`,
+tinted), the value in **Instrument Serif** at `text-[2rem]`, mono caps name
+label, mono goal line. Health tint (good/close/off) drives the icon color
+and chip only — the card border stays neutral `border-line`.
 
-**Timeline (Gantt):** Phase bars spanning date columns, colored by status. Diamond SVG markers for milestones. Amber vertical rule for today. Month labels in `text-xs text-ink-muted` above the grid. No gridlines below the header — the bar fills convey position.
+**Timeline (Gantt, `Timeline.jsx`):** phase bars + milestone diamonds,
+scoped to a fixed minimum width (`overflow-x-auto` beyond it, not
+crushed). Dates are **always visible** — a real weekly/monthly tick ruler,
+a date range under every phase bar, a date under every milestone — nothing
+is hover-only. A legend explains the color/shape language, and there's a
+client-side Hide/Show-milestones toggle. "Today" is a distinct danger-red
+line, deliberately not the same color as milestone markers (warn/amber).
 
 ## 6. Do's and Don'ts
 
 ### Do:
-- **Do** use `ink-muted` (`#6b7280`) as the absolute minimum for any displayed text. Going dimmer fails WCAG AA.
-- **Do** step up surface levels for depth: Void → Surface → Surface Raised. That is the entire elevation vocabulary.
-- **Do** reserve Electric Blue for interactive and informational state only. It means "action" or "attention." Decorative blue breaks the semantic contract.
-- **Do** reserve Confirmation Emerald for forward motion: approvals, progress, saves, completions. It means "good."
-- **Do** use `rounded-xl` (12px) for section containers and `rounded-lg` (8px) for individual item cards. Never mix the two on the same nesting level.
-- **Do** override `--color-accent` at the portal layout root for per-client branding. Every `bg-accent` / `text-accent` utility cascades automatically.
-- **Do** match button text to the specific action: "Approve deliverable", "Save branding", "Send digests now" — never generic "Submit" or "OK."
-- **Do** apply `text-wrap: balance` to `h1–h3` elements to prevent widow lines.
+- **Do** route every color through the CSS custom properties — `bg-accent`,
+  `text-ink-soft`, etc. — never a raw hex value in a component.
+- **Do** keep the serif to exactly one page-title `<h1>` (+ KPI numbers).
+  Section headings, card titles, and body text are always Geist.
+- **Do** give card-level containers `shadow-card` in light mode; trust the
+  token to disable itself in dark mode.
+- **Do** use `accent-2` (emerald) for admin's primary actions and `accent`
+  (indigo) for the client portal's — badges are the one place indigo
+  appears on both.
+- **Do** override `--accent` at the portal layout root for per-client
+  branding; never touch `accent-2`.
+- **Do** use list-row patterns (`divide-y` div rows) instead of `<table>`
+  for Plan/Documents/Billing/KPI-editor style data.
+- **Do** apply `text-wrap: balance` to headings (already global for h1–h3).
+- **Do** match button text to the specific action ("Approve deliverable",
+  "Save branding") — never generic "Submit" or "OK."
 
 ### Don't:
-- **Don't** use `border-left` or `border-right` greater than 1px as a colored accent stripe on cards or list items. This is the most common pattern to creep in and the hardest to un-see. Use tinted backgrounds or full borders instead.
-- **Don't** use gradient text (`background-clip: text` + gradient). Emphasis via weight or size only.
-- **Don't** add `box-shadow` to cards, inputs, or panels. The flat system is intentional; shadows read as inconsistency.
-- **Don't** build a generic SaaS dashboard: flat, overcrowded, no identity. xPortal has a point of view on every screen.
-- **Don't** introduce warm-tinted backgrounds, big serif headers, or stock-photo-adjacent softness. xPortal is a precision tool, not a brochure.
-- **Don't** use gradient fills, glassmorphism, hero-metric layouts (big number + gradient accent), or identical repeating card grids. These are the exact patterns that signal "AI made this" — and they are prohibited.
-- **Don't** add `tracking-widest uppercase` eyebrows above section headings. The only sanctioned use is the admin brand mark. Section cadence is heading weight and size contrast alone.
-- **Don't** use Electric Blue for decoration, non-interactive text, or backgrounds. Blue means interactive or informational — its rarity makes it trustworthy.
-- **Don't** use a display or serif typeface anywhere in the product UI. The system font stack is the only font.
-- **Don't** nest Surface-on-Surface. Surface cards must sit on Void or Surface Raised must sit on Surface — the tonal step is what makes the card readable.
+- **Don't** use a serif or display face on anything but the page `<h1>` and
+  KPI numbers. A second serif moment on a page reads as inconsistent, not
+  premium.
+- **Don't** add `box-shadow` ad hoc — use `shadow-card`/`shadow-button` or
+  the equivalent explicit utility that matches them; don't invent a new
+  shadow recipe per component.
+- **Don't** solid-fill status chips — tinted background + matching text
+  color only (`bg-accent-2/10 text-accent-2`), never a saturated fill.
+- **Don't** use `dispute` (`#7e22ce`/`#c084fc`) for anything but invoice
+  disputes — it's a narrow, specific state color, not a general purple accent.
+- **Don't** let `accent-2` bleed into the client portal as a primary color,
+  or `accent` into admin as a primary — badges are the sanctioned exception,
+  not a precedent for anything else.
+- **Don't** build a generic SaaS dashboard: flat, overcrowded, no identity.
+  Every screen should carry a point of view.
+- **Don't** use gradient text, glassmorphism panels, or hero-metric-plus-
+  gradient layouts — these read as template-generated, which is exactly
+  what this system exists to avoid.
+- **Don't** go dimmer than `ink-muted` for any displayed text.
