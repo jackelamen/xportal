@@ -157,6 +157,23 @@ body::before {
   animation: toast-in 240ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* Orchestrated page load: top-level blocks rise and settle in sequence, so a
+   screen assembles itself rather than snapping in. The stagger reads as
+   composure. Direct children of a .page-enter root animate; deeper content
+   rides along with its parent block. */
+@keyframes page-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+.page-enter > * {
+  animation: page-rise 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.page-enter > *:nth-child(1) { animation-delay: 40ms; }
+.page-enter > *:nth-child(2) { animation-delay: 110ms; }
+.page-enter > *:nth-child(3) { animation-delay: 180ms; }
+.page-enter > *:nth-child(4) { animation-delay: 250ms; }
+.page-enter > *:nth-child(n+5) { animation-delay: 300ms; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

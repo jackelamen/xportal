@@ -29,7 +29,7 @@ export default async function AdminClientPage({ params, searchParams }) {
   const here = `/admin/clients/${id}${tab === "projects" ? "" : `?tab=${tab}`}`;
 
   return (
-    <div>
+    <div className="page-enter">
       <nav className="flex items-center gap-1 text-sm text-ink-muted">
         <Link href="/admin" className="hover:text-ink">Dashboard</Link>
         <ChevronRight size={14} className="shrink-0" />

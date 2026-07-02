@@ -18,7 +18,7 @@ export default async function AdminSettings() {
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="page-enter space-y-8">
       <div className="flex items-stretch gap-4">
         <div className="w-[3px] shrink-0 rounded-full bg-accent-2" />
         <div>

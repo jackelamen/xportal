@@ -99,7 +99,7 @@ export default async function Home() {
   ];
 
   return (
-    <div>
+    <div className="page-enter">
       <div className="flex items-stretch gap-5 border-b border-line pb-6">
         <div className="w-[3px] shrink-0 rounded-full bg-accent" />
         <div>

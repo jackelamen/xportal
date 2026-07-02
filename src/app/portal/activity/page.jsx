@@ -28,7 +28,7 @@ export default async function ActivityPage() {
   );
 
   return (
-    <div>
+    <div className="page-enter">
       <div className="flex items-stretch gap-4">
         <div className="w-[3px] shrink-0 rounded-full bg-accent" />
         <h1 className="text-[1.85rem] leading-none tracking-tight">Activity</h1>

@@ -21,7 +21,7 @@ export default async function BillingPage() {
   const nextDue = [...open].filter((i) => i.status !== "Disputed").sort((a, b) => a.due_date.localeCompare(b.due_date))[0];
 
   return (
-    <div>
+    <div className="page-enter">
       <div className="flex items-stretch gap-5 border-b border-line pb-6">
         <div className="w-[3px] shrink-0 rounded-full bg-accent" />
         <div>

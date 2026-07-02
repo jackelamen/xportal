@@ -64,7 +64,7 @@ export default async function CalendarPage({ searchParams }) {
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
   return (
-    <div>
+    <div className="page-enter">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-stretch gap-4">
           <div className="w-[3px] shrink-0 rounded-full bg-accent" />

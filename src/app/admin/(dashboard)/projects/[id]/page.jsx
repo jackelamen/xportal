@@ -100,7 +100,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
   ];
 
   return (
-    <div>
+    <div className="page-enter">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1 text-sm text-ink-muted">
         <Link href="/admin" className="hover:text-ink">Dashboard</Link>

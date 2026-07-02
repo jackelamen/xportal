@@ -69,7 +69,7 @@ export default async function AdminHome() {
   const unseen = inbox.filter((a) => (Date.parse(a.created_at) || 0) > seenTs);
 
   return (
-    <div>
+    <div className="page-enter">
       {/* ── Page header ──────────────────────────────────────────────── */}
       <div className="flex items-stretch gap-5 border-b border-line pb-6">
         <div className="w-[3px] shrink-0 rounded-full bg-accent-2" />
