@@ -53,7 +53,7 @@ export default function Timeline({ milestones, today = Date.now() }) {
 
   return (
     <div className="select-none">
-      <div className="relative h-4 text-[10px] text-ink-muted">
+      <div className="font-data relative h-4 text-[10px] uppercase tracking-wide text-ink-muted">
         {months.map((m, i) => (
           <span key={i} className="absolute" style={{ left: `${Math.max(m.at, 0)}%` }}>{m.label}</span>
         ))}

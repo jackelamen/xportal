@@ -1,17 +1,23 @@
 import LoginForm from "@/components/LoginForm";
+import LoginShell from "@/components/LoginShell";
 import Logo from "@/components/Logo";
 
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-xl border border-line bg-bg-secondary p-8">
-        <Logo size={34} />
-        <h1 className="mt-5 text-2xl font-semibold">Client workspace</h1>
-        <p className="mt-2 text-sm text-ink-soft">
-          Project status, deliverables, files, and billing in one place. No password — we email you a sign-in link.
-        </p>
+    <LoginShell
+      tile="indigo"
+      eyebrow="Client portal"
+      headline="Your project, your progress, in one place."
+      blurb="Review deliverables, follow progress, and stay in sync with your team — all in real time."
+    >
+      <div className="mb-8">
+        <Logo size={30} sub="Client portal" />
+      </div>
+      <h2 className="text-2xl font-semibold text-ink">Welcome back</h2>
+      <p className="mt-1.5 text-sm text-ink-soft">Sign in to review progress and deliverables.</p>
+      <div className="mt-7">
         <LoginForm kind="client" />
       </div>
-    </main>
+    </LoginShell>
   );
 }

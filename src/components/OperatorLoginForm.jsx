@@ -30,8 +30,8 @@ export default function OperatorLoginForm() {
   }
 
   return (
-    <form onSubmit={signIn} className="mt-6 space-y-4">
-      <label className="block text-sm text-ink-soft">
+    <form onSubmit={signIn} className="space-y-4">
+      <label className="block text-sm font-medium text-ink">
         Work email
         <input
           type="email"
@@ -39,10 +39,10 @@ export default function OperatorLoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@company.com"
-          className="mt-1 w-full rounded-lg border border-line bg-bg-tertiary px-3 py-2 text-ink outline-none focus:border-accent"
+          className="mt-1.5 w-full rounded-lg border border-line bg-bg-secondary px-3 py-2.5 text-sm text-ink outline-none focus:border-accent-2"
         />
       </label>
-      <label className="block text-sm text-ink-soft">
+      <label className="block text-sm font-medium text-ink">
         Password
         <input
           type="password"
@@ -50,13 +50,13 @@ export default function OperatorLoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Your xPM password"
-          className="mt-1 w-full rounded-lg border border-line bg-bg-tertiary px-3 py-2 text-ink outline-none focus:border-accent"
+          className="mt-1.5 w-full rounded-lg border border-line bg-bg-secondary px-3 py-2.5 text-sm text-ink outline-none focus:border-accent-2"
         />
       </label>
       {error && <p className="text-sm text-danger">{error}</p>}
       <button
         disabled={busy}
-        className="w-full rounded-lg bg-accent px-4 py-2 font-medium text-white hover:opacity-90 disabled:opacity-50"
+        className="w-full rounded-lg bg-accent-2 px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-50"
       >
         {busy ? "Signing in…" : "Sign in"}
       </button>

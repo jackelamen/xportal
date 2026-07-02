@@ -1,9 +1,10 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
 import PwaRegister from "@/components/PwaRegister";
 import "./globals.css";
 
-// One family, many weights: Geist carries the whole UI (headings are just
-// heavier and tighter), Geist Mono carries data — numbers, dates, IDs.
+// Geist carries the whole UI, Geist Mono carries data (numbers, dates, IDs).
+// Space Grotesk is reserved for headline-level moments only — page titles,
+// card section headings, the wordmark — never body text or buttons.
 const sans = Geist({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -13,6 +14,12 @@ const mono = Geist_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
   variable: "--font-mono",
+  display: "swap",
+});
+const display = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
   display: "swap",
 });
 
@@ -37,7 +44,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${display.variable}`} suppressHydrationWarning>
       <body className="min-h-screen antialiased">
         {/* Apply the saved theme before paint so dark mode never flashes light. */}
         <script

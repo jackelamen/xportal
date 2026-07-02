@@ -29,8 +29,11 @@ export default async function ActivityPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Activity</h1>
-      <ol className="mt-6 space-y-0 border-l border-line pl-5">
+      <div className="flex items-stretch gap-4">
+        <div className="w-[3px] shrink-0 rounded-full bg-accent" />
+        <h1 className="text-[1.85rem] leading-none tracking-tight">Activity</h1>
+      </div>
+      <ol className="mt-8 space-y-0 border-l border-line pl-5">
         {rows.length === 0 && <p className="text-ink-muted">Nothing yet.</p>}
         {rows.map((a) => {
           const Icon = ICON[a.event_type] || CircleDot;

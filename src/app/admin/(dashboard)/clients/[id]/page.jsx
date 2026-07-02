@@ -36,21 +36,27 @@ export default async function AdminClientPage({ params, searchParams }) {
         <span className="text-ink">{client.company_name}</span>
       </nav>
 
-      <header className="mt-2 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold">{client.company_name}</h1>
-          <p className="mt-1 text-sm text-ink-soft">
-            {client.primary_email}
-            {client.slug && (
-              <> · <Link href={`/p/${client.slug}`} className="text-accent hover:underline">/p/{client.slug}</Link></>
-            )}
-          </p>
+      <header className="mt-3 flex flex-wrap items-stretch justify-between gap-4">
+        <div className="flex items-stretch gap-4">
+          <div className="w-[3px] shrink-0 rounded-full bg-accent-2" />
+          <div>
+            <h1 className="text-[1.7rem] leading-none">{client.company_name}</h1>
+            <p className="mt-2.5 flex items-center gap-2 text-sm text-ink-soft">
+              {client.primary_email}
+              {client.slug && (
+                <>
+                  <span className="text-line">·</span>
+                  <Link href={`/p/${client.slug}`} className="font-data text-accent hover:underline">/p/{client.slug}</Link>
+                </>
+              )}
+            </p>
+          </div>
         </div>
         <form action="/api/admin/preview" method="post">
           <input type="hidden" name="client_id" value={client.id} />
           <button
             title="Open the client portal exactly as this client sees it — read-only"
-            className="flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-sm text-ink-soft hover:border-accent hover:text-ink"
+            className="flex items-center gap-1.5 rounded-lg border border-line bg-bg-secondary px-3.5 py-2 text-sm font-medium text-ink-soft hover:border-accent-2 hover:text-accent-2"
           >
             <Eye size={14} /> Preview their portal
           </button>
@@ -76,9 +82,9 @@ export default async function AdminClientPage({ params, searchParams }) {
           <Link
             key={t.key}
             href={`/admin/clients/${id}${t.key === "projects" ? "" : `?tab=${t.key}`}`}
-            className={`border-b-2 px-4 py-2.5 -mb-px ${
+            className={`border-b-2 px-4 py-2.5 -mb-px text-[13.5px] transition-colors ${
               tab === t.key
-                ? "border-accent-2 font-medium text-ink"
+                ? "border-accent-2 font-semibold text-ink"
                 : "border-transparent text-ink-soft hover:text-ink"
             }`}
           >
@@ -91,24 +97,24 @@ export default async function AdminClientPage({ params, searchParams }) {
         {tab === "projects" && (
           <>
             <section>
-              <h2 className="text-lg font-medium">Projects</h2>
+              <h2 className="text-[17px]">Projects</h2>
               <div className="mt-3 space-y-2">
                 {projects.map((p) => (
                   <div
                     key={p.id}
-                    className={`relative flex items-center justify-between gap-3 rounded-lg border border-line bg-bg-secondary px-4 py-3 text-sm hover:border-accent-2 ${
+                    className={`relative flex items-center gap-3 rounded-xl border border-line bg-bg-secondary px-4 py-3.5 text-sm shadow-[0_1px_2px_rgb(0_0_0_/_0.03)] transition-colors hover:border-accent-2 ${
                       p.hidden_from_client ? "opacity-60" : ""
                     }`}
                   >
-                    <Link href={`/admin/projects/${p.id}`} className="flex min-w-0 items-center gap-2 font-medium after:absolute after:inset-0">
+                    <Link href={`/admin/projects/${p.id}`} className="flex min-w-0 items-center gap-2 font-semibold after:absolute after:inset-0">
                       <span className="truncate">{p.title}</span>
                       {p.hidden_from_client ? (
-                        <span className="rounded-full bg-warn/15 px-2 py-0.5 text-[11px] font-semibold text-warn">
+                        <span className="font-data rounded-full bg-warn/15 px-2 py-0.5 text-[10.5px] font-semibold text-warn">
                           hidden from client
                         </span>
                       ) : null}
                     </Link>
-                    <span className="ml-auto shrink-0 text-ink-soft">{p.current_phase} · {p.progress_percentage}%</span>
+                    <span className="font-data ml-auto shrink-0 text-xs text-ink-muted">{p.current_phase} · {p.progress_percentage}%</span>
                     <form action={`/api/admin/projects/${p.id}`} method="post" className="relative z-10 shrink-0">
                       <input type="hidden" name="_action" value="toggle_visibility" />
                       <input type="hidden" name="_redirect" value={here} />

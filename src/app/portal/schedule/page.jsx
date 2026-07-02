@@ -66,7 +66,10 @@ export default function SchedulePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Book a meeting</h1>
+      <div className="flex items-stretch gap-4">
+        <div className="w-[3px] shrink-0 rounded-full bg-accent" />
+        <h1 className="text-[1.85rem] leading-none tracking-tight">Book a meeting</h1>
+      </div>
 
       {bookings.length > 0 && (
         <section className="mt-6 rounded-xl border border-line bg-bg-secondary p-5">

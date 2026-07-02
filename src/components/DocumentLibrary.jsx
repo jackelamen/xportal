@@ -82,7 +82,7 @@ export default function DocumentLibrary({ projectId, documents, fileRequests }) 
 
       {grouped.map(([cat, docs]) => (
         <div key={cat}>
-          <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          <p className="font-data text-[10.5px] font-semibold uppercase tracking-widest text-ink-muted">
             {CATEGORY_LABEL[cat]}
           </p>
           <ul className="mt-2 space-y-1.5">

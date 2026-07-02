@@ -1,14 +1,23 @@
 import OperatorLoginForm from "@/components/OperatorLoginForm";
+import LoginShell from "@/components/LoginShell";
 import Logo from "@/components/Logo";
 
 export default function AdminLoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-xl border border-line bg-bg-secondary p-8">
-        <Logo size={34} tile="emerald" sub="Operator console" />
-        <h1 className="mt-5 text-2xl font-semibold">Operator sign-in</h1>
+    <LoginShell
+      tile="emerald"
+      eyebrow="Operator console"
+      headline="Run every client engagement from one place."
+      blurb="Status, deliverables, billing, and messages for every client — updated the moment you touch them."
+    >
+      <div className="mb-8">
+        <Logo size={30} tile="emerald" sub="Operator console" />
+      </div>
+      <h2 className="text-2xl font-semibold text-ink">Operator sign-in</h2>
+      <p className="mt-1.5 text-sm text-ink-soft">Sign in to manage clients and projects.</p>
+      <div className="mt-7">
         <OperatorLoginForm />
       </div>
-    </main>
+    </LoginShell>
   );
 }

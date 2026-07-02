@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { sql } from "@/lib/db";
 import LoginForm from "@/components/LoginForm";
+import LoginShell from "@/components/LoginShell";
 
 export const dynamic = "force-dynamic";
 
@@ -14,22 +15,28 @@ export default async function BrandedLoginPage({ params }) {
   if (!client) notFound();
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-xl border border-line bg-bg-secondary p-8">
-        {client.logo_path ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={`/api/public-logo/${slug}`} alt={client.company_name} className="h-10 object-contain" />
-        ) : (
-          <p
-            className="text-xs font-semibold uppercase tracking-widest"
-            style={{ color: client.accent_color || "#5b48ee" }}
-          >
-            {client.company_name}
-          </p>
-        )}
-        <h1 className="mt-2 text-2xl font-semibold">{client.company_name} — Client workspace</h1>
+    <LoginShell
+      tile="indigo"
+      accentColor={client.accent_color}
+      logoSrc={client.logo_path ? `/api/public-logo/${slug}` : undefined}
+      logoAlt={client.company_name}
+      eyebrow={`Client portal · powered by xPortal`}
+      headline="Your project, your progress, in one place."
+      blurb="Review deliverables, follow progress, and stay in sync with your team — all in real time."
+    >
+      {!client.logo_path && (
+        <p
+          className="mb-3 text-xs font-semibold uppercase tracking-widest"
+          style={{ color: client.accent_color || "#5b48ee" }}
+        >
+          {client.company_name}
+        </p>
+      )}
+      <h2 className="text-2xl font-semibold text-ink">Welcome back</h2>
+      <p className="mt-1.5 text-sm text-ink-soft">Sign in to review progress and deliverables.</p>
+      <div className="mt-7">
         <LoginForm kind="client" accent={client.accent_color} />
       </div>
-    </main>
+    </LoginShell>
   );
 }

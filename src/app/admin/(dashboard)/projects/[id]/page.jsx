@@ -111,7 +111,13 @@ export default async function AdminProjectPage({ params, searchParams }) {
         <ChevronRight size={14} className="shrink-0" />
         <span className="text-ink">{project.title}</span>
       </nav>
-      <h1 className="mt-2 text-xl font-semibold text-ink">{project.title}</h1>
+      <div className="mt-3 flex items-stretch gap-4">
+        <div className="w-[3px] shrink-0 rounded-full bg-accent-2" />
+        <div>
+          <p className="font-data text-[11px] uppercase tracking-widest text-ink-muted">{project.company_name}</p>
+          <h1 className="mt-1 text-[1.5rem] leading-none text-ink">{project.title}</h1>
+        </div>
+      </div>
 
       <div className="sticky top-0 z-10 -mx-6 mt-5 border-b border-line bg-bg-primary px-6">
         <nav className="flex gap-0.5 overflow-x-auto text-sm">
@@ -121,16 +127,16 @@ export default async function AdminProjectPage({ params, searchParams }) {
               <Link
                 key={t.key}
                 href={`/admin/projects/${id}${t.key === "overview" ? "" : `?tab=${t.key}`}`}
-                className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-2.5 border-b-2 -mb-px transition-colors ${
+                className={`flex items-center gap-1.5 whitespace-nowrap px-3 py-2.5 border-b-2 -mb-px text-[13px] transition-colors ${
                   tab === t.key
-                    ? "border-accent-2 font-medium text-ink"
+                    ? "border-accent-2 font-semibold text-ink"
                     : "border-transparent text-ink-muted hover:text-ink-soft"
                 }`}
               >
                 <Icon size={13} />
                 {t.label}
                 {t.badge > 0 && (
-                  <span className={`rounded-full px-1.5 text-[10px] font-bold leading-tight text-white ${t.badgeColor || "bg-accent"}`}>
+                  <span className={`font-data rounded-full px-1.5 text-[10px] font-bold leading-tight text-white ${t.badgeColor || "bg-accent"}`}>
                     {t.badge}
                   </span>
                 )}
@@ -191,34 +197,29 @@ export default async function AdminProjectPage({ params, searchParams }) {
 
               <div className="mt-5">
                 <p className="flex items-center gap-1.5 text-xs font-medium text-ink-muted">KPIs <InfoTip text="Shown to the client as health-colored cards: green when the target is met, amber within 15%, red when off. 'Better' sets whether higher or lower numbers win." /></p>
-                <table className="mt-2 w-full text-sm">
-                  <tbody>
-                    {kpis.map((k) => (
-                      <tr key={k.id} className="border-t border-line/60">
-                        <td className="py-2 pr-3 font-medium">{k.name}</td>
-                        <td className="py-2 pr-3 text-ink-soft">target {k.target_value ?? "—"}{k.unit || ""} ({k.direction})</td>
-                        <td className="py-2 pr-3">
-                          <form action={hub} method="post" className="flex items-center gap-2">
-                            <input type="hidden" name="_action" value="update_kpi" />
-                            <input type="hidden" name="kpi_id" value={k.id} />
-                            <input type="hidden" name="kpi_name" value={k.name} />
-                            <input type="hidden" name="_redirect" value={here} />
-                            <input name="current_value" type="number" step="any" defaultValue={k.current_value ?? ""} className="w-24 rounded border border-line bg-bg-tertiary px-2 py-1 text-xs text-ink" />
-                            <button className="text-xs text-ink-muted hover:text-ink">Update</button>
-                          </form>
-                        </td>
-                        <td className="py-2 text-right">
-                          <form action={hub} method="post">
-                            <input type="hidden" name="_action" value="delete_kpi" />
-                            <input type="hidden" name="kpi_id" value={k.id} />
-                            <input type="hidden" name="_redirect" value={here} />
-                            <button className="text-xs text-ink-muted hover:text-danger">Delete</button>
-                          </form>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <div className="mt-2 divide-y divide-line/70 rounded-lg border border-line">
+                  {kpis.map((k) => (
+                    <div key={k.id} className="flex flex-wrap items-center gap-3 px-3.5 py-2.5 text-sm">
+                      <span className="w-40 font-semibold">{k.name}</span>
+                      <span className="font-data text-xs text-ink-muted">target {k.target_value ?? "—"}{k.unit || ""} ({k.direction})</span>
+                      <form action={hub} method="post" className="ml-auto flex items-center gap-2">
+                        <input type="hidden" name="_action" value="update_kpi" />
+                        <input type="hidden" name="kpi_id" value={k.id} />
+                        <input type="hidden" name="kpi_name" value={k.name} />
+                        <input type="hidden" name="_redirect" value={here} />
+                        <input name="current_value" type="number" step="any" defaultValue={k.current_value ?? ""} className="font-data w-20 rounded-md border border-line bg-bg-tertiary px-2 py-1 text-xs text-ink" />
+                        <button className="text-xs text-ink-muted hover:text-ink">Update</button>
+                      </form>
+                      <form action={hub} method="post">
+                        <input type="hidden" name="_action" value="delete_kpi" />
+                        <input type="hidden" name="kpi_id" value={k.id} />
+                        <input type="hidden" name="_redirect" value={here} />
+                        <button className="text-xs text-ink-muted hover:text-danger">Delete</button>
+                      </form>
+                    </div>
+                  ))}
+                  {kpis.length === 0 && <p className="px-3.5 py-3 text-sm text-ink-muted">No KPIs yet.</p>}
+                </div>
                 <form action={hub} method="post" className="mt-2 flex flex-wrap items-end gap-3 text-sm">
                   <input type="hidden" name="_action" value="add_kpi" />
                   <input type="hidden" name="_redirect" value={here} />
@@ -303,40 +304,36 @@ export default async function AdminProjectPage({ params, searchParams }) {
         {tab === "plan" && (
           <section className="rounded-xl border border-line bg-bg-secondary p-5">
             <h2 className="flex items-center gap-1.5 font-medium text-ink">Phases &amp; milestones <InfoTip side="bottom" text="Phases draw as bars on the client's status bar and timeline; milestones draw as diamond markers. Statuses color them: done = green, active = blue, blocked = red." /></h2>
-            <table className="mt-3 w-full text-sm">
-              <tbody>
-                {milestones.map((m) => (
-                  <tr key={m.id} className="border-t border-line/60">
-                    <td className="py-2 pr-3">
-                      <span className="font-medium">{phaseLabel(m.phaseNo, m.title)}</span>
-                      <span className="ml-2 text-xs text-ink-muted">{m.kind}</span>
-                    </td>
-                    <td className="py-2 pr-3 text-ink-soft">
-                      {m.starts_on || "—"}{m.ends_on ? ` → ${m.ends_on}` : ""}
-                    </td>
-                    <td className="py-2 pr-3">
-                      <form action={post()} method="post" className="flex items-center gap-2">
-                        <input type="hidden" name="_action" value="set_milestone_status" />
-                        <input type="hidden" name="milestone_id" value={m.id} />
-                        <input type="hidden" name="_redirect" value={here} />
-                        <select name="status" defaultValue={m.status} className="rounded border border-line bg-bg-tertiary px-2 py-1 text-xs text-ink">
-                          {MS_STATUS.map((s) => <option key={s}>{s}</option>)}
-                        </select>
-                        <button className="text-xs text-ink-muted hover:text-ink">Set</button>
-                      </form>
-                    </td>
-                    <td className="py-2 text-right">
-                      <form action={post()} method="post">
-                        <input type="hidden" name="_action" value="delete_milestone" />
-                        <input type="hidden" name="milestone_id" value={m.id} />
-                        <input type="hidden" name="_redirect" value={here} />
-                        <button className="text-xs text-ink-muted hover:text-danger">Delete</button>
-                      </form>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="mt-3 divide-y divide-line/70 rounded-lg border border-line">
+              {milestones.map((m) => (
+                <div key={m.id} className="flex flex-wrap items-center gap-3 px-3.5 py-2.5 text-sm">
+                  <span className={`h-2 w-2 shrink-0 rounded-sm ${
+                    m.status === "done" ? "bg-accent-2" : m.status === "active" ? "bg-accent" : m.status === "blocked" ? "bg-danger" : "bg-line"
+                  }`} />
+                  <span className="font-semibold">{phaseLabel(m.phaseNo, m.title)}</span>
+                  <span className="font-data text-xs text-ink-muted">{m.kind}</span>
+                  <span className="font-data text-xs text-ink-soft">
+                    {m.starts_on || "—"}{m.ends_on ? ` → ${m.ends_on}` : ""}
+                  </span>
+                  <form action={post()} method="post" className="ml-auto flex items-center gap-2">
+                    <input type="hidden" name="_action" value="set_milestone_status" />
+                    <input type="hidden" name="milestone_id" value={m.id} />
+                    <input type="hidden" name="_redirect" value={here} />
+                    <select name="status" defaultValue={m.status} className="rounded-md border border-line bg-bg-tertiary px-2 py-1 text-xs text-ink">
+                      {MS_STATUS.map((s) => <option key={s}>{s}</option>)}
+                    </select>
+                    <button className="text-xs text-ink-muted hover:text-ink">Set</button>
+                  </form>
+                  <form action={post()} method="post">
+                    <input type="hidden" name="_action" value="delete_milestone" />
+                    <input type="hidden" name="milestone_id" value={m.id} />
+                    <input type="hidden" name="_redirect" value={here} />
+                    <button className="text-xs text-ink-muted hover:text-danger">Delete</button>
+                  </form>
+                </div>
+              ))}
+              {milestones.length === 0 && <p className="px-3.5 py-3 text-sm text-ink-muted">No phases or milestones yet.</p>}
+            </div>
             <form action={post()} method="post" className="mt-4 flex flex-wrap items-end gap-3 text-sm">
               <input type="hidden" name="_action" value="add_milestone" />
               <input type="hidden" name="_redirect" value={here} />
@@ -420,32 +417,27 @@ export default async function AdminProjectPage({ params, searchParams }) {
         {tab === "documents" && (
           <section className="rounded-xl border border-line bg-bg-secondary p-5">
             <h2 className="flex items-center gap-1.5 font-medium text-ink">Documents &amp; file requests <InfoTip side="bottom" text="The shared document library. Clients see everything here, organized by category, and can add their own reference documents." /></h2>
-            <table className="mt-3 w-full text-sm">
-              <tbody>
-                {documents.map((d) => (
-                  <tr key={d.id} className="border-t border-line/60">
-                    <td className="py-2 pr-3 text-xs uppercase text-ink-muted">{d.category}</td>
-                    <td className="py-2 pr-3">
-                      <a
-                        href={d.kind === "file" ? `/api/${d.asset_path.replace(/^uploads\//, "files/")}` : d.asset_path}
-                        target="_blank" rel="noreferrer" className="text-accent hover:underline"
-                      >
-                        {d.title}
-                      </a>
-                    </td>
-                    <td className="py-2 pr-3 text-xs text-ink-muted">{d.uploaded_by_name} · {d.created_at.slice(0, 10)}</td>
-                    <td className="py-2 text-right">
-                      <form action={`/api/admin/projects/${id}/documents`} method="post">
-                        <input type="hidden" name="_action" value="delete" />
-                        <input type="hidden" name="document_id" value={d.id} />
-                        <input type="hidden" name="_redirect" value={here} />
-                        <button className="text-xs text-ink-muted hover:text-danger">Delete</button>
-                      </form>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="mt-3 divide-y divide-line/70 rounded-lg border border-line">
+              {documents.map((d) => (
+                <div key={d.id} className="flex flex-wrap items-center gap-3 px-3.5 py-2.5 text-sm">
+                  <span className="font-data rounded-full bg-bg-tertiary px-2 py-0.5 text-[10px] uppercase tracking-wide text-ink-muted">{d.category}</span>
+                  <a
+                    href={d.kind === "file" ? `/api/${d.asset_path.replace(/^uploads\//, "files/")}` : d.asset_path}
+                    target="_blank" rel="noreferrer" className="font-medium text-accent hover:underline"
+                  >
+                    {d.title}
+                  </a>
+                  <span className="font-data text-xs text-ink-muted">{d.uploaded_by_name} · {d.created_at.slice(0, 10)}</span>
+                  <form action={`/api/admin/projects/${id}/documents`} method="post" className="ml-auto">
+                    <input type="hidden" name="_action" value="delete" />
+                    <input type="hidden" name="document_id" value={d.id} />
+                    <input type="hidden" name="_redirect" value={here} />
+                    <button className="text-xs text-ink-muted hover:text-danger">Delete</button>
+                  </form>
+                </div>
+              ))}
+              {documents.length === 0 && <p className="px-3.5 py-3 text-sm text-ink-muted">No documents yet.</p>}
+            </div>
             <form
               action={`/api/admin/projects/${id}/documents`}
               method="post"
@@ -495,42 +487,39 @@ export default async function AdminProjectPage({ params, searchParams }) {
         {tab === "billing" && (
           <section className="rounded-xl border border-line bg-bg-secondary p-5">
             <h2 className="font-medium text-ink">Invoices</h2>
-            <table className="mt-3 w-full text-sm">
-              <tbody>
-                {invoices.map((inv) => (
-                  <tr key={inv.id} className="border-t border-line/60">
-                    <td className="py-2 pr-3 font-medium">{inv.invoice_number}</td>
-                    <td className="py-2 pr-3 text-right">${Number(inv.amount).toFixed(2)}</td>
-                    <td className="py-2 pr-3 text-ink-soft">due {inv.due_date}</td>
-                    <td className={`py-2 pr-3 ${inv.status === "Disputed" ? "text-dispute" : inv.status === "Paid" ? "text-accent-2" : "text-warn"}`}>
+            <div className="mt-3 divide-y divide-line/70 rounded-lg border border-line">
+              {invoices.map((inv) => (
+                <div key={inv.id}>
+                  <div className="flex flex-wrap items-center gap-3 px-3.5 py-2.5 text-sm">
+                    <span className="font-data font-semibold">{inv.invoice_number}</span>
+                    <span className="font-data">${Number(inv.amount).toFixed(2)}</span>
+                    <span className="font-data text-xs text-ink-muted">due {inv.due_date}</span>
+                    <span className={`font-data ml-auto text-xs font-semibold ${
+                      inv.status === "Disputed" ? "text-dispute" : inv.status === "Paid" ? "text-accent-2" : "text-warn"
+                    }`}>
                       {inv.status}
-                    </td>
-                    <td className="py-2 text-right">
-                      <div className="flex justify-end gap-2">
-                        {inv.status !== "Paid" && (
-                          <InvoiceAction id={inv.id} action="mark_paid" label="Mark paid" here={here} />
-                        )}
-                        {inv.status === "Disputed" && (
-                          <InvoiceAction id={inv.id} action="resolve_dispute" label="Resolve dispute" here={here} />
-                        )}
-                        {inv.status === "Unpaid" && (
-                          <InvoiceAction id={inv.id} action="mark_overdue" label="Mark overdue" here={here} />
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {invoices.map((inv) =>
-                  inv.dispute_reason ? (
-                    <tr key={`${inv.id}-d`}>
-                      <td colSpan={5} className="pb-2 text-xs text-dispute">
-                        {inv.invoice_number} dispute: {inv.dispute_reason}
-                      </td>
-                    </tr>
-                  ) : null
-                )}
-              </tbody>
-            </table>
+                    </span>
+                    <div className="flex gap-2">
+                      {inv.status !== "Paid" && (
+                        <InvoiceAction id={inv.id} action="mark_paid" label="Mark paid" here={here} />
+                      )}
+                      {inv.status === "Disputed" && (
+                        <InvoiceAction id={inv.id} action="resolve_dispute" label="Resolve dispute" here={here} />
+                      )}
+                      {inv.status === "Unpaid" && (
+                        <InvoiceAction id={inv.id} action="mark_overdue" label="Mark overdue" here={here} />
+                      )}
+                    </div>
+                  </div>
+                  {inv.dispute_reason && (
+                    <p className="bg-dispute/5 px-3.5 pb-2.5 text-xs text-dispute">
+                      {inv.invoice_number} dispute: {inv.dispute_reason}
+                    </p>
+                  )}
+                </div>
+              ))}
+              {invoices.length === 0 && <p className="px-3.5 py-3 text-sm text-ink-muted">No invoices yet.</p>}
+            </div>
             <details className="mt-3">
               <summary className="cursor-pointer text-sm font-medium text-ink-soft">+ New invoice</summary>
               <form action="/api/admin/invoices" method="post" className="mt-3 flex flex-wrap items-end gap-3 text-sm">

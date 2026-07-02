@@ -13,13 +13,12 @@ function health(kpi) {
   return ratio >= 0.85 ? "close" : "off";
 }
 
-// Colored glass: the health tint carries the whole card — fill, border, and
-// value — so status reads from across the room.
+// Colored glass: the health tint carries the value and the delta pill.
 const TONE = {
-  good: { card: "border-accent-2/30 bg-accent-2/10", value: "text-accent-2", label: "on target" },
-  close: { card: "border-warn/30 bg-warn/10", value: "text-warn", label: "close" },
-  off: { card: "border-danger/30 bg-danger/10", value: "text-danger", label: "off target" },
-  none: { card: "border-line bg-bg-tertiary", value: "text-ink-soft", label: "" },
+  good: { value: "text-accent-2", pill: "bg-accent-2/12 text-accent-2", label: "on target" },
+  close: { value: "text-warn", pill: "bg-warn/14 text-warn", label: "close" },
+  off: { value: "text-danger", pill: "bg-danger/12 text-danger", label: "off target" },
+  none: { value: "text-ink-soft", pill: "", label: "" },
 };
 
 const fmt = (v, unit) => (v == null ? "—" : `${Number(v) % 1 === 0 ? v : Number(v).toFixed(1)}${unit || ""}`);
@@ -27,21 +26,24 @@ const fmt = (v, unit) => (v == null ? "—" : `${Number(v) % 1 === 0 ? v : Numbe
 export default function KpiGrid({ kpis }) {
   if (!kpis?.length) return null;
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+    <div className="grid grid-cols-2 divide-x divide-y divide-line rounded-xl border border-line bg-bg-secondary sm:grid-cols-3 lg:grid-cols-4 lg:divide-y-0">
       {kpis.map((k) => {
         const h = health(k);
         const t = TONE[h];
         const Icon = k.direction === "down" ? TrendingDown : k.current_value == null ? Minus : TrendingUp;
         return (
-          <div key={k.id} className={`rounded-xl border p-4 ${t.card}`}>
-            <p className="flex items-center gap-1.5 text-xs font-medium text-ink-soft">
-              <Icon size={12} className={t.value} /> {k.name}
-            </p>
-            <p className={`font-data mt-1.5 text-2xl font-semibold ${t.value}`}>
+          <div key={k.id} className="p-4">
+            <p className="text-xs font-semibold text-ink">{k.name}</p>
+            <p className={`font-data mt-2.5 text-[1.6rem] font-medium leading-none tracking-tight ${t.value}`}>
               {fmt(k.current_value, k.unit)}
             </p>
-            <p className="font-data mt-0.5 text-xs text-ink-muted">
-              target {fmt(k.target_value, k.unit)}
+            {t.label && (
+              <span className={`mt-2.5 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${t.pill}`}>
+                <Icon size={11} /> {t.label}
+              </span>
+            )}
+            <p className="font-data mt-2 text-[10.5px] text-ink-muted">
+              Goal {fmt(k.target_value, k.unit)}
               {k.direction === "down" ? " · lower wins" : ""}
             </p>
           </div>

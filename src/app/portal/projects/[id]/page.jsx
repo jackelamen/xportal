@@ -80,9 +80,12 @@ export default async function ProjectPage({ params, searchParams }) {
 
   return (
     <div>
-      <header className="rounded-xl border border-line bg-bg-secondary p-6">
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="text-xl font-semibold tracking-tight text-ink-soft">{project.title}</h1>
+      <header className="rounded-xl border border-line bg-bg-secondary p-6 shadow-[0_1px_2px_rgb(0_0_0_/_0.03),0_14px_36px_-18px_rgb(0_0_0_/_0.16)]">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="font-data text-[10.5px] uppercase tracking-widest text-ink-muted">{client.company_name}</p>
+            <h1 className="mt-1 text-[1.6rem] leading-none tracking-tight text-ink">{project.title}</h1>
+          </div>
           <p className="font-data flex items-center gap-1 text-[11px] text-ink-muted">
             updated {project.updated_at?.slice(0, 10)}
             <InfoTip side="bottom" text="Each segment below is a project phase: green is finished, indigo is in progress now, red is blocked, and grey hasn't started." />
@@ -103,15 +106,15 @@ export default async function ProjectPage({ params, searchParams }) {
           <Link
             key={t.key}
             href={`/portal/projects/${id}${t.key === "overview" ? "" : `?tab=${t.key}`}`}
-            className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 px-4 py-2.5 -mb-px ${
+            className={`flex items-center gap-1.5 whitespace-nowrap border-b-2 px-4 py-2.5 -mb-px text-[13.5px] transition-colors ${
               tab === t.key
-                ? "border-accent font-medium text-ink"
+                ? "border-accent font-semibold text-ink"
                 : "border-transparent text-ink-soft hover:text-ink"
             }`}
           >
             {t.label}
             {t.badge > 0 && (
-              <span className="rounded-full bg-accent px-1.5 text-xs font-semibold text-white">
+              <span className="font-data rounded-full bg-accent px-1.5 text-[10px] font-semibold text-white">
                 {t.badge}
               </span>
             )}

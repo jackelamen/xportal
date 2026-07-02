@@ -34,10 +34,10 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
         {(items.length > 0 || currentPhase) && (
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">
+          <p className="font-data text-[11px] uppercase tracking-widest text-ink-muted">
             Current phase{headlinePhase && ` · ${headlineIdx + 1} of ${items.length}`}
           </p>
-          <p className="mt-1 text-3xl font-bold tracking-tight text-ink">
+          <p className="font-display mt-1.5 text-[2rem] font-bold leading-none tracking-tight text-ink">
             {headline}
           </p>
           {headlinePhase?.starts_on && headlinePhase?.ends_on && (

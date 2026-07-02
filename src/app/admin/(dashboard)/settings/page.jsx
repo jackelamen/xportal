@@ -19,7 +19,13 @@ export default async function AdminSettings() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-lg font-semibold text-ink">Settings</h1>
+      <div className="flex items-stretch gap-4">
+        <div className="w-[3px] shrink-0 rounded-full bg-accent-2" />
+        <div>
+          <p className="font-data text-[11px] uppercase tracking-widest text-ink-muted">Operator console</p>
+          <h1 className="mt-1 text-[1.5rem] leading-none text-ink">Settings</h1>
+        </div>
+      </div>
 
       {/* ── Availability ──────────────────────────────────────────────── */}
       <section className="rounded-xl border border-line bg-bg-secondary p-5">

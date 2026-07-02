@@ -127,7 +127,7 @@ export default function DeliverableCard({ deliverable }) {
       {/* Decision area: choose, then confirm. */}
       {deliverable.status === "Pending" && (
         <div className="mt-4 border-t border-line pt-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-ink-muted">Your decision</p>
+          <p className="font-data text-[10.5px] font-medium uppercase tracking-widest text-ink-muted">Your decision</p>
           <div className="mt-2 flex flex-wrap gap-2">
             {toggleBtn("approve", "Approve", ThumbsUp)}
             {toggleBtn("revise", "Request changes", MessageSquareWarning)}

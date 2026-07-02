@@ -65,12 +65,15 @@ export default async function CalendarPage({ searchParams }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{monthName}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-stretch gap-4">
+          <div className="w-[3px] shrink-0 rounded-full bg-accent" />
+          <h1 className="text-[1.6rem] leading-none tracking-tight">{monthName}</h1>
+        </div>
         <div className="flex gap-2 text-sm">
-          <Link href={`/portal/calendar?y=${prev.y}&m=${prev.m}`} className="rounded-lg border border-line px-3 py-1.5 text-ink-soft hover:text-ink">←</Link>
-          <Link href="/portal/calendar" className="rounded-lg border border-line px-3 py-1.5 text-ink-soft hover:text-ink">Today</Link>
-          <Link href={`/portal/calendar?y=${next.y}&m=${next.m}`} className="rounded-lg border border-line px-3 py-1.5 text-ink-soft hover:text-ink">→</Link>
+          <Link href={`/portal/calendar?y=${prev.y}&m=${prev.m}`} className="rounded-lg border border-line bg-bg-secondary px-3 py-1.5 text-ink-soft hover:border-accent hover:text-ink">←</Link>
+          <Link href="/portal/calendar" className="rounded-lg border border-line bg-bg-secondary px-3 py-1.5 text-ink-soft hover:border-accent hover:text-ink">Today</Link>
+          <Link href={`/portal/calendar?y=${next.y}&m=${next.m}`} className="rounded-lg border border-line bg-bg-secondary px-3 py-1.5 text-ink-soft hover:border-accent hover:text-ink">→</Link>
         </div>
       </div>
 

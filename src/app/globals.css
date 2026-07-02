@@ -8,6 +8,7 @@
 @theme inline {
   --font-sans: var(--font-sans), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, "SF Mono", monospace;
+  --font-display: var(--font-display), system-ui, sans-serif;
   --color-bg-primary: var(--bg-primary);
   --color-bg-secondary: var(--bg-secondary);
   --color-bg-tertiary: var(--bg-tertiary);
@@ -85,7 +86,12 @@ button.bg-warn:hover:not(:disabled) {
   border-radius: 4px;
 }
 
+/* Space Grotesk carries headline-level moments only — page titles, card
+   section headings, the wordmark — everything else (body, labels, buttons)
+   stays on Geist. Semantic h1-h3 covers this app's headings uniformly. */
 h1, h2, h3 {
+  font-family: var(--font-display), system-ui, sans-serif;
+  font-weight: 600;
   text-wrap: balance;
   letter-spacing: -0.02em;
 }

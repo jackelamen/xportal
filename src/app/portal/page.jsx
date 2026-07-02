@@ -101,11 +101,17 @@ export default async function Home() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Welcome back, {user.name.split(" ")[0]}</h1>
-        <p className="font-data text-xs text-ink-muted">
-          {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-        </p>
+      <div className="flex items-stretch gap-5 border-b border-line pb-6">
+        <div className="w-[3px] shrink-0 rounded-full bg-accent" />
+        <div>
+          <p className="font-data text-[11px] uppercase tracking-widest text-ink-muted">
+            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            {"  ·  "}{client.company_name}
+          </p>
+          <h1 className="mt-1 text-[1.85rem] leading-none tracking-tight">
+            Welcome back, {user.name.split(" ")[0]}.
+          </h1>
+        </div>
       </div>
 
       {attention.length > 0 ? (
@@ -145,7 +151,10 @@ export default async function Home() {
         </p>
       )}
 
-      <h2 className="mt-10 text-lg font-medium">Your projects</h2>
+      <div className="mt-10 flex items-baseline justify-between">
+        <h2 className="text-[19px]">Your projects</h2>
+        <span className="font-data text-xs text-ink-muted">{projects.length} active</span>
+      </div>
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         {projects.length === 0 && (
           <p className="text-ink-soft">No active projects yet — your workspace is ready for kickoff.</p>
@@ -160,7 +169,7 @@ export default async function Home() {
             // message chip sits above it (z-10) with its own destination.
             <div
               key={p.id}
-              className="group relative rounded-xl border border-line bg-bg-secondary p-5 transition-colors hover:border-accent"
+              className="group relative rounded-xl border border-line bg-bg-secondary p-5 shadow-[0_1px_2px_rgb(0_0_0_/_0.03),0_12px_30px_-16px_rgb(0_0_0_/_0.13)] transition-all hover:-translate-y-0.5 hover:border-accent"
             >
               <div className="flex items-start justify-between gap-2">
                 <h3 className="flex min-w-0 flex-wrap items-center gap-2 font-medium">

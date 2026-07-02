@@ -28,11 +28,11 @@ export default function Logo({ size = 28, tile = "indigo", sub }) {
     <span className="inline-flex items-center gap-2.5">
       <LogoMark size={size} tile={tile} />
       <span className="leading-tight">
-        <span className="block text-base font-semibold tracking-tight text-ink">
+        <span className="font-display block text-[15px] font-semibold tracking-tight text-ink">
           x<span className={tile === "emerald" ? "text-accent-2" : "text-accent"}>Portal</span>
         </span>
         {sub && (
-          <span className="block text-[10px] font-medium uppercase tracking-widest text-ink-muted">
+          <span className="font-data block text-[10px] font-medium uppercase tracking-widest text-ink-muted">
             {sub}
           </span>
         )}

@@ -58,14 +58,17 @@ export default async function PortalLayout({ children }) {
           <div className="flex-1 overflow-y-auto px-3 py-4">
             <PortalNav items={NAV} unread={unread} />
           </div>
-          <div className="flex items-start justify-between border-t border-line px-5 py-4">
-            <div className="min-w-0">
-            <p className="truncate text-sm text-ink">{user.name}</p>
-            <form action="/api/auth/logout" method="post" className="mt-1.5">
-              <button className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink">
-                <LogOut size={13} /> Sign out
-              </button>
-            </form>
+          <div className="flex items-center gap-2.5 border-t border-line px-5 py-4">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-white">
+              {(user.name || "?").slice(0, 1).toUpperCase()}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-ink">{user.name}</p>
+              <form action="/api/auth/logout" method="post">
+                <button className="flex items-center gap-1.5 text-[11px] text-ink-muted hover:text-ink">
+                  <LogOut size={12} /> Sign out
+                </button>
+              </form>
             </div>
             <ThemeToggle />
           </div>
@@ -96,7 +99,7 @@ function BrandMark({ client, compact = false }) {
               className="h-7 max-w-40 object-contain object-left"
             />
           ) : (
-            <p className="text-xs font-semibold uppercase tracking-widest text-accent">
+            <p className="font-data text-xs font-semibold uppercase tracking-widest text-accent">
               {client.company_name}
             </p>
           )}
