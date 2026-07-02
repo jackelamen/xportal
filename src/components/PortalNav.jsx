@@ -27,7 +27,7 @@ export default function PortalNav({ items, unread, variant = "sidebar" }) {
               aria-label={label}
               aria-current={isActive(href) ? "page" : undefined}
               className={`rounded-lg p-3 ${
-                isActive(href) ? "bg-bg-tertiary text-ink" : "text-ink-soft hover:bg-bg-tertiary hover:text-ink"
+                isActive(href) ? "bg-white/10 text-white" : "text-white/55 hover:bg-white/[0.06] hover:text-white"
               }`}
             >
               <Icon size={18} />
@@ -38,39 +38,33 @@ export default function PortalNav({ items, unread, variant = "sidebar" }) {
     );
   }
 
+  // Dark sidebar: caps labels, indigo active state with a right-edge accent tab.
   return (
-    <nav className="flex flex-col gap-0.5 text-sm">
-      {items.map(({ href, icon, label }, i) => {
+    <nav className="flex flex-col gap-1">
+      {items.map(({ href, icon, label }) => {
         const Icon = ICONS[icon];
         const active = isActive(href);
         return (
-          <span key={href}>
-            {i === 1 && (
-              <p className="font-data px-3 pb-1.5 pt-4 text-[10px] uppercase tracking-widest text-ink-muted">
-                Workspace
-              </p>
+          <Link
+            key={href}
+            href={href}
+            aria-current={active ? "page" : undefined}
+            className={`relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[12px] font-medium uppercase tracking-[0.08em] transition-colors ${
+              active ? "bg-white/[0.07] text-white" : "text-white/55 hover:bg-white/[0.04] hover:text-white/90"
+            }`}
+          >
+            {active && <span className="absolute right-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-accent" />}
+            <Icon size={16} strokeWidth={active ? 2.1 : 1.9} className={active ? "text-accent" : ""} />
+            <span className="flex-1">{label}</span>
+            {label === "Home" && unread > 0 && (
+              <span
+                title={`${unread} unread message${unread > 1 ? "s" : ""} from the team`}
+                className="font-mono rounded-full bg-accent px-1.5 text-[10px] font-semibold normal-case tracking-normal text-white"
+              >
+                {unread}
+              </span>
             )}
-            <Link
-              href={href}
-              aria-current={active ? "page" : undefined}
-              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13.5px] transition-colors ${
-                active
-                  ? "bg-accent/10 font-semibold text-accent"
-                  : "text-ink-soft hover:bg-bg-tertiary hover:text-ink"
-              }`}
-            >
-              <Icon size={16} strokeWidth={active ? 2.2 : 1.8} />
-              <span>{label}</span>
-              {label === "Home" && unread > 0 && (
-                <span
-                  title={`${unread} unread message${unread > 1 ? "s" : ""} from the team`}
-                  className="font-data ml-auto rounded-full bg-accent px-1.5 text-xs font-semibold text-white"
-                >
-                  {unread}
-                </span>
-              )}
-            </Link>
-          </span>
+          </Link>
         );
       })}
     </nav>

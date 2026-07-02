@@ -1,10 +1,13 @@
-import { Geist, Geist_Mono, Space_Grotesk } from "next/font/google";
+import { Geist, Geist_Mono, Space_Grotesk, Fraunces } from "next/font/google";
 import PwaRegister from "@/components/PwaRegister";
 import "./globals.css";
 
-// Geist carries the whole UI, Geist Mono carries data (numbers, dates, IDs).
-// Space Grotesk is reserved for headline-level moments only — page titles,
-// card section headings, the wordmark — never body text or buttons.
+// Type strategy:
+//  - Fraunces (serif) — page titles + card section headings. The editorial
+//    serif is what lifts the UI out of the generic all-sans "AI SaaS" look.
+//  - Geist — all body, UI, labels, buttons.
+//  - Geist Mono — data: numbers, dates, IDs, caps eyebrows.
+//  - Space Grotesk — the xPortal wordmark only.
 const sans = Geist({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -20,6 +23,13 @@ const display = Space_Grotesk({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
   variable: "--font-display",
+  display: "swap",
+});
+const serif = Fraunces({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  axes: ["opsz"],
+  variable: "--font-serif",
   display: "swap",
 });
 
@@ -44,7 +54,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable} ${display.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${display.variable} ${serif.variable}`} suppressHydrationWarning>
       <body className="min-h-screen antialiased">
         {/* Apply the saved theme before paint so dark mode never flashes light. */}
         <script

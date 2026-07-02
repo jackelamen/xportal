@@ -80,26 +80,41 @@ export default async function ProjectPage({ params, searchParams }) {
 
   return (
     <div>
-      <header className="rounded-xl border border-line bg-bg-secondary p-6 shadow-[0_1px_2px_rgb(0_0_0_/_0.03),0_14px_36px_-18px_rgb(0_0_0_/_0.16)]">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="font-data text-[10.5px] uppercase tracking-widest text-ink-muted">{client.company_name}</p>
-            <h1 className="mt-1 text-[1.6rem] leading-none tracking-tight text-ink">{project.title}</h1>
+      {/* Hero: status + serif project title */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            {milestones.some((m) => m.kind === "phase" && m.status === "blocked") ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-danger/12 px-2.5 py-1 text-[11px] font-semibold text-danger">
+                <span className="h-1.5 w-1.5 rounded-full bg-danger" /> NEEDS ATTENTION
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-2/12 px-2.5 py-1 text-[11px] font-semibold text-accent-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-accent-2" /> ON TRACK
+              </span>
+            )}
+            <span className="font-mono text-[11px] text-ink-muted">Updated {project.updated_at?.slice(0, 10)}</span>
           </div>
-          <p className="font-data flex items-center gap-1 text-[11px] text-ink-muted">
-            updated {project.updated_at?.slice(0, 10)}
-            <InfoTip side="bottom" text="Each segment below is a project phase: green is finished, indigo is in progress now, red is blocked, and grey hasn't started." />
-          </p>
+          <h1 className="mt-3 text-[2.4rem] font-semibold leading-none tracking-tight text-ink">{project.title}</h1>
+          <p className="font-mono mt-2.5 text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">{client.company_name}</p>
         </div>
-        <div className="mt-5">
-          <ProjectStatus
-            phases={milestones.filter((m) => m.kind === "phase")}
-            currentPhase={project.current_phase}
-            progress={project.progress_percentage}
-            targetDate={project.target_date}
-          />
+      </div>
+
+      {/* Phase timeline card */}
+      <section className="mt-7 rounded-2xl border border-line bg-bg-secondary p-6 shadow-[0_1px_2px_rgb(16_16_29_/_0.04),0_18px_40px_-24px_rgb(16_16_29_/_0.18)]">
+        <div className="mb-6 flex items-center justify-between">
+          <span className="font-mono flex items-center gap-1.5 text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">
+            Phase timeline
+            <InfoTip side="bottom" text="Each segment is a project phase: green is finished, indigo is in progress now, red is blocked, and grey hasn't started." />
+          </span>
         </div>
-      </header>
+        <ProjectStatus
+          phases={milestones.filter((m) => m.kind === "phase")}
+          currentPhase={project.current_phase}
+          progress={project.progress_percentage}
+          targetDate={project.target_date}
+        />
+      </section>
 
       <nav className="mt-8 flex gap-1 overflow-x-auto border-b border-line text-sm">
         {tabs.map((t) => (
@@ -124,93 +139,97 @@ export default async function ProjectPage({ params, searchParams }) {
 
       <div className="mt-6 space-y-8">
         {tab === "overview" && (
-          <>
-            <section className="rounded-xl border border-line bg-bg-secondary p-6">
-              <h2 className="text-lg font-medium">Project hub</h2>
-              {project.description && (
-                <p className="mt-3 max-w-3xl text-sm leading-relaxed text-ink-soft">{project.description}</p>
-              )}
-
-              {kpis.length > 0 && (
-                <div className="mt-5">
-                  <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                    KPIs
-                    <InfoTip text="The numbers this project is judged by. Green means the target is met, amber means within 15% of it, red means off target." />
-                  </p>
-                  <div className="mt-2">
-                    <KpiGrid kpis={kpis} />
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-5 flex flex-wrap gap-x-10 gap-y-4">
-                {links.length > 0 && (
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Key links</p>
-                    <ul className="mt-2 space-y-1">
-                      {links.map((l) => (
-                        <li key={l.id}>
-                          <a href={l.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-sm text-accent hover:underline">
-                            <Link2 size={13} /> {l.label}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+          <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
+            {/* Left: project hub */}
+            <div className="min-w-0">
+              <section className="rounded-2xl border border-line bg-bg-secondary p-6 shadow-[0_1px_2px_rgb(16_16_29_/_0.04)]">
+                <h2 className="text-[19px]">Project hub</h2>
+                {project.description && (
+                  <p className="mt-3 max-w-[62ch] text-[14px] leading-relaxed text-ink-soft">{project.description}</p>
                 )}
-                {people.length > 0 && (
-                  <div>
-                    <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-                      <Users size={12} /> People
+
+                {kpis.length > 0 && (
+                  <div className="mt-7">
+                    <p className="font-mono flex items-center gap-1.5 text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">
+                      Key metrics
+                      <InfoTip text="The numbers this project is judged by. Green means the target is met, amber means within 15% of it, red means off target." />
                     </p>
-                    <ul className="mt-2 space-y-1 text-sm">
-                      {people.map((p) => (
-                        <li key={p.id} className="text-ink">
-                          {p.name}
-                          <span className="text-ink-muted"> — {p.role || (p.side === "operator" ? "Our team" : "Your team")}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="mt-3">
+                      <KpiGrid kpis={kpis} />
+                    </div>
                   </div>
                 )}
-              </div>
-            </section>
 
-            <section className="grid gap-6 lg:grid-cols-2">
-              <div className="rounded-xl border border-line bg-bg-secondary p-6">
-                <h2 className="flex items-center gap-2 text-lg font-medium">
-                  <Hammer size={17} className="text-accent" /> We're working on
+                <div className="mt-7 grid gap-6 sm:grid-cols-2">
+                  {links.length > 0 && (
+                    <div>
+                      <p className="font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">Key links</p>
+                      <ul className="mt-2.5 space-y-2">
+                        {links.map((l) => (
+                          <li key={l.id}>
+                            <a href={l.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-[13.5px] text-accent hover:underline">
+                              <Link2 size={13} /> {l.label}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {people.length > 0 && (
+                    <div>
+                      <p className="font-mono flex items-center gap-1.5 text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">
+                        <Users size={11} /> People
+                      </p>
+                      <ul className="mt-2.5 space-y-2 text-[13.5px]">
+                        {people.map((p) => (
+                          <li key={p.id} className="text-ink">
+                            {p.name}
+                            <span className="text-ink-muted"> — {p.role || (p.side === "operator" ? "Our team" : "Your team")}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </section>
+            </div>
+
+            {/* Right rail: live work + decisions */}
+            <div className="space-y-5">
+              <section className="rounded-2xl border border-line bg-bg-secondary p-5 shadow-[0_1px_2px_rgb(16_16_29_/_0.04)]">
+                <h2 className="flex items-center gap-2 text-[15px]">
+                  <Hammer size={15} className="text-accent" /> We&apos;re working on
                   <InfoTip text="What the team is actively doing right now. Items disappear from this list when they're finished." />
                 </h2>
-                <ul className="mt-3 space-y-1.5 text-sm text-ink-soft">
+                <ul className="mt-4 space-y-3 text-[13.5px] text-ink-soft">
                   {working.length === 0 && <li className="text-ink-muted">Nothing in flight right now.</li>}
                   {working.map((w) => (
-                    <li key={w.id} className="flex items-start gap-2">
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" /> {w.title}
+                    <li key={w.id} className="flex items-start gap-2.5">
+                      <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" /> {w.title}
                     </li>
                   ))}
                 </ul>
-              </div>
-              <div className="rounded-xl border border-line bg-bg-secondary p-6">
-                <h2 className="flex items-center gap-2 text-lg font-medium">
-                  <Gavel size={17} className="text-accent" /> Decision log
+              </section>
+              <section className="rounded-2xl border border-line bg-bg-secondary p-5 shadow-[0_1px_2px_rgb(16_16_29_/_0.04)]">
+                <h2 className="flex items-center gap-2 text-[15px]">
+                  <Gavel size={15} className="text-accent" /> Decision log
                   <InfoTip text="A running record of the key decisions made on this project — including your deliverable approvals — so there's never a question about what was agreed and when." />
                 </h2>
-                <ul className="mt-3 space-y-2 text-sm">
+                <ul className="mt-4 space-y-4 text-[13.5px]">
                   {decisions.length === 0 && <li className="text-ink-muted">No recorded decisions yet.</li>}
                   {decisions.map((d) => (
                     <li key={d.id}>
                       <p className="text-ink">{d.summary}</p>
-                      <p className="text-xs text-ink-muted">
+                      <p className="font-mono mt-1 text-[10.5px] text-ink-muted">
                         {d.decided_on}{d.recorded_by ? ` · ${d.recorded_by}` : ""}
                         {d.source === "approval" ? " · from approval" : d.source === "xpm" ? " · from xPM" : ""}
                       </p>
                     </li>
                   ))}
                 </ul>
-              </div>
-            </section>
-          </>
+              </section>
+            </div>
+          </div>
         )}
 
         {tab === "deliverables" && (

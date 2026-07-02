@@ -1,115 +1,93 @@
-import { Check, Flag } from "lucide-react";
+import { Flag } from "lucide-react";
 import { phaseLabel } from "@/lib/phases";
 
-// The first thing a client checks. Answers three questions without thought:
-// where are we now, how far along is the whole project, and what's next.
+// The phase-timeline card body: a connected track of phase segments with the
+// active one highlighted, a slim progress bar, target date, and what's next.
+// The page provides the surrounding "Phase timeline" card + eyebrow; the big
+// project title lives in the page hero above, so this doesn't repeat a heading.
 
 const fmtDate = (s) =>
   s ? new Date(s + "T00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) : null;
 
+const barColor = (s) =>
+  s === "done" ? "bg-accent-2/70"
+  : s === "active" ? "bg-accent"
+  : s === "blocked" ? "bg-danger"
+  : "bg-bg-tertiary border border-line";
+
 export default function ProjectStatus({ phases, currentPhase, progress, targetDate }) {
   const items = phases?.length > 0 ? phases : [];
-
   const activeIdx = items.findIndex((p) => p.status === "active");
-  const active = activeIdx >= 0 ? items[activeIdx] : null;
-  // "blocked" is a status on whichever phase it's set on — not necessarily the
-  // one currently active — so it's surfaced as its own warning line rather than
-  // hijacking the headline (a future phase can be flagged blocked while a
-  // different phase is actively being worked today).
   const blocked = items.find((p) => p.status === "blocked");
   const blockedIdx = blocked ? items.indexOf(blocked) : -1;
   const next = items.slice(activeIdx + 1).find((p) => p.status === "upcoming");
   const nextIdx = next ? items.indexOf(next) : -1;
 
-  // Headline always describes the same phase as the "N of M" count and the date
-  // range below it: the active phase, falling back to the blocked one only if
-  // nothing is active, and finally to the raw stored current_phase string.
-  const headlinePhase = active || blocked || null;
-  const headlineIdx = active ? activeIdx : blocked ? blockedIdx : -1;
-  const headline = headlinePhase ? phaseLabel(headlineIdx, headlinePhase.title) : currentPhase;
-
   return (
     <div>
-      {/* The headline answer: where are we, how far along. */}
-      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-        {(items.length > 0 || currentPhase) && (
-        <div>
-          <p className="font-data text-[11px] uppercase tracking-widest text-ink-muted">
-            Current phase{headlinePhase && ` · ${headlineIdx + 1} of ${items.length}`}
-          </p>
-          <p className="font-display mt-1.5 text-[2rem] font-bold leading-none tracking-tight text-ink">
-            {headline}
-          </p>
-          {headlinePhase?.starts_on && headlinePhase?.ends_on && (
-            <p className="font-data mt-1 text-xs text-ink-soft">
-              {fmtDate(headlinePhase.starts_on)} – {fmtDate(headlinePhase.ends_on)}
-            </p>
+      {items.length > 0 ? (
+        <div className="flex gap-1.5">
+          {items.map((ph, i) => (
+            <div key={ph.id} className="min-w-0 flex-1">
+              <div
+                className={`h-2.5 rounded-full ${barColor(ph.status)} ${
+                  ph.status === "active" ? "shadow-[0_2px_10px_-2px_rgb(91_72_238_/_0.55)]" : ""
+                }`}
+              />
+              <p
+                className={`mt-2.5 truncate text-[11px] ${
+                  ph.status === "active" ? "font-semibold text-accent"
+                  : ph.status === "blocked" ? "font-semibold text-danger"
+                  : ph.status === "done" ? "text-ink-soft" : "text-ink-muted"
+                }`}
+              >
+                {phaseLabel(i, ph.title)}
+              </p>
+              {ph.starts_on && (
+                <p className="font-mono truncate text-[10px] text-ink-muted">
+                  {fmtDate(ph.starts_on)}{ph.ends_on ? ` – ${fmtDate(ph.ends_on)}` : ""}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : currentPhase ? (
+        <p className="font-serif text-lg text-ink">{currentPhase}</p>
+      ) : (
+        <p className="text-sm text-ink-muted">No phases defined yet.</p>
+      )}
+
+      {(typeof progress === "number" || targetDate || next || blocked) && (
+        <div className="mt-5 border-t border-line pt-4">
+          {typeof progress === "number" && (
+            <div className="flex items-center gap-3">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-bg-tertiary">
+                <div className="h-full rounded-full bg-accent-2" style={{ width: `${progress}%` }} />
+              </div>
+              <span className="font-mono text-[12px] font-medium text-ink-soft">{progress}%</span>
+              {targetDate && (
+                <span className="flex items-center gap-1.5 font-mono text-[11px] text-ink-muted">
+                  <Flag size={12} className="text-accent" /> target {targetDate}
+                </span>
+              )}
+            </div>
           )}
-          {blocked && (
-            <p className="mt-2 inline-flex items-center rounded-full bg-danger/10 px-2.5 py-1 text-xs font-semibold text-danger">
-              {phaseLabel(blockedIdx, blocked.title)} is blocked — needs attention
+          {(next || blocked) && (
+            <p className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-ink-soft">
+              {blocked && (
+                <span className="font-medium text-danger">
+                  {phaseLabel(blockedIdx, blocked.title)} is blocked — needs attention
+                </span>
+              )}
+              {next && (
+                <span>
+                  Up next: <span className="font-medium text-ink">{phaseLabel(nextIdx, next.title)}</span>
+                  {next.starts_on && <span className="font-mono text-xs text-ink-muted"> · starts {fmtDate(next.starts_on)}</span>}
+                </span>
+              )}
             </p>
           )}
         </div>
-        )}
-        {typeof progress === "number" && (
-          <div className="text-right">
-            <p className="font-data text-4xl font-semibold tracking-tight text-accent">{progress}%</p>
-            <p className="text-xs text-ink-muted">of the project complete</p>
-          </div>
-        )}
-      </div>
-
-      {/* The track: one connected bar, each segment a phase. */}
-      {items.length > 0 && (
-      <div className="mt-6 flex gap-1">
-        {items.map((ph, i) => (
-          <div key={ph.id} className="min-w-0 flex-1">
-            <div
-              className={`h-2 first:rounded-l-full last:rounded-r-full ${
-                ph.status === "done" ? "bg-accent-2" :
-                ph.status === "active" ? "bg-accent" :
-                ph.status === "blocked" ? "bg-danger" : "bg-bg-tertiary"
-              } ${ph.status === "active" ? "animate-pulse" : ""} rounded-sm`}
-            />
-            <div className="mt-2 flex items-start gap-1 pr-2">
-              {ph.status === "done" && <Check size={12} className="mt-0.5 shrink-0 text-accent-2" />}
-              <div className="min-w-0">
-                <p className={`truncate text-xs ${
-                  ph.status === "active" ? "font-semibold text-ink" :
-                  ph.status === "blocked" ? "font-semibold text-danger" :
-                  ph.status === "done" ? "text-ink-soft" : "text-ink-muted"
-                }`}>
-                  {phaseLabel(i, ph.title)}
-                </p>
-                {ph.starts_on && (
-                  <p className="font-data truncate text-[10px] text-ink-muted">
-                    {fmtDate(ph.starts_on)}{ph.ends_on ? ` – ${fmtDate(ph.ends_on)}` : ""}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      )}
-
-      {/* What's next — the question clients would otherwise email about. */}
-      {(next || targetDate) && (
-        <p className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-1 border-t border-line pt-4 text-sm text-ink-soft">
-          {next && (
-            <span>
-              Up next: <span className="font-medium text-ink">{phaseLabel(nextIdx, next.title)}</span>
-              {next.starts_on && <span className="font-data text-xs text-ink-muted"> · starts {fmtDate(next.starts_on)}</span>}
-            </span>
-          )}
-          {targetDate && (
-            <span className="flex items-center gap-1.5">
-              <Flag size={13} className="text-accent" />
-              Target delivery <span className="font-data font-medium text-ink">{targetDate}</span>
-            </span>
-          )}
-        </p>
       )}
     </div>
   );
