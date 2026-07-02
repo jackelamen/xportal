@@ -58,7 +58,7 @@ export default async function AdminLayout({ children }) {
         </div>
 
         <div className="flex items-center gap-3 border-t border-white/[0.08] px-4 py-4">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent-2 to-[#22c58f] text-[11px] font-semibold text-white">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-2 text-[11px] font-semibold text-white ring-1 ring-white/15">
             {(operator.name || "?").slice(0, 1).toUpperCase()}
           </span>
           <div className="min-w-0 flex-1 leading-tight">

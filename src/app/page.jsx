@@ -13,8 +13,8 @@ export default function LoginPage() {
       <div className="mb-8">
         <Logo size={30} sub="Client portal" />
       </div>
-      <h2 className="text-2xl font-semibold text-ink">Welcome back</h2>
-      <p className="mt-1.5 text-sm text-ink-soft">Sign in to review progress and deliverables.</p>
+      <h2 className="text-2xl font-semibold text-ink">Sign in to your workspace</h2>
+      <p className="mt-1.5 text-sm text-ink-soft">Review progress, deliverables, and billing in one place.</p>
       <div className="mt-7">
         <LoginForm kind="client" />
       </div>

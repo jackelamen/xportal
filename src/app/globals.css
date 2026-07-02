@@ -65,7 +65,6 @@ body {
   background-color: var(--color-bg-primary);
   color: var(--color-ink);
   font-family: var(--font-sans), system-ui, sans-serif;
-  font-feature-settings: "cv05", "cv11"; /* Inter: open digits + curved l */
 }
 
 button, a, summary, input, select, textarea {
@@ -89,8 +88,8 @@ button.bg-warn:hover:not(:disabled) {
 
 /* One editorial serif moment per page: the page-title hero (h1) is Instrument
    Serif, kept at its natural 400 weight and large. Section/card headings
-   (h2, h3) stay on Geist — this restraint (serif hero + sans everything else)
-   is what reads premium rather than "serif slapped everywhere". */
+   (h2, h3) stay on Geist — the restraint of a single serif note against an
+   otherwise-sans system is what carries the editorial, high-end feel. */
 h1 {
   font-family: var(--font-serif), Georgia, serif;
   font-weight: 400;

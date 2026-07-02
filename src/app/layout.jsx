@@ -2,10 +2,10 @@ import { Geist, Geist_Mono, Space_Grotesk, Instrument_Serif } from "next/font/go
 import PwaRegister from "@/components/PwaRegister";
 import "./globals.css";
 
-// Type strategy (mirrors the "Modern Enterprise" reference):
+// Type strategy:
 //  - Instrument Serif — reserved for the one editorial moment per page: the
-//    page-title hero (h1) and big KPI numbers. High-contrast + elegant; this
-//    single restrained serif note is what reads as "premium, not AI".
+//    page-title hero (h1) and big KPI numbers. High-contrast and elegant; a
+//    single restrained serif note against an otherwise-sans system.
 //  - Geist — everything else: section headings, body, UI, labels, buttons.
 //  - Geist Mono — data: dates, IDs, units, eyebrows.
 //  - Space Grotesk — the xPortal wordmark only.

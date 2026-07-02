@@ -62,7 +62,7 @@ export default async function PortalLayout({ children }) {
             <PortalNav items={NAV} unread={unread} />
           </div>
           <div className="flex items-center gap-3 border-t border-white/[0.08] px-4 py-4">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-[#8b7bff] text-[11px] font-semibold text-white">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-white ring-1 ring-white/15">
               {(user.name || "?").slice(0, 1).toUpperCase()}
             </span>
             <div className="min-w-0 flex-1 leading-tight">

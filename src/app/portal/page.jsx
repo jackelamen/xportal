@@ -4,7 +4,6 @@ import {
 } from "lucide-react";
 import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
-import { InfoTip } from "@/components/Tip";
 import { phaseLabel } from "@/lib/phases";
 
 export const dynamic = "force-dynamic";
@@ -109,21 +108,17 @@ export default async function Home() {
             {"  ·  "}{client.company_name}
           </p>
           <h1 className="mt-1 text-[1.85rem] leading-none tracking-tight">
-            Welcome back, {user.name.split(" ")[0]}.
+            {user.name.split(" ")[0]}, here's where things stand.
           </h1>
         </div>
       </div>
 
       {attention.length > 0 ? (
         <section className="mt-6 rounded-xl border border-accent/40 bg-accent/5 p-5">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
-            </span>
+          <h2 className="flex items-center gap-2.5 text-sm font-semibold text-ink">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-accent ring-4 ring-accent/15" />
             Needs your attention
             <span className="font-data text-xs font-normal text-ink-muted">({attention.length})</span>
-            <InfoTip side="bottom" text="Everything waiting on an action from you — files to upload, work to review, invoices, and new messages. Click any item to jump straight to it." />
           </h2>
           <ul className="mt-4 space-y-2">
             {attention.map((a, i) => (
@@ -244,10 +239,7 @@ export default async function Home() {
         </section>
 
         <section className="rounded-xl border border-line bg-bg-secondary p-5">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
-            Latest from the team
-            <InfoTip text="The most recent things we've done across your projects — uploads, status changes, file requests, and messages." />
-          </h2>
+          <h2 className="text-sm font-semibold text-ink">Latest from the team</h2>
           <ul className="mt-3 space-y-2 text-sm">
             {recentActivity.length === 0 && <li className="text-ink-muted">No recent updates.</li>}
             {recentActivity.map((a) => (
