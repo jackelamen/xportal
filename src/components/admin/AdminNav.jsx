@@ -3,22 +3,25 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Settings } from "lucide-react";
 
+// Dark sidebar: caps labels, emerald active state with a right-edge accent
+// tab — mirrors the client portal's PortalNav, but accent-2 (emerald) instead
+// of accent (indigo), since admin keeps its own identity color.
 function NavItem({ href, icon: Icon, label, badge, exact = false }) {
   const pathname = usePathname();
   const active = exact ? pathname === href : pathname.startsWith(href);
   return (
     <Link
       href={href}
-      className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
-        active
-          ? "bg-accent-2/10 font-semibold text-accent-2"
-          : "text-ink-soft hover:bg-bg-tertiary hover:text-ink"
+      aria-current={active ? "page" : undefined}
+      className={`relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[12px] font-medium uppercase tracking-[0.08em] transition-colors ${
+        active ? "bg-white/[0.07] text-white" : "text-white/55 hover:bg-white/[0.04] hover:text-white/90"
       }`}
     >
-      <Icon size={15} strokeWidth={active ? 2.2 : 1.8} />
-      <span className="flex-1 truncate">{label}</span>
+      {active && <span className="absolute right-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-accent-2" />}
+      <Icon size={16} strokeWidth={active ? 2.1 : 1.9} className={active ? "text-accent-2" : ""} />
+      <span className="flex-1">{label}</span>
       {!!badge && (
-        <span className="rounded-full bg-accent px-1.5 py-px text-[10px] font-semibold leading-tight text-white">
+        <span className="font-mono rounded-full bg-accent px-1.5 text-[10px] font-semibold normal-case tracking-normal text-white">
           {badge}
         </span>
       )}
@@ -26,17 +29,17 @@ function NavItem({ href, icon: Icon, label, badge, exact = false }) {
   );
 }
 
-const DOT_COLOR = ["bg-accent", "bg-danger", "bg-warn", "bg-accent-2", "bg-dispute"];
+const DOT_COLOR = ["bg-accent-2", "bg-accent", "bg-warn", "bg-dispute", "bg-danger"];
 
 export default function AdminNav({ unreadCount, clients = [] }) {
   const pathname = usePathname();
   return (
-    <nav className="space-y-0.5">
+    <nav className="flex flex-col gap-1">
       <NavItem href="/admin" icon={LayoutDashboard} label="Dashboard" badge={unreadCount} exact />
 
       {clients.length > 0 && (
         <>
-          <p className="font-data px-3 pb-1.5 pt-4 text-[10px] uppercase tracking-widest text-ink-muted">
+          <p className="font-mono px-3 pb-1.5 pt-4 text-[10px] uppercase tracking-widest text-white/35">
             Clients
           </p>
           {clients.map((c, i) => {
@@ -45,10 +48,12 @@ export default function AdminNav({ unreadCount, clients = [] }) {
               <Link
                 key={c.id}
                 href={`/admin/clients/${c.id}`}
-                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
-                  active ? "bg-accent-2/10 font-semibold text-accent-2" : "text-ink-soft hover:bg-bg-tertiary hover:text-ink"
+                aria-current={active ? "page" : undefined}
+                className={`relative flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-[12.5px] font-medium normal-case tracking-normal transition-colors ${
+                  active ? "bg-white/[0.07] text-white" : "text-white/55 hover:bg-white/[0.04] hover:text-white/90"
                 }`}
               >
+                {active && <span className="absolute right-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-accent-2" />}
                 <span className={`h-1.5 w-1.5 shrink-0 rounded-sm ${DOT_COLOR[i % DOT_COLOR.length]}`} />
                 <span className="flex-1 truncate">{c.company_name}</span>
               </Link>
@@ -57,7 +62,7 @@ export default function AdminNav({ unreadCount, clients = [] }) {
         </>
       )}
 
-      <p className="font-data px-3 pb-1.5 pt-4 text-[10px] uppercase tracking-widest text-ink-muted">
+      <p className="font-mono px-3 pb-1.5 pt-4 text-[10px] uppercase tracking-widest text-white/35">
         Console
       </p>
       <NavItem href="/admin/settings" icon={Settings} label="Settings" />

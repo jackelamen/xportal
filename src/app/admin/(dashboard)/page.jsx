@@ -322,11 +322,11 @@ export default async function AdminHome() {
 function Stat({ label, value, note, noteTone = "warn", tone }) {
   return (
     <div className={`px-5 py-4 ${tone === "danger" ? "bg-danger/[0.03]" : ""}`}>
-      <p className="font-data text-[10px] uppercase tracking-wide text-ink-muted">{label}</p>
-      <p className={`font-data mt-2 text-[1.75rem] font-medium leading-none tracking-tight ${tone === "danger" ? "text-danger" : "text-ink"}`}>
+      <p className="font-mono text-[10px] uppercase tracking-wide text-ink-muted">{label}</p>
+      <p className={`font-serif mt-2 text-[2rem] leading-none ${tone === "danger" ? "text-danger" : "text-ink"}`}>
         {value}
         {note && (
-          <span className={`ml-1.5 text-xs ${noteTone === "warn" ? "text-warn" : "text-ink-muted"}`}>{note}</span>
+          <span className={`font-sans ml-1.5 text-xs ${noteTone === "warn" ? "text-warn" : "text-ink-muted"}`}>{note}</span>
         )}
       </p>
     </div>
