@@ -150,13 +150,7 @@ export default async function ProjectPage({ params, searchParams }) {
 
                 {kpis.length > 0 && (
                   <div className="mt-7">
-                    <p className="font-mono flex items-center gap-1.5 text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">
-                      Key metrics
-                      <InfoTip text="The numbers this project is judged by. Green means the target is met, amber means within 15% of it, red means off target." />
-                    </p>
-                    <div className="mt-3">
-                      <KpiGrid kpis={kpis} />
-                    </div>
+                    <KpiGrid kpis={kpis} />
                   </div>
                 )}
 
