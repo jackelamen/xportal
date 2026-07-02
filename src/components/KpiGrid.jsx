@@ -40,7 +40,7 @@ export default function KpiGrid({ kpis }) {
                 {t.label}
               </span>
             </div>
-            <p className="font-mono mt-4 text-[1.7rem] font-medium leading-none tracking-tight text-ink">
+            <p className="font-serif mt-4 text-[2rem] leading-none text-ink">
               {fmt(k.current_value, k.unit)}
             </p>
             <p className="font-mono mt-2.5 text-[10.5px] uppercase tracking-[0.12em] text-ink-muted">{k.name}</p>

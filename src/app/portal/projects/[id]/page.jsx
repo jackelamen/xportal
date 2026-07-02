@@ -95,8 +95,8 @@ export default async function ProjectPage({ params, searchParams }) {
             )}
             <span className="font-mono text-[11px] text-ink-muted">Updated {project.updated_at?.slice(0, 10)}</span>
           </div>
-          <h1 className="mt-3 text-[2.4rem] font-semibold leading-none tracking-tight text-ink">{project.title}</h1>
-          <p className="font-mono mt-2.5 text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">{client.company_name}</p>
+          <h1 className="mt-2 text-[2.9rem] leading-[1.02] text-ink">{project.title}</h1>
+          <p className="font-mono mt-3 text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">{client.company_name}</p>
         </div>
       </div>
 

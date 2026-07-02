@@ -1,12 +1,13 @@
-import { Geist, Geist_Mono, Space_Grotesk, Fraunces } from "next/font/google";
+import { Geist, Geist_Mono, Space_Grotesk, Instrument_Serif } from "next/font/google";
 import PwaRegister from "@/components/PwaRegister";
 import "./globals.css";
 
-// Type strategy:
-//  - Fraunces (serif) — page titles + card section headings. The editorial
-//    serif is what lifts the UI out of the generic all-sans "AI SaaS" look.
-//  - Geist — all body, UI, labels, buttons.
-//  - Geist Mono — data: numbers, dates, IDs, caps eyebrows.
+// Type strategy (mirrors the "Modern Enterprise" reference):
+//  - Instrument Serif — reserved for the one editorial moment per page: the
+//    page-title hero (h1) and big KPI numbers. High-contrast + elegant; this
+//    single restrained serif note is what reads as "premium, not AI".
+//  - Geist — everything else: section headings, body, UI, labels, buttons.
+//  - Geist Mono — data: dates, IDs, units, eyebrows.
 //  - Space Grotesk — the xPortal wordmark only.
 const sans = Geist({
   subsets: ["latin"],
@@ -25,10 +26,10 @@ const display = Space_Grotesk({
   variable: "--font-display",
   display: "swap",
 });
-const serif = Fraunces({
+const serif = Instrument_Serif({
   subsets: ["latin"],
+  weight: "400",
   style: ["normal", "italic"],
-  axes: ["opsz"],
   variable: "--font-serif",
   display: "swap",
 });

@@ -1,19 +1,28 @@
 import { Flag } from "lucide-react";
 import { phaseLabel } from "@/lib/phases";
 
-// The phase-timeline card body: a connected track of phase segments with the
-// active one highlighted, a slim progress bar, target date, and what's next.
-// The page provides the surrounding "Phase timeline" card + eyebrow; the big
-// project title lives in the page hero above, so this doesn't repeat a heading.
+// The phase-timeline card body: a connected bar of phase segments (the active
+// one striped), aligned labels, a slim progress bar, target date, and what's
+// next. The page provides the surrounding "Phase timeline" card + eyebrow and
+// the big serif project title above, so this doesn't repeat a heading.
 
 const fmtDate = (s) =>
   s ? new Date(s + "T00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) : null;
 
-const barColor = (s) =>
-  s === "done" ? "bg-accent-2/70"
-  : s === "active" ? "bg-accent"
-  : s === "blocked" ? "bg-danger"
-  : "bg-bg-tertiary border border-line";
+const SEG = {
+  done: "bg-accent-2/25",
+  active: "bg-accent/12",
+  blocked: "bg-danger/15",
+  upcoming: "bg-bg-secondary",
+};
+
+// Diagonal hatch for the active phase, tinted with the (possibly client-branded)
+// accent variable so it recolors with per-client branding.
+const stripes = {
+  backgroundImage:
+    "repeating-linear-gradient(45deg, transparent, transparent 7px, var(--color-accent) 7px, var(--color-accent) 14px)",
+  opacity: 0.22,
+};
 
 export default function ProjectStatus({ phases, currentPhase, progress, targetDate }) {
   const items = phases?.length > 0 ? phases : [];
@@ -26,16 +35,23 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
   return (
     <div>
       {items.length > 0 ? (
-        <div className="flex gap-1.5">
-          {items.map((ph, i) => (
-            <div key={ph.id} className="min-w-0 flex-1">
+        <>
+          <div className="flex h-9 overflow-hidden rounded-lg border border-line bg-bg-tertiary">
+            {items.map((ph, i) => (
               <div
-                className={`h-2.5 rounded-full ${barColor(ph.status)} ${
-                  ph.status === "active" ? "shadow-[0_2px_10px_-2px_rgb(91_72_238_/_0.55)]" : ""
-                }`}
-              />
+                key={ph.id}
+                className={`relative flex-1 border-r border-line last:border-r-0 ${SEG[ph.status] || SEG.upcoming}`}
+                title={`${phaseLabel(i, ph.title)} — ${ph.status}`}
+              >
+                {ph.status === "active" && <div className="absolute inset-0" style={stripes} />}
+              </div>
+            ))}
+          </div>
+          <div className="mt-2.5 flex">
+            {items.map((ph, i) => (
               <p
-                className={`mt-2.5 truncate text-[11px] ${
+                key={ph.id}
+                className={`min-w-0 flex-1 truncate px-1 text-center text-[10.5px] ${
                   ph.status === "active" ? "font-semibold text-accent"
                   : ph.status === "blocked" ? "font-semibold text-danger"
                   : ph.status === "done" ? "text-ink-soft" : "text-ink-muted"
@@ -43,16 +59,11 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
               >
                 {phaseLabel(i, ph.title)}
               </p>
-              {ph.starts_on && (
-                <p className="font-mono truncate text-[10px] text-ink-muted">
-                  {fmtDate(ph.starts_on)}{ph.ends_on ? ` – ${fmtDate(ph.ends_on)}` : ""}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       ) : currentPhase ? (
-        <p className="font-serif text-lg text-ink">{currentPhase}</p>
+        <p className="text-lg font-medium text-ink">{currentPhase}</p>
       ) : (
         <p className="text-sm text-ink-muted">No phases defined yet.</p>
       )}

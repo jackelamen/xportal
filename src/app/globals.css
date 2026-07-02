@@ -87,15 +87,21 @@ button.bg-warn:hover:not(:disabled) {
   border-radius: 4px;
 }
 
-/* Fraunces (serif) carries headline-level moments — page titles and card
-   section headings — the editorial note that lifts the UI out of the generic
-   all-sans look. Everything else (body, labels, buttons, data) stays on
-   Geist / Geist Mono. Semantic h1-h3 covers this app's headings uniformly. */
-h1, h2, h3 {
+/* One editorial serif moment per page: the page-title hero (h1) is Instrument
+   Serif, kept at its natural 400 weight and large. Section/card headings
+   (h2, h3) stay on Geist — this restraint (serif hero + sans everything else)
+   is what reads premium rather than "serif slapped everywhere". */
+h1 {
   font-family: var(--font-serif), Georgia, serif;
+  font-weight: 400;
+  text-wrap: balance;
+  letter-spacing: -0.005em;
+}
+h2, h3 {
+  font-family: var(--font-sans), system-ui, sans-serif;
   font-weight: 600;
   text-wrap: balance;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.02em;
 }
 
 /* Cards float: every rounded panel on the secondary surface carries the
