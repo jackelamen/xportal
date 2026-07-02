@@ -38,7 +38,7 @@ export default async function AdminClientPage({ params, searchParams }) {
 
       <header className="mt-3 flex flex-wrap items-stretch justify-between gap-4">
         <div className="flex items-stretch gap-4">
-          <div className="w-[3px] shrink-0 rounded-full bg-accent-2" />
+          <div className="w-[3px] shrink-0 rounded-full bg-spark" />
           <div>
             <h1 className="text-[1.7rem] leading-none">{client.company_name}</h1>
             <p className="mt-2.5 flex items-center gap-2 text-sm text-ink-soft">

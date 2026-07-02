@@ -112,7 +112,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
         <span className="text-ink">{project.title}</span>
       </nav>
       <div className="mt-3 flex items-stretch gap-4">
-        <div className="w-[3px] shrink-0 rounded-full bg-accent-2" />
+        <div className="w-[3px] shrink-0 rounded-full bg-spark" />
         <div>
           <p className="font-data text-[11px] uppercase tracking-widest text-ink-muted">{project.company_name}</p>
           <h1 className="mt-1 text-[1.5rem] leading-none text-ink">{project.title}</h1>

@@ -1,14 +1,14 @@
-import { Geist, Geist_Mono, Space_Grotesk, Instrument_Serif } from "next/font/google";
+import { Geist, Geist_Mono, Syne, Instrument_Serif } from "next/font/google";
 import PwaRegister from "@/components/PwaRegister";
 import "./globals.css";
 
-// Type strategy:
-//  - Instrument Serif - reserved for the one editorial moment per page: the
-//    page-title hero (h1) and big KPI numbers. High-contrast and elegant; a
-//    single restrained serif note against an otherwise-sans system.
+// Type strategy - three distinct voices, each with a job:
+//  - Instrument Serif - the one editorial moment per page: the page-title hero
+//    (h1) and big KPI numbers. A single restrained serif note.
+//  - Syne - the xPortal wordmark only. A characterful geometric display face
+//    that gives the brand mark its own presence, distinct from body and hero.
 //  - Geist - everything else: section headings, body, UI, labels, buttons.
 //  - Geist Mono - data: dates, IDs, units, eyebrows.
-//  - Space Grotesk - the xPortal wordmark only.
 const sans = Geist({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -20,9 +20,9 @@ const mono = Geist_Mono({
   variable: "--font-mono",
   display: "swap",
 });
-const display = Space_Grotesk({
+const display = Syne({
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["600", "700", "800"],
   variable: "--font-display",
   display: "swap",
 });

@@ -22,6 +22,7 @@
   --color-warn: var(--warn);
   --color-danger: var(--danger);
   --color-dispute: var(--dispute);
+  --color-spark: var(--spark);
 }
 
 :root {
@@ -31,6 +32,9 @@
   --bg-tertiary: #efeff5;
   --accent: #5b48ee;
   --accent-2: #059669;
+  /* Spark: a warm amber counter-accent to the cool indigo. Used sparingly for
+     the editorial hero rule and small brand moments, never as a status color. */
+  --spark: #e0982e;
   --ink: #16161d;
   --ink-soft: #4d4d59;
   --ink-muted: #6e6e7a;
@@ -40,6 +44,11 @@
   --dispute: #7e22ce;
   --shadow-card: 0 1px 2px rgb(22 22 29 / 0.04), 0 12px 32px -16px rgb(22 22 29 / 0.14);
   --shadow-button: inset 0 1px 0 rgb(255 255 255 / 0.16), 0 1px 2px rgb(22 22 29 / 0.24);
+  /* A faint light source from the top: gives the flat canvas depth without
+     drawing attention. Rendered under all content via the body background. */
+  --bg-atmosphere:
+    radial-gradient(120% 80% at 50% -12%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 58%),
+    radial-gradient(90% 60% at 92% 4%, color-mix(in srgb, var(--spark) 5%, transparent), transparent 60%);
   color-scheme: light;
 }
 
@@ -49,6 +58,7 @@
   --bg-tertiary: #1f2937;
   --accent: #7c6cf6;
   --accent-2: #10b981;
+  --spark: #f2b34a;
   --ink: #f3f4f6;
   --ink-soft: #9ca3af;
   --ink-muted: #6b7280;
@@ -58,11 +68,17 @@
   --dispute: #c084fc;
   --shadow-card: none;
   --shadow-button: inset 0 1px 0 rgb(255 255 255 / 0.08);
+  --bg-atmosphere:
+    radial-gradient(120% 80% at 50% -12%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 55%),
+    radial-gradient(90% 60% at 92% 4%, color-mix(in srgb, var(--spark) 8%, transparent), transparent 60%);
   color-scheme: dark;
 }
 
 body {
   background-color: var(--color-bg-primary);
+  background-image: var(--bg-atmosphere);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--color-ink);
   font-family: var(--font-sans), system-ui, sans-serif;
 }

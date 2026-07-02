@@ -20,7 +20,7 @@ export default async function AdminSettings() {
   return (
     <div className="page-enter space-y-8">
       <div className="flex items-stretch gap-4">
-        <div className="w-[3px] shrink-0 rounded-full bg-accent-2" />
+        <div className="w-[3px] shrink-0 rounded-full bg-spark" />
         <div>
           <p className="font-data text-[11px] uppercase tracking-widest text-ink-muted">Operator console</p>
           <h1 className="mt-1 text-[1.5rem] leading-none text-ink">Settings</h1>

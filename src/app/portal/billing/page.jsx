@@ -23,7 +23,7 @@ export default async function BillingPage() {
   return (
     <div className="page-enter">
       <div className="flex items-stretch gap-5 border-b border-line pb-6">
-        <div className="w-[3px] shrink-0 rounded-full bg-accent" />
+        <div className="w-[3px] shrink-0 rounded-full bg-spark" />
         <div>
           <p className="font-data text-[11px] uppercase tracking-widest text-ink-muted">{client.company_name} · Billing</p>
           <h1 className="mt-1 text-[1.85rem] leading-none tracking-tight">Invoices &amp; payments</h1>

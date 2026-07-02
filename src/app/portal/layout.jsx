@@ -95,7 +95,7 @@ function BrandMark({ client, compact = false }) {
       <div className="flex items-center gap-2.5">
         <LogoMark size={compact ? 26 : 28} tile="indigo" />
         <div className="leading-tight">
-          <div className="font-display text-[15px] font-semibold tracking-tight text-white">
+          <div className="font-display text-[15px] font-bold tracking-tight text-white">
             x<span className="text-accent">Portal</span>
           </div>
           {!compact && (

@@ -21,7 +21,7 @@ export default function LoginShell({ tile = "indigo", eyebrow, headline, blurb, 
           ) : (
             <>
               <LogoMark size={30} tile={tile} />
-              <span className="text-base font-semibold tracking-tight text-ink">
+              <span className="font-display text-base font-bold tracking-tight text-ink">
                 x<span className={tile === "emerald" ? "text-accent-2" : "text-accent"}>Portal</span>
               </span>
             </>

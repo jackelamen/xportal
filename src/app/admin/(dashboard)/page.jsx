@@ -72,7 +72,7 @@ export default async function AdminHome() {
     <div className="page-enter">
       {/* ── Page header ──────────────────────────────────────────────── */}
       <div className="flex items-stretch gap-5 border-b border-line pb-6">
-        <div className="w-[3px] shrink-0 rounded-full bg-accent-2" />
+        <div className="w-[3px] shrink-0 rounded-full bg-spark" />
         <div>
           <p className="font-data text-[11px] uppercase tracking-widest text-ink-muted">Operator console</p>
           <h1 className="mt-1 text-[1.7rem] leading-none">Dashboard</h1>

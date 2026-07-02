@@ -67,7 +67,7 @@ export default async function CalendarPage({ searchParams }) {
     <div className="page-enter">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-stretch gap-4">
-          <div className="w-[3px] shrink-0 rounded-full bg-accent" />
+          <div className="w-[3px] shrink-0 rounded-full bg-spark" />
           <h1 className="text-[1.6rem] leading-none tracking-tight">{monthName}</h1>
         </div>
         <div className="flex gap-2 text-sm">

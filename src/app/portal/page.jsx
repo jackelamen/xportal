@@ -101,7 +101,7 @@ export default async function Home() {
   return (
     <div className="page-enter">
       <div className="flex items-stretch gap-5 border-b border-line pb-6">
-        <div className="w-[3px] shrink-0 rounded-full bg-accent" />
+        <div className="w-[3px] shrink-0 rounded-full bg-spark" />
         <div>
           <p className="font-data text-[11px] uppercase tracking-widest text-ink-muted">
             {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}

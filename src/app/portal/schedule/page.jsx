@@ -67,7 +67,7 @@ export default function SchedulePage() {
   return (
     <div className="page-enter">
       <div className="flex items-stretch gap-4">
-        <div className="w-[3px] shrink-0 rounded-full bg-accent" />
+        <div className="w-[3px] shrink-0 rounded-full bg-spark" />
         <h1 className="text-[1.85rem] leading-none tracking-tight">Book a meeting</h1>
       </div>
 

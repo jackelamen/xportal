@@ -33,7 +33,7 @@ export default async function AdminLayout({ children }) {
       <header className="flex items-center justify-between bg-[#0b0d13] p-4 text-white md:hidden">
         <Link href="/admin" className="flex items-center gap-2.5">
           <LogoMark size={26} tile="emerald" />
-          <span className="font-display text-[15px] font-semibold tracking-tight text-white">
+          <span className="font-display text-[15px] font-bold tracking-tight text-white">
             x<span className="text-accent-2">Portal</span>
           </span>
         </Link>
@@ -45,7 +45,7 @@ export default async function AdminLayout({ children }) {
           <Link href="/admin" className="flex items-center gap-2.5">
             <LogoMark size={28} tile="emerald" />
             <div className="leading-tight">
-              <div className="font-display text-[15px] font-semibold tracking-tight text-white">
+              <div className="font-display text-[15px] font-bold tracking-tight text-white">
                 x<span className="text-accent-2">Portal</span>
               </div>
               <div className="font-mono text-[9px] uppercase tracking-[0.14em] text-white/40">Operator console</div>

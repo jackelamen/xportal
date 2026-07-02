@@ -30,7 +30,7 @@ export default async function ActivityPage() {
   return (
     <div className="page-enter">
       <div className="flex items-stretch gap-4">
-        <div className="w-[3px] shrink-0 rounded-full bg-accent" />
+        <div className="w-[3px] shrink-0 rounded-full bg-spark" />
         <h1 className="text-[1.85rem] leading-none tracking-tight">Activity</h1>
       </div>
       <ol className="mt-8 space-y-0 border-l border-line pl-5">
