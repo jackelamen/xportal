@@ -4,7 +4,7 @@ import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { Link2, Users, Gavel, Hammer } from "lucide-react";
 import ProjectStatus from "@/components/ProjectStatus";
-import Timeline from "@/components/Timeline";
+import ProjectProgress from "@/components/ProjectProgress";
 import DeliverableCard from "@/components/DeliverableCard";
 import MessageFeed from "@/components/MessageFeed";
 import KpiGrid from "@/components/KpiGrid";
@@ -14,7 +14,7 @@ import { t as translate } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
-const TABS = ["overview", "deliverables", "documents", "timeline", "messages"];
+const TABS = ["overview", "deliverables", "documents", "progress", "messages"];
 
 export default async function ProjectPage({ params, searchParams }) {
   const { id } = await params;
@@ -65,6 +65,20 @@ export default async function ProjectPage({ params, searchParams }) {
   const working = await sql(
     "SELECT * FROM working_items WHERE project_id = ? AND status = 'active' ORDER BY created_at", [id]
   );
+  // The Progress tab's pulse: this project's recent team activity, the next
+  // meeting, and any open invoices for the "coming up" list.
+  const projectActivity = await sql(
+    `SELECT * FROM activity_log WHERE project_id = ? AND actor_type = 'operator'
+     ORDER BY created_at DESC LIMIT 12`, [id]
+  );
+  const nextMeeting = (await sql(
+    `SELECT * FROM bookings WHERE client_id = ? AND status = 'confirmed' AND starts_at > NOW()
+     ORDER BY starts_at ASC LIMIT 1`, [client.id]
+  ))[0] || null;
+  const dueInvoices = await sql(
+    `SELECT invoice_number, due_date FROM invoices
+     WHERE project_id = ? AND status IN ('Unpaid','Overdue') ORDER BY due_date ASC`, [id]
+  );
 
   // Attention counts drive the tab badges. Messages stay unread until the
   // client marks them read (or replies) - no silent auto-read on page visit.
@@ -72,12 +86,13 @@ export default async function ProjectPage({ params, searchParams }) {
   const pendingCount = deliverables.filter((d) => d.status === "Pending").length;
   const requestCount = fileRequests.length;
 
-  const hasTimeline = milestones.some((m) => m.kind === "phase" && m.starts_on && m.ends_on);
+  // Progress tab shows whenever the project has any phases to walk through.
+  const hasProgress = milestones.some((m) => m.kind === "phase");
   const tabs = [
     { key: "overview", label: t("project.tabOverview") },
     { key: "deliverables", label: t("project.tabDeliverables"), badge: pendingCount },
     { key: "documents", label: t("project.tabDocuments"), badge: requestCount },
-    ...(hasTimeline ? [{ key: "timeline", label: t("project.tabTimeline") }] : []),
+    ...(hasProgress ? [{ key: "progress", label: t("project.tabProgress") }] : []),
     { key: "messages", label: t("project.tabMessages"), badge: unreadCount },
   ];
 
@@ -248,13 +263,14 @@ export default async function ProjectPage({ params, searchParams }) {
           </section>
         )}
 
-        {tab === "timeline" && hasTimeline && (
-          <section className="rounded-xl border border-line bg-bg-secondary p-6">
-            <p className="mb-3 flex justify-end">
-              <InfoTip text={t("project.timelineTip")} />
-            </p>
-            <Timeline milestones={milestones} locale={locale} />
-          </section>
+        {tab === "progress" && hasProgress && (
+          <ProjectProgress
+            milestones={milestones}
+            activity={projectActivity}
+            nextMeeting={nextMeeting}
+            dueInvoices={dueInvoices}
+            locale={locale}
+          />
         )}
 
         {tab === "messages" && (
