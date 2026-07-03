@@ -1,5 +1,5 @@
-// The xPortal mark: a gateway/portal arch. A doorway you step through, with a
-// lit threshold orb at its centre - a portal into the engagement.
+// The xPortal mark: a bold X whose crossing opens into a lit portal-eye - the
+// "x" of xPortal fused with the portal idea, and distinct from a plain flat X.
 // `tile` sets the background: indigo = client portal, emerald = operator console.
 const TILES = { indigo: "#5b48ee", emerald: "#059669" };
 
@@ -8,12 +8,13 @@ export function LogoMark({ size = 28, tile = "indigo", className = "" }) {
   return (
     <svg viewBox="0 0 512 512" width={size} height={size} className={className} aria-hidden>
       <rect width="512" height="512" rx="115" fill={fill} />
-      {/* Outer doorway silhouette. */}
-      <path d="M150 392 L150 246 A106 106 0 0 1 362 246 L362 392 Z" fill="#fff" />
-      {/* Inner opening (punched back to the tile colour) leaves an arch frame. */}
-      <path d="M202 392 L202 250 A54 54 0 0 1 310 250 L310 392 Z" fill={fill} />
-      {/* Lit threshold orb. */}
-      <circle cx="256" cy="300" r="28" fill="#fff" />
+      <g stroke="#fff" strokeWidth="56" strokeLinecap="round">
+        <line x1="168" y1="168" x2="344" y2="344" />
+        <line x1="344" y1="168" x2="168" y2="344" />
+      </g>
+      {/* Portal-eye punched at the crossing. */}
+      <circle cx="256" cy="256" r="40" fill={fill} />
+      <circle cx="256" cy="256" r="15" fill="#fff" />
     </svg>
   );
 }

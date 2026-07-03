@@ -1,7 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- xPortal mark: a gateway/portal arch with a lit threshold orb. -->
+  <!-- xPortal mark: a bold X opening into a lit portal-eye. -->
   <rect width="512" height="512" rx="115" fill="#5b48ee"/>
-  <path d="M150 392 L150 246 A106 106 0 0 1 362 246 L362 392 Z" fill="#ffffff"/>
-  <path d="M202 392 L202 250 A54 54 0 0 1 310 250 L310 392 Z" fill="#5b48ee"/>
-  <circle cx="256" cy="300" r="28" fill="#ffffff"/>
+  <g stroke="#ffffff" stroke-width="56" stroke-linecap="round">
+    <line x1="168" y1="168" x2="344" y2="344"/>
+    <line x1="344" y1="168" x2="168" y2="344"/>
+  </g>
+  <circle cx="256" cy="256" r="40" fill="#5b48ee"/>
+  <circle cx="256" cy="256" r="15" fill="#ffffff"/>
 </svg>
