@@ -11,6 +11,7 @@ import { EditableRow, RowButton } from "@/components/admin/EditableRow";
 import { InfoTip } from "@/components/Tip";
 import { sql } from "@/lib/db";
 import { numberPhases, phaseLabel } from "@/lib/phases";
+import { formatMoney } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
 
@@ -499,7 +500,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
                 <div key={inv.id}>
                   <div className="flex flex-wrap items-center gap-3 px-3.5 py-2.5 text-sm">
                     <span className="font-data font-semibold">{inv.invoice_number}</span>
-                    <span className="font-data">${Number(inv.amount).toFixed(2)}</span>
+                    <span className="font-data">{formatMoney(inv.amount, inv.currency, "en")}</span>
                     <span className="font-data text-xs text-ink-muted">due {inv.due_date}</span>
                     <span className={`font-data ml-auto text-xs font-semibold ${
                       inv.status === "Disputed" ? "text-dispute" : inv.status === "Paid" ? "text-accent-2" : "text-warn"
@@ -523,8 +524,8 @@ export default async function AdminProjectPage({ params, searchParams }) {
                       {lineItemsByInvoice[inv.id].map((li) => (
                         <li key={li.id} className="flex items-center gap-2 py-0.5">
                           <span className="min-w-0 flex-1 truncate">{li.description}</span>
-                          <span className="font-data text-ink-muted">{li.quantity} × ${Number(li.unit_price).toFixed(2)}</span>
-                          <span className="font-data w-20 text-right">${(li.quantity * li.unit_price).toFixed(2)}</span>
+                          <span className="font-data text-ink-muted">{li.quantity} × {formatMoney(li.unit_price, inv.currency, "en")}</span>
+                          <span className="font-data w-20 text-right">{formatMoney(li.quantity * li.unit_price, inv.currency, "en")}</span>
                         </li>
                       ))}
                     </ul>

@@ -25,7 +25,7 @@ export default {
     allCaughtUp: "모두 확인했습니다. 지금은 확인할 항목이 없습니다.",
     attentionFileRequest: '파일이 필요합니다: "{title}" ({project})',
     attentionDeliverable: '"{title}"의 검토를 기다리고 있습니다 ({project})',
-    attentionInvoice: "청구서 {number} (${amount}) 납부 기한 {date}",
+    attentionInvoice: "청구서 {number} ({amount}) 납부 기한 {date}",
     attentionMessages: "{sender}님으로부터 새 메시지 {n}개 ({project})",
     attentionMessagesFallback: "팀",
     yourProjects: "내 프로젝트",

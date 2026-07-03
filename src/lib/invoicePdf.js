@@ -1,4 +1,37 @@
+import fs from "node:fs";
+import path from "node:path";
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
+import { formatMoney } from "./money";
+
+// English/USD invoices use built-in Helvetica (no embed, tiny file). Invoices
+// that carry Korean text or a KRW amount can't be encoded by Helvetica, so
+// those embed Noto Sans KR (pre-subset to Latin + Hangul + currency, ~1.8 MB
+// per weight) which covers Hangul and the ₩ sign.
+const FONT_DIR = path.join(process.cwd(), "src/lib/fonts");
+let notoCache;
+function notoBytes() {
+  if (!notoCache) {
+    notoCache = {
+      regular: fs.readFileSync(path.join(FONT_DIR, "NotoSansKR-Regular.otf")),
+      bold: fs.readFileSync(path.join(FONT_DIR, "NotoSansKR-Bold.otf")),
+    };
+  }
+  return notoCache;
+}
+
+// Helvetica (WinAnsi) can't encode codepoints above Latin-1 (e.g. Hangul) or
+// the ₩ sign, so any such content forces the Noto embed.
+function needsUnicodeFont({ inv, client, lineItems, settings }) {
+  if (inv.currency === "KRW") return true;
+  const strings = [
+    client.company_name, client.primary_email, inv.project_title, inv.dispute_reason,
+    settings.invoice_business_name, settings.invoice_business_address,
+    settings.invoice_payment_instructions, settings.invoice_footer,
+    ...lineItems.map((r) => r.description),
+  ];
+  return strings.some((s) => s && [...String(s)].some((ch) => ch.codePointAt(0) > 0xff));
+}
 
 // A designed, branded invoice PDF (replaces the old text-only writer):
 // an accent header band, business identity, billed-to block, an itemized
@@ -20,7 +53,6 @@ const INK = rgb(0.086, 0.086, 0.114);
 const SOFT = rgb(0.302, 0.302, 0.35);
 const MUTED = rgb(0.43, 0.43, 0.48);
 const LINE = rgb(0.898, 0.898, 0.933);
-const money = (n) => `$${Number(n || 0).toFixed(2)}`;
 
 // Embeds a base64 data-URI logo (PNG or JPG) into the document, returning the
 // pdf-lib image or null when absent/unsupported.
@@ -38,10 +70,21 @@ async function embedLogo(doc, dataUri) {
 export async function buildInvoicePdf({ inv, client, lineItems = [], settings = {}, logo }) {
   const doc = await PDFDocument.create();
   const page = doc.addPage([PAGE_W, PAGE_H]);
-  const font = await doc.embedFont(StandardFonts.Helvetica);
-  const bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  let font, bold;
+  if (needsUnicodeFont({ inv, client, lineItems, settings })) {
+    doc.registerFontkit(fontkit);
+    const noto = notoBytes();
+    // subset:false: pdf-lib's subsetter corrupts CFF/OTF glyphs, and the source
+    // is already pre-subset, so the embed stays small (~1.9 MB PDF).
+    font = await doc.embedFont(noto.regular, { subset: false });
+    bold = await doc.embedFont(noto.bold, { subset: false });
+  } else {
+    font = await doc.embedFont(StandardFonts.Helvetica);
+    bold = await doc.embedFont(StandardFonts.HelveticaBold);
+  }
   const accent = hexToRgb(client.accent_color);
   const logoImg = await embedLogo(doc, logo);
+  const money = (n) => formatMoney(n, inv.currency, "en");
 
   const text = (s, x, y, { size = 10, f = font, color = INK } = {}) =>
     page.drawText(String(s ?? ""), { x, y, size, font: f, color });

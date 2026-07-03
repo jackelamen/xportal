@@ -26,7 +26,7 @@ export default {
     allCaughtUp: "You're all caught up. Nothing needs your attention right now.",
     attentionFileRequest: 'We need a file from you: "{title}" ({project})',
     attentionDeliverable: '"{title}" is awaiting your review ({project})',
-    attentionInvoice: "Invoice {number} (${amount}) due {date}",
+    attentionInvoice: "Invoice {number} ({amount}) due {date}",
     attentionMessages: "{n} new message{plural} from {sender} ({project})",
     attentionMessagesFallback: "the team",
     yourProjects: "Your projects",

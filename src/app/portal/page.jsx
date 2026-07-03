@@ -6,6 +6,7 @@ import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { phaseLabel } from "@/lib/phases";
 import { t, formatDate } from "@/lib/i18n";
+import { formatMoney } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
 
@@ -89,7 +90,7 @@ export default async function Home() {
     ...openInvoices.map((i) => ({
       icon: Receipt,
       href: "/portal/billing",
-      text: t(locale, "home.attentionInvoice", { number: i.invoice_number, amount: Number(i.amount).toFixed(2), date: i.due_date }),
+      text: t(locale, "home.attentionInvoice", { number: i.invoice_number, amount: formatMoney(i.amount, i.currency, locale), date: i.due_date }),
     })),
     ...unreadByProject.map((m) => ({
       icon: MessageSquare,

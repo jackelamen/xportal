@@ -1,6 +1,7 @@
 import { sql, uuid } from "@/lib/db";
 import { requireOperator, redirectBack, uniqueViolation } from "@/lib/admin";
 import { logActivity, notifyClient } from "@/lib/activity";
+import { formatMoney, CURRENCIES } from "@/lib/money";
 
 // Parse the line_items hidden field (JSON from the admin form). Each valid row
 // needs a description and a non-negative amount; the invoice total is their sum.
@@ -30,6 +31,8 @@ export async function POST(request) {
   const number = String(form.get("invoice_number") || "").trim();
   const issued = String(form.get("issued_date") || "");
   const due = String(form.get("due_date") || "");
+  const currencyRaw = String(form.get("currency") || "USD");
+  const currency = CURRENCIES.includes(currencyRaw) ? currencyRaw : "USD";
 
   const lineItems = parseLineItems(form.get("line_items"));
   // Total comes from line items when present; otherwise the single amount field
@@ -46,8 +49,8 @@ export async function POST(request) {
   const invoiceId = uuid();
   try {
     await sql(
-      "INSERT INTO invoices (id, project_id, invoice_number, amount, issued_date, due_date) VALUES (?, ?, ?, ?, ?, ?)",
-      [invoiceId, projectId, number, amount, issued, due]
+      "INSERT INTO invoices (id, project_id, invoice_number, amount, currency, issued_date, due_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [invoiceId, projectId, number, amount, currency, issued, due]
     );
   } catch (e) {
     const msg = uniqueViolation(e);
@@ -63,14 +66,15 @@ export async function POST(request) {
     );
   }
 
+  const amountLabel = formatMoney(amount, currency, "en");
   await logActivity({
     clientId: project.client_id, projectId, actorType: "operator", actorName: operator.name,
-    eventType: "invoice.issued", summary: `Invoice ${number} issued ($${amount.toFixed(2)})`,
+    eventType: "invoice.issued", summary: `Invoice ${number} issued (${amountLabel})`,
   });
   await notifyClient(
     project.client_id,
     `Invoice ${number} issued`,
-    `Invoice ${number} for $${amount.toFixed(2)} (${project.title}) is due ${due}. Sign in to view or download it.`
+    `Invoice ${number} for ${amountLabel} (${project.title}) is due ${due}. Sign in to view or download it.`
   );
   return redirectBack(request, form);
 }

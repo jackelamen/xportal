@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
+import { formatMoney, CURRENCIES } from "@/lib/money";
 
 const blankRow = () => ({ description: "", quantity: "1", unit_price: "" });
-const money = (n) => `$${(Number(n) || 0).toFixed(2)}`;
 
 // Invoice composer with itemized line rows. The live total is the sum of
 // quantity x rate; the rows serialize into a hidden field the API reads.
 export default function InvoiceForm({ projectId, redirectTo, inputClass }) {
   const [rows, setRows] = useState([blankRow()]);
+  const [currency, setCurrency] = useState("USD");
+  const money = (n) => formatMoney(n, currency, "en");
 
   const setCell = (i, key, value) =>
     setRows((rs) => rs.map((r, j) => (j === i ? { ...r, [key]: value } : r)));
@@ -28,9 +30,16 @@ export default function InvoiceForm({ projectId, redirectTo, inputClass }) {
       <input type="hidden" name="project_id" value={projectId} />
       <input type="hidden" name="_redirect" value={redirectTo} />
       <input type="hidden" name="line_items" value={serialized} />
+      <input type="hidden" name="currency" value={currency} />
 
       <div className="flex flex-wrap items-end gap-3">
         <label className="block text-ink-soft">Number<input name="invoice_number" required className={inputClass} /></label>
+        <label className="block text-ink-soft">
+          Currency
+          <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={inputClass}>
+            {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </label>
         <label className="block text-ink-soft">Issued<input name="issued_date" type="date" required className={inputClass} /></label>
         <label className="block text-ink-soft">Due<input name="due_date" type="date" required className={inputClass} /></label>
       </div>

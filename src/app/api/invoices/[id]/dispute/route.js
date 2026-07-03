@@ -3,6 +3,7 @@ import { sql, uuid } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { notifyXpm } from "@/lib/xpm-bridge";
 import { logActivity, notifyOperators } from "@/lib/activity";
+import { formatMoney } from "@/lib/money";
 
 // Disputing freezes the invoice (no overdue escalation), records the reason,
 // and opens an invoice-scoped message thread for the back-and-forth.
@@ -44,7 +45,7 @@ export async function POST(request, { params }) {
   });
   await notifyOperators(
     `[${client.company_name}] Invoice ${inv.invoice_number} disputed`,
-    `${user.name} disputed invoice ${inv.invoice_number} ($${Number(inv.amount).toFixed(2)}, ${inv.project_title}):\n\n${reason.trim()}`
+    `${user.name} disputed invoice ${inv.invoice_number} (${formatMoney(inv.amount, inv.currency, "en")}, ${inv.project_title}):\n\n${reason.trim()}`
   );
   await notifyXpm("invoice.disputed", {
     invoice_number: inv.invoice_number, xpm_project_id: inv.xpm_project_id,
