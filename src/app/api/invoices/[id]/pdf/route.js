@@ -1,7 +1,7 @@
 import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { buildInvoicePdf } from "@/lib/invoicePdf";
-import { getSettings, INVOICE_SETTING_KEYS } from "@/lib/settings";
+import { getSettings, INVOICE_SETTING_KEYS, INVOICE_LOGO_KEY } from "@/lib/settings";
 
 export async function GET(request, { params }) {
   const session = await getClientSession();
@@ -20,9 +20,9 @@ export async function GET(request, { params }) {
   const lineItems = await sql(
     "SELECT * FROM invoice_line_items WHERE invoice_id = ? ORDER BY sort_order", [id]
   );
-  const settings = await getSettings(INVOICE_SETTING_KEYS);
+  const settings = await getSettings([...INVOICE_SETTING_KEYS, INVOICE_LOGO_KEY]);
 
-  const pdf = await buildInvoicePdf({ inv, client, lineItems, settings });
+  const pdf = await buildInvoicePdf({ inv, client, lineItems, settings, logo: settings[INVOICE_LOGO_KEY] });
 
   return new Response(pdf, {
     headers: {

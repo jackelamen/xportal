@@ -1,5 +1,5 @@
 import { getBlackoutDates, getWeeklyHours } from "@/lib/calendar";
-import { getSettings, INVOICE_SETTING_KEYS } from "@/lib/settings";
+import { getSettings, INVOICE_SETTING_KEYS, INVOICE_LOGO_KEY } from "@/lib/settings";
 import { InfoTip } from "@/components/Tip";
 
 export const dynamic = "force-dynamic";
@@ -14,8 +14,9 @@ export default async function AdminSettings() {
   const [hours, blackouts, settings] = await Promise.all([
     getWeeklyHours(),
     getBlackoutDates(),
-    getSettings(INVOICE_SETTING_KEYS),
+    getSettings([...INVOICE_SETTING_KEYS, INVOICE_LOGO_KEY]),
   ]);
+  const logo = settings[INVOICE_LOGO_KEY];
 
   return (
     <div className="page-enter space-y-8">
@@ -172,9 +173,35 @@ export default async function AdminSettings() {
         <form
           action="/api/admin/invoice-settings"
           method="post"
+          encType="multipart/form-data"
           className="mt-4 grid gap-4 text-sm md:grid-cols-2"
         >
           <input type="hidden" name="_redirect" value="/admin/settings" />
+
+          <div className="md:col-span-2">
+            <p className="text-ink-soft">Logo</p>
+            <div className="mt-1.5 flex flex-wrap items-center gap-4">
+              <div className="flex h-14 w-40 items-center justify-center overflow-hidden rounded-lg border border-line bg-bg-tertiary">
+                {logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logo} alt="Invoice logo" className="max-h-11 max-w-36 object-contain" />
+                ) : (
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-ink-muted">No logo</span>
+                )}
+              </div>
+              <div className="text-xs text-ink-soft">
+                <input type="file" name="logo" accept="image/png,image/jpeg" className="block text-xs file:mr-3 file:rounded-md file:border file:border-line file:bg-bg-secondary file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-ink-soft hover:file:border-accent-2" />
+                <p className="mt-2 text-ink-muted">PNG or JPG, under 800 KB. Prints in the invoice header.</p>
+                {logo && (
+                  <label className="mt-2 flex items-center gap-2 text-ink-soft">
+                    <input type="checkbox" name="remove_logo" value="1" className="h-3.5 w-3.5 accent-[var(--color-accent-2)]" />
+                    Remove current logo
+                  </label>
+                )}
+              </div>
+            </div>
+          </div>
+
           <label className="block text-ink-soft">
             Business name
             <input

@@ -23,3 +23,8 @@ export const INVOICE_SETTING_KEYS = [
   "invoice_payment_instructions",
   "invoice_footer",
 ];
+
+// The agency logo printed on invoice PDFs. Stored as a base64 data URI in
+// app_settings (not a file) so it persists on serverless hosts without a
+// filesystem, and the PDF builder can embed it without a disk read.
+export const INVOICE_LOGO_KEY = "invoice_business_logo";

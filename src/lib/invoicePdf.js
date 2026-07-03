@@ -22,12 +22,26 @@ const MUTED = rgb(0.43, 0.43, 0.48);
 const LINE = rgb(0.898, 0.898, 0.933);
 const money = (n) => `$${Number(n || 0).toFixed(2)}`;
 
-export async function buildInvoicePdf({ inv, client, lineItems = [], settings = {} }) {
+// Embeds a base64 data-URI logo (PNG or JPG) into the document, returning the
+// pdf-lib image or null when absent/unsupported.
+async function embedLogo(doc, dataUri) {
+  const m = /^data:(image\/png|image\/jpeg);base64,(.+)$/s.exec(dataUri || "");
+  if (!m) return null;
+  const bytes = Buffer.from(m[2], "base64");
+  try {
+    return m[1] === "image/png" ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
+  } catch {
+    return null;
+  }
+}
+
+export async function buildInvoicePdf({ inv, client, lineItems = [], settings = {}, logo }) {
   const doc = await PDFDocument.create();
   const page = doc.addPage([PAGE_W, PAGE_H]);
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
   const accent = hexToRgb(client.accent_color);
+  const logoImg = await embedLogo(doc, logo);
 
   const text = (s, x, y, { size = 10, f = font, color = INK } = {}) =>
     page.drawText(String(s ?? ""), { x, y, size, font: f, color });
@@ -48,17 +62,36 @@ export async function buildInvoicePdf({ inv, client, lineItems = [], settings = 
 
   let y = PAGE_H - 92;
 
-  // Header: business identity (left) + INVOICE label (right).
-  const businessName = settings.invoice_business_name || "Invoice";
-  text(businessName, MARGIN, y, { size: 19, f: bold });
+  // Header right: the INVOICE label + number (constant regardless of logo).
   rightText("INVOICE", RIGHT, y + 4, { size: 22, f: bold, color: accent });
   rightText(`#${inv.invoice_number}`, RIGHT, y - 12, { size: 10, f: bold, color: SOFT });
 
+  // Header left: the agency logo when set, otherwise the business name large.
+  // With a logo, the business name sits smaller beneath it.
+  const businessName = settings.invoice_business_name || "Invoice";
+  let addrY;
+  if (logoImg) {
+    const maxH = 38;
+    const maxW = 220;
+    const scale = Math.min(maxH / logoImg.height, maxW / logoImg.width);
+    const w = logoImg.width * scale;
+    const h = logoImg.height * scale;
+    page.drawImage(logoImg, { x: MARGIN, y: y + 8 - h, width: w, height: h });
+    if (settings.invoice_business_name) {
+      text(businessName, MARGIN, y - h + 2, { size: 10.5, f: bold, color: SOFT });
+      addrY = y - h - 12;
+    } else {
+      addrY = y - h - 2;
+    }
+  } else {
+    text(businessName, MARGIN, y, { size: 19, f: bold });
+    addrY = y - 16;
+  }
+
   if (settings.invoice_business_address) {
-    let ay = y - 16;
     for (const ln of settings.invoice_business_address.split("\n").slice(0, 4)) {
-      text(ln, MARGIN, ay, { size: 9, color: MUTED });
-      ay -= 12;
+      text(ln, MARGIN, addrY, { size: 9, color: MUTED });
+      addrY -= 12;
     }
   }
 
