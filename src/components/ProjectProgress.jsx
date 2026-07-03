@@ -111,6 +111,7 @@ export default function ProjectProgress({ milestones, activity, nextMeeting, due
                         {cd && <span className={`font-semibold ${cd.tone}`}>· {cd.text}</span>}
                       </p>
                     )}
+                    {p.detail && <p className="mt-2 text-[13px] leading-relaxed text-ink-soft">{p.detail}</p>}
                     {nested.length > 0 && (
                       <ul className="mt-2.5 space-y-1.5">
                         {nested.map((pt) => (

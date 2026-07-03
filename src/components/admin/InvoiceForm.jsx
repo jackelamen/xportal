@@ -5,12 +5,19 @@ import { Plus, Trash2 } from "lucide-react";
 import { formatMoney, CURRENCIES } from "@/lib/money";
 
 const blankRow = () => ({ description: "", quantity: "1", unit_price: "" });
+const str = (v) => (v == null ? "" : String(v));
 
 // Invoice composer with itemized line rows. The live total is the sum of
 // quantity x rate; the rows serialize into a hidden field the API reads.
-export default function InvoiceForm({ projectId, redirectTo, inputClass }) {
-  const [rows, setRows] = useState([blankRow()]);
-  const [currency, setCurrency] = useState("USD");
+// When `invoice` is passed it edits that invoice instead of creating one.
+export default function InvoiceForm({ projectId, redirectTo, inputClass, invoice, initialLineItems }) {
+  const editing = !!invoice;
+  const [rows, setRows] = useState(
+    initialLineItems?.length
+      ? initialLineItems.map((r) => ({ description: str(r.description), quantity: str(r.quantity), unit_price: str(r.unit_price) }))
+      : [blankRow()]
+  );
+  const [currency, setCurrency] = useState(invoice?.currency || "USD");
   const money = (n) => formatMoney(n, currency, "en");
 
   const setCell = (i, key, value) =>
@@ -26,22 +33,22 @@ export default function InvoiceForm({ projectId, redirectTo, inputClass }) {
   );
 
   return (
-    <form action="/api/admin/invoices" method="post" className="mt-3 space-y-4 text-sm">
-      <input type="hidden" name="project_id" value={projectId} />
+    <form action={editing ? `/api/admin/invoices/${invoice.id}` : "/api/admin/invoices"} method="post" className="mt-3 space-y-4 text-sm">
+      {editing ? <input type="hidden" name="_action" value="edit" /> : <input type="hidden" name="project_id" value={projectId} />}
       <input type="hidden" name="_redirect" value={redirectTo} />
       <input type="hidden" name="line_items" value={serialized} />
       <input type="hidden" name="currency" value={currency} />
 
       <div className="flex flex-wrap items-end gap-3">
-        <label className="block text-ink-soft">Number<input name="invoice_number" required className={inputClass} /></label>
+        <label className="block text-ink-soft">Number<input name="invoice_number" required defaultValue={invoice?.invoice_number || ""} className={inputClass} /></label>
         <label className="block text-ink-soft">
           Currency
           <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={inputClass}>
             {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </label>
-        <label className="block text-ink-soft">Issued<input name="issued_date" type="date" required className={inputClass} /></label>
-        <label className="block text-ink-soft">Due<input name="due_date" type="date" required className={inputClass} /></label>
+        <label className="block text-ink-soft">Issued<input name="issued_date" type="date" required defaultValue={invoice?.issued_date || ""} className={inputClass} /></label>
+        <label className="block text-ink-soft">Due<input name="due_date" type="date" required defaultValue={invoice?.due_date || ""} className={inputClass} /></label>
       </div>
 
       <div>
@@ -105,7 +112,7 @@ export default function InvoiceForm({ projectId, redirectTo, inputClass }) {
           disabled={total <= 0}
           className="rounded-lg bg-accent-2 px-4 py-2 font-medium text-white disabled:opacity-50"
         >
-          Create invoice
+          {editing ? "Save changes" : "Create invoice"}
         </button>
       </div>
     </form>

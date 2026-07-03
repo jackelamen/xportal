@@ -5,9 +5,12 @@ import { getClientSession } from "@/lib/auth";
 import { Link2, Users, Gavel, Hammer } from "lucide-react";
 import ProjectStatus from "@/components/ProjectStatus";
 import ProjectProgress from "@/components/ProjectProgress";
+import ProjectPlan from "@/components/ProjectPlan";
 import DeliverableCard from "@/components/DeliverableCard";
 import MessageFeed from "@/components/MessageFeed";
-import KpiGrid from "@/components/KpiGrid";
+// KpiGrid is paused for now (kept in src/components/KpiGrid.jsx for when KPIs
+// return). The Plan takes its place in the overview for the time being.
+// import KpiGrid from "@/components/KpiGrid";
 import DocumentLibrary from "@/components/DocumentLibrary";
 import { InfoTip } from "@/components/Tip";
 import { t as translate } from "@/lib/i18n";
@@ -50,7 +53,8 @@ export default async function ProjectPage({ params, searchParams }) {
     "SELECT * FROM communication_threads WHERE project_id = ? AND invoice_id IS NULL ORDER BY created_at ASC",
     [id]
   );
-  const kpis = await sql("SELECT * FROM project_kpis WHERE project_id = ? ORDER BY name", [id]);
+  // KPIs are paused for now; keep the query out until they return.
+  // const kpis = await sql("SELECT * FROM project_kpis WHERE project_id = ? ORDER BY name", [id]);
   const documents = await sql(
     "SELECT * FROM project_documents WHERE project_id = ? ORDER BY created_at DESC", [id]
   );
@@ -160,18 +164,12 @@ export default async function ProjectPage({ params, searchParams }) {
       <div className="mt-6 space-y-8">
         {tab === "overview" && (
           <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
-            {/* Left: project hub */}
-            <div className="min-w-0">
+            {/* Left: project hub + the plan */}
+            <div className="min-w-0 space-y-5">
               <section className="rounded-2xl border border-line bg-bg-secondary p-6 shadow-[0_1px_2px_rgb(16_16_29_/_0.04)]">
                 <h2 className="text-[19px]">{t("project.projectHub")}</h2>
                 {project.description && (
                   <p className="mt-3 max-w-[62ch] text-[14px] leading-relaxed text-ink-soft">{project.description}</p>
-                )}
-
-                {kpis.length > 0 && (
-                  <div className="mt-7">
-                    <KpiGrid kpis={kpis} locale={locale} />
-                  </div>
                 )}
 
                 <div className="mt-7 grid gap-6 sm:grid-cols-2">
@@ -206,6 +204,8 @@ export default async function ProjectPage({ params, searchParams }) {
                   )}
                 </div>
               </section>
+
+              <ProjectPlan milestones={milestones} locale={locale} />
             </div>
 
             {/* Right rail: live work + decisions */}

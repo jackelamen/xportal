@@ -74,6 +74,13 @@ export default {
     fromXpm: " · from xPM",
     nothingAwaitingReview: "Nothing awaiting review.",
   },
+  plan: {
+    title: "The plan",
+    tip: "How this engagement is structured: the phases and milestones ahead, and what to expect from each.",
+    empty: "The plan is being put together. You'll see the phases and what to expect here soon.",
+    milestone: "Milestone",
+    tbd: "Dates to be confirmed",
+  },
   progress: {
     journeyTitle: "Project journey",
     journeyTip: "Each step is a phase of the work. Finished phases are checked off, the current one is highlighted, and upcoming phases are still to come.",

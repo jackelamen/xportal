@@ -55,15 +55,30 @@ export async function POST(request, { params }) {
       "SELECT COALESCE(MAX(sort_order), -1) AS mx FROM project_milestones WHERE project_id = ?", [id]
     ))[0];
     await sql(
-      `INSERT INTO project_milestones (id, project_id, title, kind, starts_on, ends_on, status, sort_order)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO project_milestones (id, project_id, title, kind, starts_on, ends_on, status, detail, sort_order)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         uuid(), id, title,
         form.get("kind") === "milestone" ? "milestone" : "phase",
         String(form.get("starts_on") || "") || null,
         String(form.get("ends_on") || "") || null,
         String(form.get("status") || "upcoming"),
+        String(form.get("detail") || "").trim() || null,
         (mxRow?.mx ?? -1) + 1,
+      ]
+    );
+  } else if (action === "edit_milestone") {
+    const title = String(form.get("title") || "").trim();
+    if (!title) return new Response("Milestone title required", { status: 400 });
+    await sql(
+      `UPDATE project_milestones SET title = ?, starts_on = ?, ends_on = ?, detail = ?
+       WHERE id = ? AND project_id = ?`,
+      [
+        title,
+        String(form.get("starts_on") || "") || null,
+        String(form.get("ends_on") || "") || null,
+        String(form.get("detail") || "").trim() || null,
+        String(form.get("milestone_id")), id,
       ]
     );
   } else if (action === "set_milestone_status") {

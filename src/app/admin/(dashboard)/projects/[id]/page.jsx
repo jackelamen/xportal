@@ -311,36 +311,55 @@ export default async function AdminProjectPage({ params, searchParams }) {
 
         {tab === "plan" && (
           <section className="rounded-xl border border-line bg-bg-secondary p-5">
-            <h2 className="flex items-center gap-1.5 font-medium text-ink">Phases &amp; milestones <InfoTip side="bottom" text="Phases draw as bars on the client's status bar and timeline; milestones draw as diamond markers. Statuses color them: done = green, active = blue, blocked = red." /></h2>
+            <h2 className="flex items-center gap-1.5 font-medium text-ink">The Plan <InfoTip side="bottom" text="The phases and milestones that make up this engagement, and what the client should expect from each. This is the single source for the client's Plan section and their Progress tab: add phases (bars) and milestones (markers), give each dates and a short 'what to expect' note, and set statuses to advance the journey." /></h2>
+            <p className="mt-1 text-xs text-ink-muted">Phases and milestones you add here build the client&apos;s Plan and Progress views automatically.</p>
             <div className="mt-3 divide-y divide-line/70 rounded-lg border border-line">
               {milestones.map((m) => (
-                <div key={m.id} className="flex flex-wrap items-center gap-3 px-3.5 py-2.5 text-sm">
-                  <span className={`h-2 w-2 shrink-0 rounded-sm ${
-                    m.status === "done" ? "bg-accent-2" : m.status === "active" ? "bg-accent" : m.status === "blocked" ? "bg-danger" : "bg-line"
-                  }`} />
-                  <span className="font-semibold">{phaseLabel(m.phaseNo, m.title)}</span>
-                  <span className="font-data text-xs text-ink-muted">{m.kind}</span>
-                  <span className="font-data text-xs text-ink-soft">
-                    {m.starts_on || "–"}{m.ends_on ? ` → ${m.ends_on}` : ""}
-                  </span>
-                  <form action={post()} method="post" className="ml-auto flex items-center gap-2">
-                    <input type="hidden" name="_action" value="set_milestone_status" />
-                    <input type="hidden" name="milestone_id" value={m.id} />
-                    <input type="hidden" name="_redirect" value={here} />
-                    <select name="status" defaultValue={m.status} className="rounded-md border border-line bg-bg-tertiary px-2 py-1 text-xs text-ink">
-                      {MS_STATUS.map((s) => <option key={s}>{s}</option>)}
-                    </select>
-                    <button className="text-xs text-ink-muted hover:text-ink">Set</button>
-                  </form>
-                  <form action={post()} method="post">
-                    <input type="hidden" name="_action" value="delete_milestone" />
-                    <input type="hidden" name="milestone_id" value={m.id} />
-                    <input type="hidden" name="_redirect" value={here} />
-                    <button className="text-xs text-ink-muted hover:text-danger">Delete</button>
-                  </form>
+                <div key={m.id} className="px-3.5 py-2.5 text-sm">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className={`h-2 w-2 shrink-0 rounded-sm ${
+                      m.status === "done" ? "bg-accent-2" : m.status === "active" ? "bg-accent" : m.status === "blocked" ? "bg-danger" : "bg-line"
+                    }`} />
+                    <span className="font-semibold">{phaseLabel(m.phaseNo, m.title)}</span>
+                    <span className="font-data text-xs text-ink-muted">{m.kind}</span>
+                    <span className="font-data text-xs text-ink-soft">
+                      {m.starts_on || "–"}{m.ends_on ? ` → ${m.ends_on}` : ""}
+                    </span>
+                    <form action={post()} method="post" className="ml-auto flex items-center gap-2">
+                      <input type="hidden" name="_action" value="set_milestone_status" />
+                      <input type="hidden" name="milestone_id" value={m.id} />
+                      <input type="hidden" name="_redirect" value={here} />
+                      <select name="status" defaultValue={m.status} className="rounded-md border border-line bg-bg-tertiary px-2 py-1 text-xs text-ink">
+                        {MS_STATUS.map((s) => <option key={s}>{s}</option>)}
+                      </select>
+                      <button className="text-xs text-ink-muted hover:text-ink">Set</button>
+                    </form>
+                    <form action={post()} method="post">
+                      <input type="hidden" name="_action" value="delete_milestone" />
+                      <input type="hidden" name="milestone_id" value={m.id} />
+                      <input type="hidden" name="_redirect" value={here} />
+                      <button className="text-xs text-ink-muted hover:text-danger">Delete</button>
+                    </form>
+                  </div>
+                  {m.detail && <p className="mt-1 pl-5 text-xs text-ink-soft">{m.detail}</p>}
+                  <details className="mt-1 pl-5">
+                    <summary className="cursor-pointer text-xs text-ink-muted hover:text-ink">Edit details</summary>
+                    <form action={post()} method="post" className="mt-2 flex flex-wrap items-end gap-3">
+                      <input type="hidden" name="_action" value="edit_milestone" />
+                      <input type="hidden" name="milestone_id" value={m.id} />
+                      <input type="hidden" name="_redirect" value={here} />
+                      <label className="block text-ink-soft">Title<input name="title" defaultValue={m.title} required className={input} /></label>
+                      <label className="block text-ink-soft">Starts<input name="starts_on" type="date" defaultValue={m.starts_on || ""} className={input} /></label>
+                      <label className="block text-ink-soft">Ends<input name="ends_on" type="date" defaultValue={m.ends_on || ""} className={input} /></label>
+                      <label className="block w-full text-ink-soft">What to expect
+                        <textarea name="detail" rows={2} defaultValue={m.detail || ""} placeholder="Explain this phase or milestone and what the client should expect." className={`${input} w-full`} />
+                      </label>
+                      <button className="rounded-lg bg-accent-2 px-3 py-2 font-medium text-white">Save</button>
+                    </form>
+                  </details>
                 </div>
               ))}
-              {milestones.length === 0 && <p className="px-3.5 py-3 text-sm text-ink-muted">No phases or milestones yet.</p>}
+              {milestones.length === 0 && <p className="px-3.5 py-3 text-sm text-ink-muted">No phases or milestones yet. Add the first below to start the plan.</p>}
             </div>
             <form action={post()} method="post" className="mt-4 flex flex-wrap items-end gap-3 text-sm">
               <input type="hidden" name="_action" value="add_milestone" />
@@ -355,6 +374,9 @@ export default async function AdminProjectPage({ params, searchParams }) {
               </label>
               <label className="block text-ink-soft">Starts<input name="starts_on" type="date" className={input} /></label>
               <label className="block text-ink-soft">Ends<input name="ends_on" type="date" className={input} /></label>
+              <label className="block w-full text-ink-soft">What to expect <span className="text-ink-muted">(optional)</span>
+                <textarea name="detail" rows={2} placeholder="Explain this phase or milestone and what the client should expect." className={`${input} w-full`} />
+              </label>
               <button className="rounded-lg border border-line px-4 py-2 text-ink-soft hover:text-ink">Add</button>
             </form>
           </section>
@@ -535,6 +557,22 @@ export default async function AdminProjectPage({ params, searchParams }) {
                       {inv.invoice_number} dispute: {inv.dispute_reason}
                     </p>
                   )}
+                  <div className="flex items-center gap-4 border-t border-line/60 px-3.5 py-1.5">
+                    <details className="min-w-0 flex-1">
+                      <summary className="cursor-pointer text-xs font-medium text-ink-muted hover:text-ink">Edit invoice</summary>
+                      <InvoiceForm
+                        invoice={inv}
+                        initialLineItems={lineItemsByInvoice[inv.id] || []}
+                        redirectTo={here}
+                        inputClass={input}
+                      />
+                    </details>
+                    <form action={`/api/admin/invoices/${inv.id}`} method="post">
+                      <input type="hidden" name="_action" value="delete" />
+                      <input type="hidden" name="_redirect" value={here} />
+                      <button className="text-xs text-ink-muted hover:text-danger">Delete</button>
+                    </form>
+                  </div>
                 </div>
               ))}
               {invoices.length === 0 && <p className="px-3.5 py-3 text-sm text-ink-muted">No invoices yet.</p>}
