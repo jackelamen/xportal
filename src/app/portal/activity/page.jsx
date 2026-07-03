@@ -3,6 +3,7 @@ import { getClientSession } from "@/lib/auth";
 import {
   FileCheck2, MessageSquare, Receipt, CalendarClock, CircleDot,
 } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,8 @@ const ICON = {
 };
 
 export default async function ActivityPage() {
-  const { client } = await getClientSession();
+  const { user, client } = await getClientSession();
+  const locale = user.locale || "en";
   const rows = await sql(
     `SELECT a.*, p.title AS project_title FROM activity_log a
      LEFT JOIN portal_projects p ON p.id = a.project_id
@@ -31,10 +33,10 @@ export default async function ActivityPage() {
     <div className="page-enter">
       <div className="flex items-stretch gap-4">
         <div className="w-[3px] shrink-0 rounded-full bg-spark" />
-        <h1 className="text-[1.85rem] leading-none tracking-tight">Activity</h1>
+        <h1 className="text-[1.85rem] leading-none tracking-tight">{t(locale, "activity.title")}</h1>
       </div>
       <ol className="mt-8 space-y-0 border-l border-line pl-5">
-        {rows.length === 0 && <p className="text-ink-muted">Nothing yet.</p>}
+        {rows.length === 0 && <p className="text-ink-muted">{t(locale, "activity.empty")}</p>}
         {rows.map((a) => {
           const Icon = ICON[a.event_type] || CircleDot;
           return (

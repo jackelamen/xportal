@@ -6,20 +6,22 @@ import {
   Check, X, ExternalLink, FileText, History, Eye, ThumbsUp, MessageSquareWarning,
 } from "lucide-react";
 import { toast } from "@/components/Toaster";
+import { t as translate } from "@/lib/i18n";
 
 // A colored dot plus a status label in the status color reads state instantly
 // without the generic filled-pill look.
 const STATUS = {
-  Pending: { dot: "bg-warn", text: "text-warn", label: "Pending review" },
-  Approved: { dot: "bg-accent-2", text: "text-accent-2", label: "Approved" },
-  "Revisions Requested": { dot: "bg-danger", text: "text-danger", label: "Changes requested" },
+  Pending: { dot: "bg-warn", text: "text-warn", key: "deliverable.statusPending" },
+  Approved: { dot: "bg-accent-2", text: "text-accent-2", key: "deliverable.statusApproved" },
+  "Revisions Requested": { dot: "bg-danger", text: "text-danger", key: "deliverable.statusRevisions" },
 };
 
 const assetHref = (v) =>
   v.kind === "file" ? `/api/${v.asset_path.replace(/^uploads\//, "files/")}` : v.asset_path;
 
-export default function DeliverableCard({ deliverable }) {
+export default function DeliverableCard({ deliverable, locale = "en" }) {
   const router = useRouter();
+  const t = (key, vars) => translate(locale, key, vars);
   // Two-step decision: pick an action (toggle), then confirm it. A stray
   // click can never approve anything.
   const [choice, setChoice] = useState(null); // null | "approve" | "revise"
@@ -49,14 +51,10 @@ export default function DeliverableCard({ deliverable }) {
     });
     setBusy(false);
     if (!res.ok) {
-      toast.error((await res.json()).error || "Something went wrong");
+      toast.error((await res.json()).error || t("deliverable.toastError"));
       return;
     }
-    toast(
-      action === "approve"
-        ? "Approved. The team has been notified."
-        : "Revision request sent to the team."
-    );
+    toast(action === "approve" ? t("deliverable.toastApproved") : t("deliverable.toastRevisionSent"));
     setChoice(null);
     router.refresh();
   }
@@ -103,7 +101,7 @@ export default function DeliverableCard({ deliverable }) {
           return (
             <span className={`inline-flex shrink-0 items-center gap-2 text-xs font-medium ${s?.text || "text-ink-soft"}`}>
               <span className={`h-2 w-2 rounded-full ${s?.dot || "bg-ink-muted"}`} />
-              {s?.label || deliverable.status}
+              {s ? t(s.key) : deliverable.status}
               {deliverable.actioned_by ? <span className="text-ink-muted">· {deliverable.actioned_by}</span> : ""}
             </span>
           );
@@ -120,30 +118,30 @@ export default function DeliverableCard({ deliverable }) {
           className="mt-3 inline-flex items-center gap-2 rounded-lg border border-line bg-bg-primary px-3 py-2 text-sm font-medium text-accent hover:border-accent"
         >
           <FileText size={14} />
-          {current.kind === "file" ? `Open ${current.original_name || "document"}` : "View the work"}
+          {current.kind === "file" ? t("deliverable.openFile", { name: current.original_name || "document" }) : t("deliverable.viewWork")}
           <ExternalLink size={12} className="text-ink-muted" />
         </a>
       )}
 
       {deliverable.feedback_notes && (
         <p className="mt-3 rounded-lg bg-bg-tertiary px-3 py-2 text-sm text-ink-soft">
-          Your feedback: {deliverable.feedback_notes}
+          {t("deliverable.yourFeedback", { notes: deliverable.feedback_notes })}
         </p>
       )}
 
       {/* Decision area: choose, then confirm. */}
       {deliverable.status === "Pending" && (
         <div className="mt-4 border-t border-line pt-4">
-          <p className="font-data text-[10.5px] font-medium uppercase tracking-widest text-ink-muted">Your decision</p>
+          <p className="font-data text-[10.5px] font-medium uppercase tracking-widest text-ink-muted">{t("deliverable.yourDecision")}</p>
           <div className="mt-2 flex flex-wrap gap-2">
-            {toggleBtn("approve", "Approve", ThumbsUp)}
-            {toggleBtn("revise", "Request changes", MessageSquareWarning)}
+            {toggleBtn("approve", t("deliverable.approve"), ThumbsUp)}
+            {toggleBtn("revise", t("deliverable.requestChanges"), MessageSquareWarning)}
           </div>
 
           {choice === "approve" && (
             <div className="mt-3 rounded-lg border border-accent-2/30 bg-accent-2/5 p-3 text-sm">
               <p className="text-ink-soft">
-                Approving is final. It locks this deliverable and notifies the team.
+                {t("deliverable.approvingIsFinal")}
               </p>
               <div className="mt-2.5 flex gap-2">
                 <button
@@ -151,10 +149,10 @@ export default function DeliverableCard({ deliverable }) {
                   onClick={() => act("approve")}
                   className="rounded-lg bg-accent-2 px-4 py-2 font-medium text-white disabled:opacity-50"
                 >
-                  {busy ? "Approving…" : "Confirm approval"}
+                  {busy ? t("deliverable.approving") : t("deliverable.confirmApproval")}
                 </button>
                 <button onClick={() => setChoice(null)} className="flex items-center gap-1 rounded-lg border border-line px-3 py-2 text-ink-soft hover:text-ink">
-                  <X size={13} /> Cancel
+                  <X size={13} /> {t("common.cancel")}
                 </button>
               </div>
             </div>
@@ -163,7 +161,7 @@ export default function DeliverableCard({ deliverable }) {
           {choice === "revise" && (
             <div className="mt-3 rounded-lg border border-danger/30 bg-danger/5 p-3 text-sm">
               <label className="block text-ink-soft">
-                What should change? <span className="text-ink-muted">(required; the team sees this verbatim)</span>
+                {t("deliverable.whatShouldChange")} <span className="text-ink-muted">{t("deliverable.whatShouldChangeHint")}</span>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -177,10 +175,10 @@ export default function DeliverableCard({ deliverable }) {
                   onClick={() => act("request_revisions")}
                   className="rounded-lg bg-danger px-4 py-2 font-medium text-white disabled:opacity-50"
                 >
-                  {busy ? "Sending…" : "Send revision request"}
+                  {busy ? t("deliverable.sending") : t("deliverable.sendRevisionRequest")}
                 </button>
                 <button onClick={() => setChoice(null)} className="flex items-center gap-1 rounded-lg border border-line px-3 py-2 text-ink-soft hover:text-ink">
-                  <X size={13} /> Cancel
+                  <X size={13} /> {t("common.cancel")}
                 </button>
               </div>
             </div>
@@ -194,7 +192,7 @@ export default function DeliverableCard({ deliverable }) {
             onClick={() => setShowHistory(!showHistory)}
             className="flex items-center gap-1 text-xs text-ink-muted hover:text-ink"
           >
-            <History size={12} /> {showHistory ? "Hide" : "Show"} {history.length} previous version{history.length > 1 ? "s" : ""}
+            <History size={12} /> {t(showHistory ? "deliverable.hideVersions" : "deliverable.showVersions", { n: history.length, plural: history.length > 1 ? "s" : "" })}
           </button>
           {showHistory && (
             <ul className="mt-2 space-y-1.5 rounded-lg bg-bg-tertiary p-3 text-xs text-ink-soft">
@@ -206,7 +204,7 @@ export default function DeliverableCard({ deliverable }) {
                   </a>
                   {v.note && <span className="truncate">· {v.note}</span>}
                   {v.viewed_at && (
-                    <span className="ml-auto flex items-center gap-1 text-ink-muted"><Eye size={11} /> viewed</span>
+                    <span className="ml-auto flex items-center gap-1 text-ink-muted"><Eye size={11} /> {t("deliverable.viewed")}</span>
                   )}
                 </li>
               ))}

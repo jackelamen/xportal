@@ -1,10 +1,14 @@
 import { LogoMark } from "./Logo";
+import LoginLocaleToggle from "./LoginLocaleToggle";
+import { t } from "@/lib/i18n";
 
 // Shared split-panel login shell: a dark brand panel (always-dark regardless
 // of site theme - wrapped in a locally-scoped "dark" class so bg/ink tokens
 // resolve to their dark values) plus a form panel on the right. Used by the
-// operator, root client, and per-client-branded sign-in pages.
-export default function LoginShell({ tile = "indigo", eyebrow, headline, blurb, logoSrc, logoAlt, accentColor, children }) {
+// operator, root client, and per-client-branded sign-in pages. `locale` is only
+// passed on the client-facing pages; the operator page leaves it undefined so
+// the language switcher never appears there.
+export default function LoginShell({ tile = "indigo", eyebrow, headline, blurb, logoSrc, logoAlt, accentColor, locale, children }) {
   return (
     <main className="flex min-h-screen w-full">
       <div className="dark relative hidden flex-1 flex-col justify-between overflow-hidden bg-bg-primary p-10 text-ink md:flex lg:p-14">
@@ -36,10 +40,17 @@ export default function LoginShell({ tile = "indigo", eyebrow, headline, blurb, 
           <p className="mt-4 max-w-[38ch] text-sm leading-relaxed text-ink-soft">{blurb}</p>
         </div>
 
-        <p className="font-data relative text-[11px] text-ink-muted">© {new Date().getFullYear()} xPortal</p>
+        <p className="font-data relative text-[11px] text-ink-muted">
+          {locale ? t(locale, "login.copyright", { year: new Date().getFullYear() }) : `© ${new Date().getFullYear()} xPortal`}
+        </p>
       </div>
 
-      <div className="flex w-full flex-1 items-center justify-center bg-bg-primary p-8 md:w-[440px] md:flex-none">
+      <div className="relative flex w-full flex-1 items-center justify-center bg-bg-primary p-8 md:w-[440px] md:flex-none">
+        {locale && (
+          <div className="absolute right-6 top-6">
+            <LoginLocaleToggle locale={locale} />
+          </div>
+        )}
         <div className="w-full max-w-[340px]">{children}</div>
       </div>
     </main>

@@ -1,22 +1,28 @@
 import LoginForm from "@/components/LoginForm";
 import LoginShell from "@/components/LoginShell";
 import Logo from "@/components/Logo";
+import { t } from "@/lib/i18n";
+import { getLoginLocale } from "@/lib/i18n/loginLocale";
 
-export default function LoginPage() {
+export const dynamic = "force-dynamic";
+
+export default async function LoginPage() {
+  const locale = await getLoginLocale();
   return (
     <LoginShell
       tile="indigo"
-      eyebrow="Client portal"
-      headline="Your project, your progress, in one place."
-      blurb="Review deliverables, follow progress, and stay in sync with your team, all in real time."
+      locale={locale}
+      eyebrow={t(locale, "login.eyebrow")}
+      headline={t(locale, "login.headline")}
+      blurb={t(locale, "login.blurb")}
     >
       <div className="mb-8">
-        <Logo size={30} sub="Client portal" />
+        <Logo size={30} sub={t(locale, "nav.clientPortal")} />
       </div>
-      <h2 className="text-2xl font-semibold text-ink">Sign in to your workspace</h2>
-      <p className="mt-1.5 text-sm text-ink-soft">Review progress, deliverables, and billing in one place.</p>
+      <h2 className="text-2xl font-semibold text-ink">{t(locale, "login.signInHeadline")}</h2>
+      <p className="mt-1.5 text-sm text-ink-soft">{t(locale, "login.signInBlurb")}</p>
       <div className="mt-7">
-        <LoginForm kind="client" />
+        <LoginForm kind="client" locale={locale} />
       </div>
     </LoginShell>
   );

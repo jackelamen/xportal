@@ -8,10 +8,11 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { numberPhases, phaseLabel } from "@/lib/phases";
+import { t as translate } from "@/lib/i18n";
 
 const dayMs = 86_400_000;
+const DATE_LOCALE = { en: "en-US", ko: "ko-KR" };
 const toT = (s) => new Date(s + "T00:00").getTime();
-const fmtDate = (t) => new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric" });
 
 // Fixed widths keep the track column's coordinate space identical to the
 // Today-line overlay and the ruler, so nothing drifts out of alignment.
@@ -40,29 +41,32 @@ const activeStripes = {
 
 // Weekly ticks for short projects (a lone month name would be useless there),
 // monthly once weekly would pack in too many labels to read.
-function buildTicks(min, max, pct) {
+function buildTicks(min, max, pct, dl) {
   const spanDays = (max - min) / dayMs;
   const ticks = [];
+  const day = ( t) => new Date(t).toLocaleDateString(dl, { month: "short", day: "numeric" });
   if (spanDays <= 70) {
-    for (let t = min; t <= max; t += 7 * dayMs) ticks.push({ label: fmtDate(t), at: pct(t) });
-    if (ticks.length === 0 || ticks[ticks.length - 1].at < 99) ticks.push({ label: fmtDate(max), at: pct(max) });
+    for (let t = min; t <= max; t += 7 * dayMs) ticks.push({ label: day(t), at: pct(t) });
+    if (ticks.length === 0 || ticks[ticks.length - 1].at < 99) ticks.push({ label: day(max), at: pct(max) });
   } else {
     for (let d = new Date(min); d.getTime() <= max; d.setMonth(d.getMonth() + 1, 1)) {
-      ticks.push({ label: d.toLocaleDateString("en-US", { month: "short" }), at: pct(d.getTime()) });
+      ticks.push({ label: d.toLocaleDateString(dl, { month: "short" }), at: pct(d.getTime()) });
     }
   }
   return ticks;
 }
 
-const LEGEND = [
-  { label: "Done", swatch: "bg-accent-2/70" },
-  { label: "In progress", swatch: "bg-accent" },
-  { label: "Blocked", swatch: "bg-danger" },
-  { label: "Upcoming", swatch: "border border-line bg-bg-tertiary" },
-];
-
-export default function Timeline({ milestones, today = Date.now() }) {
+export default function Timeline({ milestones, today = Date.now(), locale = "en" }) {
   const [showMilestones, setShowMilestones] = useState(true);
+  const t = (key, vars) => translate(locale, key, vars);
+  const dl = DATE_LOCALE[locale] || "en-US";
+  const fmtDate = (time) => new Date(time).toLocaleDateString(dl, { month: "short", day: "numeric" });
+  const LEGEND = [
+    { label: t("timeline.legendDone"), swatch: "bg-accent-2/70" },
+    { label: t("timeline.legendInProgress"), swatch: "bg-accent" },
+    { label: t("timeline.legendBlocked"), swatch: "bg-danger" },
+    { label: t("timeline.legendUpcoming"), swatch: "border border-line bg-bg-tertiary" },
+  ];
 
   const numbered = numberPhases(milestones);
   const phases = numbered.filter((m) => m.kind === "phase" && m.starts_on && m.ends_on);
@@ -77,7 +81,7 @@ export default function Timeline({ milestones, today = Date.now() }) {
   const pct = (t) => ((t - min) / span) * 100;
   const clamp = (n) => Math.min(Math.max(n, 0), 100);
 
-  const ticks = buildTicks(min, max, pct);
+  const ticks = buildTicks(min, max, pct, dl);
   const todayOnChart = today >= min && today <= max;
 
   return (
@@ -92,12 +96,12 @@ export default function Timeline({ milestones, today = Date.now() }) {
           ))}
           {points.length > 0 && (
             <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rotate-45 bg-warn" /> Milestone
+              <span className="h-2 w-2 rotate-45 bg-warn" /> {t("timeline.legendMilestone")}
             </span>
           )}
           {todayOnChart && (
             <span className="flex items-center gap-1.5">
-              <span className="h-2.5 w-px bg-danger" /> Today
+              <span className="h-2.5 w-px bg-danger" /> {t("timeline.legendToday")}
             </span>
           )}
         </div>
@@ -108,7 +112,7 @@ export default function Timeline({ milestones, today = Date.now() }) {
             className="flex items-center gap-1.5 rounded-md border border-line px-2.5 py-1 text-[11px] font-medium text-ink-soft hover:border-accent hover:text-ink"
           >
             {showMilestones ? <EyeOff size={12} /> : <Eye size={12} />}
-            {showMilestones ? "Hide" : "Show"} milestones
+            {t(showMilestones ? "timeline.hideMilestones" : "timeline.showMilestones")}
           </button>
         )}
       </div>
@@ -171,7 +175,7 @@ export default function Timeline({ milestones, today = Date.now() }) {
             {showMilestones && points.length > 0 && (
               <>
                 <div className="my-1.5 flex items-center gap-2 pl-3">
-                  <span className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-ink-muted">Milestones</span>
+                  <span className="font-mono text-[9.5px] uppercase tracking-[0.14em] text-ink-muted">{t("timeline.milestonesLabel")}</span>
                   <span className="h-px flex-1 bg-line" />
                 </div>
                 {points.map((m) => {

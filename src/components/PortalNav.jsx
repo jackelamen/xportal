@@ -9,7 +9,7 @@ import {
 const ICONS = { LayoutDashboard, Receipt, CalendarClock, CalendarDays, History };
 
 // Client nav with an active state - the current page is always visible.
-export default function PortalNav({ items, unread, variant = "sidebar" }) {
+export default function PortalNav({ items, unread, unreadTitle, variant = "sidebar" }) {
   const pathname = usePathname();
   const isActive = (href) =>
     href === "/portal" ? pathname === "/portal" || pathname.startsWith("/portal/projects") : pathname.startsWith(href);
@@ -56,9 +56,9 @@ export default function PortalNav({ items, unread, variant = "sidebar" }) {
             {active && <span className="absolute right-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-accent" />}
             <Icon size={16} strokeWidth={active ? 2.1 : 1.9} className={active ? "text-accent" : ""} />
             <span className="flex-1">{label}</span>
-            {label === "Home" && unread > 0 && (
+            {href === "/portal" && unread > 0 && (
               <span
-                title={`${unread} unread message${unread > 1 ? "s" : ""} from the team`}
+                title={unreadTitle}
                 className="font-mono rounded-full bg-accent px-1.5 text-[10px] font-semibold normal-case tracking-normal text-white"
               >
                 {unread}

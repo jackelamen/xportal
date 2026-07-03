@@ -5,14 +5,14 @@ import {
 import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { phaseLabel } from "@/lib/phases";
+import { t, formatDate } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
-const fmtDate = (s) =>
-  s ? new Date(s + "T00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) : null;
-
 export default async function Home() {
   const { user, client } = await getClientSession();
+  const locale = user.locale || "en";
+  const fmtDate = (s) => (s ? formatDate(locale, s, { month: "short", day: "numeric" }) : null);
 
   const projectsQ = sql(
     "SELECT * FROM portal_projects WHERE client_id = ? AND hidden_from_client = 0 ORDER BY updated_at DESC",
@@ -79,22 +79,27 @@ export default async function Home() {
     ...openRequests.map((f) => ({
       icon: Inbox,
       href: `/portal/projects/${f.project_id}?tab=documents`,
-      text: `We need a file from you: "${f.title}" (${f.project_title})`,
+      text: t(locale, "home.attentionFileRequest", { title: f.title, project: f.project_title }),
     })),
     ...pending.map((d) => ({
       icon: FileCheck2,
       href: `/portal/projects/${d.project_id}?tab=deliverables`,
-      text: `"${d.title}" is awaiting your review (${d.project_title})`,
+      text: t(locale, "home.attentionDeliverable", { title: d.title, project: d.project_title }),
     })),
     ...openInvoices.map((i) => ({
       icon: Receipt,
       href: "/portal/billing",
-      text: `Invoice ${i.invoice_number} ($${Number(i.amount).toFixed(2)}) due ${i.due_date}`,
+      text: t(locale, "home.attentionInvoice", { number: i.invoice_number, amount: Number(i.amount).toFixed(2), date: i.due_date }),
     })),
     ...unreadByProject.map((m) => ({
       icon: MessageSquare,
       href: `/portal/projects/${m.project_id}?tab=messages#msg-${m.first_unread_id}`,
-      text: `${m.n} new message${m.n > 1 ? "s" : ""} from ${m.first_sender || "the team"} (${m.project_title})`,
+      text: t(locale, "home.attentionMessages", {
+        n: m.n,
+        plural: m.n > 1 ? "s" : "",
+        sender: m.first_sender || t(locale, "home.attentionMessagesFallback"),
+        project: m.project_title,
+      }),
     })),
   ];
 
@@ -104,11 +109,11 @@ export default async function Home() {
         <div className="w-[3px] shrink-0 rounded-full bg-spark" />
         <div>
           <p className="font-data text-[11px] uppercase tracking-widest text-ink-muted">
-            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            {formatDate(locale, new Date().toISOString().slice(0, 10), { weekday: "long", month: "long", day: "numeric" })}
             {"  ·  "}{client.company_name}
           </p>
           <h1 className="mt-1 text-[1.85rem] leading-none tracking-tight">
-            {user.name.split(" ")[0]}, here's where things stand.
+            {t(locale, "home.greeting", { name: user.name.split(" ")[0] })}
           </h1>
         </div>
       </div>
@@ -117,7 +122,7 @@ export default async function Home() {
         <section className="mt-6 rounded-xl border border-accent/40 bg-accent/5 p-5">
           <h2 className="flex items-center gap-2.5 text-sm font-semibold text-ink">
             <span className="h-2 w-2 shrink-0 rounded-full bg-accent ring-4 ring-accent/15" />
-            Needs your attention
+            {t(locale, "home.needsAttention")}
             <span className="font-data text-xs font-normal text-ink-muted">({attention.length})</span>
           </h2>
           <ul className="mt-4 space-y-2">
@@ -142,17 +147,17 @@ export default async function Home() {
         </section>
       ) : (
         <p className="mt-6 rounded-xl border border-line bg-bg-secondary p-5 text-sm text-ink-soft">
-          You're all caught up. Nothing needs your attention right now.
+          {t(locale, "home.allCaughtUp")}
         </p>
       )}
 
       <div className="mt-10 flex items-baseline justify-between">
-        <h2 className="text-[19px]">Your projects</h2>
-        <span className="font-data text-xs text-ink-muted">{projects.length} active</span>
+        <h2 className="text-[19px]">{t(locale, "home.yourProjects")}</h2>
+        <span className="font-data text-xs text-ink-muted">{t(locale, "home.activeCount", { n: projects.length })}</span>
       </div>
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         {projects.length === 0 && (
-          <p className="text-ink-soft">No active projects yet. Your workspace is ready for kickoff.</p>
+          <p className="text-ink-soft">{t(locale, "home.noProjects")}</p>
         )}
         {projects.map((p) => {
           const phases = phasesByProject[p.id] || [];
@@ -176,7 +181,7 @@ export default async function Home() {
                       href={`/portal/projects/${p.id}?tab=messages`}
                       className="relative z-10 rounded-full bg-accent px-1.5 py-0.5 text-xs font-semibold text-white hover:opacity-90"
                     >
-                      {unreadMap[p.id]} new
+                      {t(locale, "home.newBadge", { n: unreadMap[p.id] })}
                     </Link>
                   )}
                 </h3>
@@ -185,13 +190,13 @@ export default async function Home() {
 
               <p className="mt-2 text-sm">
                 {blocked ? (
-                  <span className="font-medium text-danger">Blocked: {phaseLabel(phases.indexOf(blocked), blocked.title)}</span>
+                  <span className="font-medium text-danger">{t(locale, "home.blocked", { phase: phaseLabel(phases.indexOf(blocked), blocked.title) })}</span>
                 ) : (
                   <>
                     <span className="font-medium text-accent">{active ? phaseLabel(activeIdx, active.title) : p.current_phase}</span>
                     <span className="text-ink-muted">
-                      {active ? ` · ${activeIdx + 1} of ${phases.length}` : ""}
-                      {active?.ends_on ? ` · through ${fmtDate(active.ends_on)}` : ""}
+                      {active ? t(locale, "home.ofTotal", { idx: activeIdx + 1, total: phases.length }) : ""}
+                      {active?.ends_on ? t(locale, "home.through", { date: fmtDate(active.ends_on) }) : ""}
                     </span>
                   </>
                 )}
@@ -204,7 +209,9 @@ export default async function Home() {
                 <span className="font-data text-xs font-medium text-ink-soft">{p.progress_percentage}%</span>
               </div>
 
-              <p className="font-data mt-3 text-[11px] text-ink-muted">target {p.target_date || "TBD"}</p>
+              <p className="font-data mt-3 text-[11px] text-ink-muted">
+                {p.target_date ? t(locale, "home.targetDate", { date: p.target_date }) : t(locale, "home.targetTbd")}
+              </p>
             </div>
           );
         })}
@@ -213,35 +220,35 @@ export default async function Home() {
       <div className="mt-10 grid gap-4 md:grid-cols-2">
         <section className="rounded-xl border border-line bg-bg-secondary p-5">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
-            <CalendarClock size={15} className="text-accent" /> Next meeting
+            <CalendarClock size={15} className="text-accent" /> {t(locale, "home.nextMeeting")}
           </h2>
           {nextMeeting ? (
             <div className="mt-3 text-sm">
               <p className="font-medium text-ink">{nextMeeting.topic}</p>
               <p className="font-data mt-1 text-xs text-ink-soft">
-                {nextMeeting.starts_at.slice(0, 16)} · {nextMeeting.duration_minutes} min
+                {nextMeeting.starts_at.slice(0, 16)} · {t(locale, "schedule.minutes", { n: nextMeeting.duration_minutes })}
               </p>
               <Link href="/portal/schedule" className="mt-3 inline-flex items-center gap-1 text-xs text-accent hover:underline">
-                Manage meetings <ArrowRight size={12} />
+                {t(locale, "home.manageMeetings")} <ArrowRight size={12} />
               </Link>
             </div>
           ) : (
             <div className="mt-3 text-sm text-ink-soft">
-              <p>Nothing scheduled.</p>
+              <p>{t(locale, "home.nothingScheduled")}</p>
               <Link
                 href="/portal/schedule"
                 className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-xs font-medium text-ink-soft hover:border-accent hover:text-ink"
               >
-                <CalendarPlus size={13} /> Book a meeting
+                <CalendarPlus size={13} /> {t(locale, "home.bookMeeting")}
               </Link>
             </div>
           )}
         </section>
 
         <section className="rounded-xl border border-line bg-bg-secondary p-5">
-          <h2 className="text-sm font-semibold text-ink">Latest from the team</h2>
+          <h2 className="text-sm font-semibold text-ink">{t(locale, "home.latestFromTeam")}</h2>
           <ul className="mt-3 space-y-2 text-sm">
-            {recentActivity.length === 0 && <li className="text-ink-muted">No recent updates.</li>}
+            {recentActivity.length === 0 && <li className="text-ink-muted">{t(locale, "home.noRecentUpdates")}</li>}
             {recentActivity.map((a) => (
               <li key={a.id} className="flex items-baseline gap-2">
                 <span className="font-data shrink-0 text-[11px] text-ink-muted">{a.created_at.slice(5, 10)}</span>
@@ -250,7 +257,7 @@ export default async function Home() {
             ))}
           </ul>
           <Link href="/portal/activity" className="mt-3 inline-flex items-center gap-1 text-xs text-accent hover:underline">
-            Full activity history <ArrowRight size={12} />
+            {t(locale, "home.fullActivityHistory")} <ArrowRight size={12} />
           </Link>
         </section>
       </div>

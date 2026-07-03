@@ -2,16 +2,17 @@
 
 import { useState } from "react";
 import { Paperclip } from "lucide-react";
+import { t } from "@/lib/i18n";
 
 // Native file inputs render as dim, unclickable-looking text. This wraps a
 // visually-hidden input in a button-styled label so "attach a file" reads as
 // an obvious action, and echoes the chosen filename next to it.
-export default function FilePicker({ name = "file", accept, required, label = "Choose file…" }) {
+export default function FilePicker({ name = "file", accept, required, label, locale = "en" }) {
   const [fileName, setFileName] = useState("");
   return (
     <label className="inline-flex cursor-pointer items-center gap-2">
       <span className="flex items-center gap-1.5 rounded-lg border border-line bg-bg-tertiary px-3 py-2 text-sm text-ink-soft transition-colors hover:border-accent hover:text-ink">
-        <Paperclip size={14} /> {label}
+        <Paperclip size={14} /> {label || t(locale, "documents.filePickerLabel")}
       </span>
       <input
         type="file"
@@ -22,7 +23,7 @@ export default function FilePicker({ name = "file", accept, required, label = "C
         onChange={(e) => setFileName(e.target.files?.[0]?.name || "")}
       />
       <span className={`max-w-44 truncate text-xs ${fileName ? "text-ink" : "text-ink-muted"}`}>
-        {fileName || "No file selected"}
+        {fileName || t(locale, "documents.filePickerEmpty")}
       </span>
     </label>
   );

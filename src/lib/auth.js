@@ -80,7 +80,7 @@ export async function getClientSession() {
       const contact = contacts[0] ?? null;
       if (client && contact) {
         return {
-          user: { id: contact.id, name: contact.name, email: contact.email },
+          user: { id: contact.id, name: contact.name, email: contact.email, locale: contact.locale || "en" },
           client,
           preview: true,
         };
@@ -91,7 +91,7 @@ export async function getClientSession() {
   const raw = store.get(COOKIE.client)?.value;
   if (!raw) return null;
   const rows = await sql(
-    `SELECT u.id AS user_id, u.name AS user_name, u.email AS user_email, c.*
+    `SELECT u.id AS user_id, u.name AS user_name, u.email AS user_email, u.locale AS user_locale, c.*
      FROM active_sessions s
      JOIN client_users u ON u.id = s.user_id
      JOIN clients c ON c.id = u.client_id
@@ -101,8 +101,8 @@ export async function getClientSession() {
   );
   const row = rows[0];
   if (!row) return null;
-  const { user_id, user_name, user_email, ...client } = row;
-  return { user: { id: user_id, name: user_name, email: user_email }, client };
+  const { user_id, user_name, user_email, user_locale, ...client } = row;
+  return { user: { id: user_id, name: user_name, email: user_email, locale: user_locale || "en" }, client };
 }
 
 export async function getOperatorSession() {

@@ -1,13 +1,11 @@
 import { Flag } from "lucide-react";
 import { phaseLabel } from "@/lib/phases";
+import { t as translate, formatDate } from "@/lib/i18n";
 
 // The phase-timeline card body: a connected bar of phase segments (the active
 // one striped), aligned labels, a slim progress bar, target date, and what's
 // next. The page provides the surrounding "Phase timeline" card + eyebrow and
 // the big serif project title above, so this doesn't repeat a heading.
-
-const fmtDate = (s) =>
-  s ? new Date(s + "T00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) : null;
 
 const SEG = {
   done: "bg-accent-2/25",
@@ -24,7 +22,9 @@ const stripes = {
   opacity: 0.22,
 };
 
-export default function ProjectStatus({ phases, currentPhase, progress, targetDate }) {
+export default function ProjectStatus({ phases, currentPhase, progress, targetDate, locale = "en" }) {
+  const t = (key, vars) => translate(locale, key, vars);
+  const fmtDate = (s) => (s ? formatDate(locale, s, { month: "short", day: "numeric" }) : null);
   const items = phases?.length > 0 ? phases : [];
   const activeIdx = items.findIndex((p) => p.status === "active");
   const blocked = items.find((p) => p.status === "blocked");
@@ -65,7 +65,7 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
       ) : currentPhase ? (
         <p className="text-lg font-medium text-ink">{currentPhase}</p>
       ) : (
-        <p className="text-sm text-ink-muted">No phases defined yet.</p>
+        <p className="text-sm text-ink-muted">{t("status.noPhases")}</p>
       )}
 
       {(typeof progress === "number" || targetDate || next || blocked) && (
@@ -78,7 +78,7 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
               <span className="font-mono text-[12px] font-medium text-ink-soft">{progress}%</span>
               {targetDate && (
                 <span className="flex items-center gap-1.5 font-mono text-[11px] text-ink-muted">
-                  <Flag size={12} className="text-accent" /> target {targetDate}
+                  <Flag size={12} className="text-accent" /> {t("status.targetDate", { date: targetDate })}
                 </span>
               )}
             </div>
@@ -87,13 +87,13 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
             <p className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-ink-soft">
               {blocked && (
                 <span className="font-medium text-danger">
-                  {phaseLabel(blockedIdx, blocked.title)} is blocked and needs attention
+                  {t("status.isBlocked", { phase: phaseLabel(blockedIdx, blocked.title) })}
                 </span>
               )}
               {next && (
                 <span>
-                  Up next: <span className="font-medium text-ink">{phaseLabel(nextIdx, next.title)}</span>
-                  {next.starts_on && <span className="font-mono text-xs text-ink-muted"> · starts {fmtDate(next.starts_on)}</span>}
+                  {t("status.upNextLabel")}<span className="font-medium text-ink">{phaseLabel(nextIdx, next.title)}</span>
+                  {next.starts_on && <span className="font-mono text-xs text-ink-muted">{t("status.starts", { date: fmtDate(next.starts_on) })}</span>}
                 </span>
               )}
             </p>

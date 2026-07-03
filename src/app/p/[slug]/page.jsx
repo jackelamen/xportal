@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { sql } from "@/lib/db";
 import LoginForm from "@/components/LoginForm";
 import LoginShell from "@/components/LoginShell";
+import { t } from "@/lib/i18n";
+import { getLoginLocale } from "@/lib/i18n/loginLocale";
 
 export const dynamic = "force-dynamic";
 
@@ -13,16 +15,18 @@ export default async function BrandedLoginPage({ params }) {
     [slug]
   ))[0];
   if (!client) notFound();
+  const locale = await getLoginLocale();
 
   return (
     <LoginShell
       tile="indigo"
+      locale={locale}
       accentColor={client.accent_color}
       logoSrc={client.logo_path ? `/api/public-logo/${slug}` : undefined}
       logoAlt={client.company_name}
-      eyebrow={`Client portal · powered by xPortal`}
-      headline="Your project, your progress, in one place."
-      blurb="Review deliverables, follow progress, and stay in sync with your team, all in real time."
+      eyebrow={t(locale, "login.brandedEyebrow")}
+      headline={t(locale, "login.headline")}
+      blurb={t(locale, "login.blurb")}
     >
       {!client.logo_path && (
         <p
@@ -32,10 +36,10 @@ export default async function BrandedLoginPage({ params }) {
           {client.company_name}
         </p>
       )}
-      <h2 className="text-2xl font-semibold text-ink">Sign in to your workspace</h2>
-      <p className="mt-1.5 text-sm text-ink-soft">Review progress, deliverables, and billing in one place.</p>
+      <h2 className="text-2xl font-semibold text-ink">{t(locale, "login.signInHeadline")}</h2>
+      <p className="mt-1.5 text-sm text-ink-soft">{t(locale, "login.signInBlurb")}</p>
       <div className="mt-7">
-        <LoginForm kind="client" accent={client.accent_color} />
+        <LoginForm kind="client" accent={client.accent_color} locale={locale} />
       </div>
     </LoginShell>
   );

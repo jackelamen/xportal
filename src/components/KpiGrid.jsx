@@ -1,32 +1,32 @@
 import { Check, TriangleAlert, Minus } from "lucide-react";
 import { InfoTip } from "@/components/Tip";
+import { t as translate } from "@/lib/i18n";
 
 // A KPI's health + a plain-English status line describing where it sits
 // relative to its goal. Countable metrics (whole numbers, no unit) read as
 // "N over/under goal"; scores and percentages read as "Beating target".
-function evaluate(k) {
+function evaluate(k, t) {
   const c = k.current_value;
-  const t = k.target_value;
-  if (c == null || t == null) return { tone: "none", text: "No target set" };
+  const tgt = k.target_value;
+  if (c == null || tgt == null) return { tone: "none", text: t("kpi.noTargetSet") };
 
-  const good = k.direction === "down" ? c <= t : c >= t;
-  const delta = c - t;
-  const isCount = !k.unit && Number.isInteger(c) && Number.isInteger(t) && Math.abs(delta) >= 1;
-  const overUnder = delta > 0 ? "over" : "under";
+  const good = k.direction === "down" ? c <= tgt : c >= tgt;
+  const delta = c - tgt;
+  const isCount = !k.unit && Number.isInteger(c) && Number.isInteger(tgt) && Math.abs(delta) >= 1;
 
   let tone;
   if (good) tone = "good";
   else if (isCount) tone = Math.abs(delta) <= 1 ? "close" : "off";
   else {
-    const ratio = k.direction === "down" ? t / c : c / t;
+    const ratio = k.direction === "down" ? tgt / c : c / tgt;
     tone = ratio >= 0.85 ? "close" : "off";
   }
 
   let text;
-  if (delta === 0) text = "On target";
-  else if (isCount) text = `${Math.abs(delta)} ${overUnder} goal`;
-  else if (good) text = "Beating target";
-  else text = k.direction === "down" ? "Over target" : "Below target";
+  if (delta === 0) text = t("kpi.onTarget");
+  else if (isCount) text = delta > 0 ? t("kpi.overGoal", { n: Math.abs(delta) }) : t("kpi.underGoal", { n: Math.abs(delta) });
+  else if (good) text = t("kpi.beatingTarget");
+  else text = k.direction === "down" ? t("kpi.overTarget") : t("kpi.belowTarget");
 
   return { tone, text };
 }
@@ -40,10 +40,11 @@ const TONE = {
 
 const fmt = (v) => (v == null ? "–" : Number(v) % 1 === 0 ? String(v) : Number(v).toFixed(1));
 
-export default function KpiGrid({ kpis }) {
+export default function KpiGrid({ kpis, locale = "en" }) {
   if (!kpis?.length) return null;
+  const t = (key, vars) => translate(locale, key, vars);
 
-  const evaluated = kpis.map((k) => ({ k, ...evaluate(k) }));
+  const evaluated = kpis.map((k) => ({ k, ...evaluate(k, t) }));
   const scored = evaluated.filter((e) => e.tone !== "none");
   const onTarget = scored.filter((e) => e.tone === "good").length;
 
@@ -51,13 +52,13 @@ export default function KpiGrid({ kpis }) {
     <section>
       <div className="mb-4 flex items-center justify-between">
         <p className="font-mono flex items-center gap-1.5 text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">
-          Key results
-          <InfoTip text="The numbers this project is judged by. Green is beating or meeting the goal, amber is close, red is off target." />
+          {t("kpi.keyResults")}
+          <InfoTip text={t("kpi.keyResultsTip")} />
         </p>
         {scored.length > 0 && (
           <span className="font-mono flex items-center gap-1.5 text-[11px] text-ink-soft">
             <span className={`h-1.5 w-1.5 rounded-full ${onTarget === scored.length ? "bg-accent-2" : "bg-warn"}`} />
-            {onTarget} of {scored.length} on target
+            {t("kpi.onTargetCount", { n: onTarget, m: scored.length })}
           </span>
         )}
       </div>
@@ -83,8 +84,8 @@ export default function KpiGrid({ kpis }) {
               </span>
 
               <p className="font-mono mt-2.5 text-[10px] text-ink-muted">
-                {k.target_value == null ? "No goal" : `Goal ${fmt(k.target_value)}${k.unit || ""}`}
-                {k.direction === "down" && k.target_value != null ? " · lower wins" : ""}
+                {k.target_value == null ? t("kpi.noGoal") : t("kpi.goal", { value: `${fmt(k.target_value)}${k.unit || ""}` })}
+                {k.direction === "down" && k.target_value != null ? t("kpi.lowerWins") : ""}
               </p>
             </div>
           );
