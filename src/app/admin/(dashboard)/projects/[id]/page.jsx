@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import FilePicker from "@/components/FilePicker";
 import CsvImport from "@/components/admin/CsvImport";
+import InvoiceForm from "@/components/admin/InvoiceForm";
 import { EditableRow, RowButton } from "@/components/admin/EditableRow";
 import { InfoTip } from "@/components/Tip";
 import { sql } from "@/lib/db";
@@ -50,6 +51,12 @@ export default async function AdminProjectPage({ params, searchParams }) {
   const invoices = await sql(
     "SELECT * FROM invoices WHERE project_id = ? ORDER BY issued_date DESC", [id]
   );
+  const lineItemRows = await sql(
+    `SELECT li.* FROM invoice_line_items li JOIN invoices i ON i.id = li.invoice_id
+     WHERE i.project_id = ? ORDER BY li.sort_order`, [id]
+  );
+  const lineItemsByInvoice = {};
+  for (const li of lineItemRows) (lineItemsByInvoice[li.invoice_id] ||= []).push(li);
   const messages = await sql(
     "SELECT * FROM communication_threads WHERE project_id = ? ORDER BY created_at ASC", [id]
   );
@@ -511,6 +518,17 @@ export default async function AdminProjectPage({ params, searchParams }) {
                       )}
                     </div>
                   </div>
+                  {lineItemsByInvoice[inv.id]?.length > 0 && (
+                    <ul className="border-t border-line/60 bg-bg-primary/30 px-3.5 py-2 text-xs text-ink-soft">
+                      {lineItemsByInvoice[inv.id].map((li) => (
+                        <li key={li.id} className="flex items-center gap-2 py-0.5">
+                          <span className="min-w-0 flex-1 truncate">{li.description}</span>
+                          <span className="font-data text-ink-muted">{li.quantity} × ${Number(li.unit_price).toFixed(2)}</span>
+                          <span className="font-data w-20 text-right">${(li.quantity * li.unit_price).toFixed(2)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                   {inv.dispute_reason && (
                     <p className="bg-dispute/5 px-3.5 pb-2.5 text-xs text-dispute">
                       {inv.invoice_number} dispute: {inv.dispute_reason}
@@ -522,15 +540,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
             </div>
             <details className="mt-3">
               <summary className="cursor-pointer text-sm font-medium text-ink-soft">+ New invoice</summary>
-              <form action="/api/admin/invoices" method="post" className="mt-3 flex flex-wrap items-end gap-3 text-sm">
-                <input type="hidden" name="project_id" value={id} />
-                <input type="hidden" name="_redirect" value={here} />
-                <label className="block text-ink-soft">Number<input name="invoice_number" required className={input} /></label>
-                <label className="block text-ink-soft">Amount<input name="amount" type="number" step="0.01" min="0.01" required className={`${input} w-28`} /></label>
-                <label className="block text-ink-soft">Issued<input name="issued_date" type="date" required className={input} /></label>
-                <label className="block text-ink-soft">Due<input name="due_date" type="date" required className={input} /></label>
-                <button className="rounded-lg bg-accent-2 px-4 py-2 font-medium text-white">Issue</button>
-              </form>
+              <InvoiceForm projectId={id} redirectTo={here} inputClass={input} />
             </details>
           </section>
         )}

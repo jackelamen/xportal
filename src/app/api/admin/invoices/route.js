@@ -2,6 +2,25 @@ import { sql, uuid } from "@/lib/db";
 import { requireOperator, redirectBack, uniqueViolation } from "@/lib/admin";
 import { logActivity, notifyClient } from "@/lib/activity";
 
+// Parse the line_items hidden field (JSON from the admin form). Each valid row
+// needs a description and a non-negative amount; the invoice total is their sum.
+function parseLineItems(raw) {
+  let rows;
+  try {
+    rows = JSON.parse(raw || "[]");
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .map((r) => ({
+      description: String(r.description || "").trim(),
+      quantity: Number(r.quantity) || 0,
+      unit_price: Number(r.unit_price) || 0,
+    }))
+    .filter((r) => r.description && r.quantity > 0);
+}
+
 export async function POST(request) {
   const { error, operator } = await requireOperator();
   if (error) return error;
@@ -9,24 +28,39 @@ export async function POST(request) {
   const form = await request.formData();
   const projectId = String(form.get("project_id") || "");
   const number = String(form.get("invoice_number") || "").trim();
-  const amount = Number(form.get("amount"));
   const issued = String(form.get("issued_date") || "");
   const due = String(form.get("due_date") || "");
 
+  const lineItems = parseLineItems(form.get("line_items"));
+  // Total comes from line items when present; otherwise the single amount field
+  // (kept for backward compatibility with any caller not sending line items).
+  const amount = lineItems.length
+    ? lineItems.reduce((sum, r) => sum + r.quantity * r.unit_price, 0)
+    : Number(form.get("amount"));
+
   const project = (await sql("SELECT * FROM portal_projects WHERE id = ?", [projectId]))[0];
   if (!project || !number || !(amount > 0) || !issued || !due) {
-    return new Response("project, invoice_number, positive amount, issued and due dates required", { status: 400 });
+    return new Response("project, invoice_number, at least one line item (or amount), issued and due dates required", { status: 400 });
   }
 
+  const invoiceId = uuid();
   try {
     await sql(
       "INSERT INTO invoices (id, project_id, invoice_number, amount, issued_date, due_date) VALUES (?, ?, ?, ?, ?, ?)",
-      [uuid(), projectId, number, amount, issued, due]
+      [invoiceId, projectId, number, amount, issued, due]
     );
   } catch (e) {
     const msg = uniqueViolation(e);
     if (msg) return new Response(msg, { status: 409 });
     throw e;
+  }
+
+  for (let i = 0; i < lineItems.length; i++) {
+    const r = lineItems[i];
+    await sql(
+      "INSERT INTO invoice_line_items (id, invoice_id, description, quantity, unit_price, sort_order) VALUES (?, ?, ?, ?, ?, ?)",
+      [uuid(), invoiceId, r.description, r.quantity, r.unit_price, i]
+    );
   }
 
   await logActivity({
