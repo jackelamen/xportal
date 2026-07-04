@@ -127,6 +127,17 @@ export default async function AdminProjectPage({ params, searchParams }) {
         </div>
       </div>
 
+      {project.archived_at && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warn/40 bg-warn/10 px-4 py-3 text-sm">
+          <span className="font-medium text-warn">This project is archived. It&apos;s hidden from the client and the active list.</span>
+          <form action={post()} method="post">
+            <input type="hidden" name="_action" value="unarchive" />
+            <input type="hidden" name="_redirect" value={here} />
+            <button className="rounded-lg border border-warn/50 px-3 py-1.5 font-medium text-warn hover:bg-warn/15">Unarchive</button>
+          </form>
+        </div>
+      )}
+
       <div className="sticky top-0 z-10 -mx-6 mt-5 border-b border-line bg-bg-primary px-6">
         <nav className="flex gap-0.5 overflow-x-auto text-sm">
           {tabs.map((t) => {
@@ -304,6 +315,38 @@ export default async function AdminProjectPage({ params, searchParams }) {
               <h2 className="flex items-center gap-1.5 font-medium text-ink">Import from CSV <InfoTip side="bottom" text="Pull project data in from a CSV instead of typing it: phases & milestones, KPIs, links, people, working items, and decisions are added to this project. New items are appended; matching KPIs update in place." /></h2>
               <div className="mt-3">
                 <CsvImport mode="merge" projectId={id} />
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-danger/30 bg-bg-secondary p-5">
+              <h2 className="font-medium text-danger">Danger zone</h2>
+              {!project.archived_at && (
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+                  <div className="max-w-md">
+                    <p className="text-sm font-medium text-ink">Archive this project</p>
+                    <p className="text-xs text-ink-muted">Hides it from the client and the active list. Reversible; all data is kept.</p>
+                  </div>
+                  <form action={post()} method="post">
+                    <input type="hidden" name="_action" value="archive" />
+                    <input type="hidden" name="_redirect" value={here} />
+                    <button className="rounded-lg border border-warn/50 px-4 py-2 text-sm font-medium text-warn hover:bg-warn/10">Archive</button>
+                  </form>
+                </div>
+              )}
+              <div className="mt-4">
+                <p className="text-sm font-medium text-ink">Delete permanently</p>
+                <p className="max-w-xl text-xs text-ink-muted">
+                  Removes this project and <span className="text-danger">everything under it</span>: phases, milestones, deliverables, invoices, messages, and documents. This can&apos;t be undone.
+                </p>
+                <form action={post()} method="post" className="mt-3 flex flex-wrap items-end gap-3 text-sm">
+                  <input type="hidden" name="_action" value="delete" />
+                  <input type="hidden" name="_redirect" value={`/admin/clients/${project.cid}`} />
+                  <label className="block text-ink-soft">
+                    Type <span className="font-semibold text-ink">{project.title}</span> to confirm
+                    <input name="confirm_title" required autoComplete="off" className={`${input} w-64`} />
+                  </label>
+                  <button className="rounded-lg bg-danger px-4 py-2 font-medium text-white">Delete project</button>
+                </form>
               </div>
             </section>
           </>

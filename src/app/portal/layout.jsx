@@ -29,7 +29,7 @@ export default async function PortalLayout({ children }) {
   const { n: unread } = (await sql(
     `SELECT COUNT(*)::int AS n FROM communication_threads t
      JOIN portal_projects p ON p.id = t.project_id
-     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND t.sender_type = 'Internal_Operator' AND t.is_read = 0`,
+     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND p.archived_at IS NULL AND t.sender_type = 'Internal_Operator' AND t.is_read = 0`,
     [client.id]
   ))[0];
 

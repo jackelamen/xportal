@@ -23,6 +23,8 @@ export default async function AdminClientPage({ params, searchParams }) {
   const projects = await sql(
     "SELECT * FROM portal_projects WHERE client_id = ? ORDER BY updated_at DESC", [id]
   );
+  const activeProjects = projects.filter((p) => !p.archived_at);
+  const archivedProjects = projects.filter((p) => p.archived_at);
   const notes = await sql(
     "SELECT * FROM internal_notes WHERE client_id = ? AND project_id IS NULL ORDER BY created_at DESC", [id]
   );
@@ -99,7 +101,7 @@ export default async function AdminClientPage({ params, searchParams }) {
             <section>
               <h2 className="text-[17px]">Projects</h2>
               <div className="mt-3 space-y-2">
-                {projects.map((p) => (
+                {activeProjects.map((p) => (
                   <div
                     key={p.id}
                     className={`relative flex items-center gap-3 rounded-xl border border-line bg-bg-secondary px-4 py-3.5 text-sm shadow-[0_1px_2px_rgb(0_0_0_/_0.03)] transition-colors hover:border-accent-2 ${
@@ -127,10 +129,31 @@ export default async function AdminClientPage({ params, searchParams }) {
                     </form>
                   </div>
                 ))}
-                {projects.length === 0 && (
-                  <p className="text-sm text-ink-muted">No projects yet.</p>
+                {activeProjects.length === 0 && (
+                  <p className="text-sm text-ink-muted">No active projects.</p>
                 )}
               </div>
+
+              {archivedProjects.length > 0 && (
+                <details className="mt-3">
+                  <summary className="cursor-pointer text-xs font-medium text-ink-muted hover:text-ink">
+                    Archived ({archivedProjects.length})
+                  </summary>
+                  <div className="mt-2 space-y-2">
+                    {archivedProjects.map((p) => (
+                      <div key={p.id} className="relative flex items-center gap-3 rounded-xl border border-line bg-bg-secondary px-4 py-3 text-sm opacity-70">
+                        <Link href={`/admin/projects/${p.id}`} className="min-w-0 truncate font-medium after:absolute after:inset-0">{p.title}</Link>
+                        <span className="font-data ml-auto shrink-0 text-xs text-ink-muted">archived {p.archived_at?.slice(0, 10)}</span>
+                        <form action={`/api/admin/projects/${p.id}`} method="post" className="relative z-10 shrink-0">
+                          <input type="hidden" name="_action" value="unarchive" />
+                          <input type="hidden" name="_redirect" value={here} />
+                          <button className="rounded-md border border-line px-2 py-1 text-xs text-ink-soft hover:border-accent-2 hover:text-ink">Unarchive</button>
+                        </form>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
               <details className="mt-3 rounded-xl border border-line bg-bg-secondary p-4">
                 <summary className="cursor-pointer text-sm font-medium text-ink-soft">+ New project</summary>
                 <form action="/api/admin/projects" method="post" className="mt-3 flex flex-wrap items-end gap-3 text-sm">

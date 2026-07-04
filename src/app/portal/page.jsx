@@ -16,13 +16,13 @@ export default async function Home() {
   const fmtDate = (s) => (s ? formatDate(locale, s, { month: "short", day: "numeric" }) : null);
 
   const projectsQ = sql(
-    "SELECT * FROM portal_projects WHERE client_id = ? AND hidden_from_client = 0 ORDER BY updated_at DESC",
+    "SELECT * FROM portal_projects WHERE client_id = ? AND hidden_from_client = 0 AND archived_at IS NULL ORDER BY updated_at DESC",
     [client.id]
   );
   // One query for all phases across the client's projects, grouped in JS.
   const phasesQ = sql(
     `SELECT m.* FROM project_milestones m JOIN portal_projects p ON p.id = m.project_id
-     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND m.kind = 'phase'
+     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND p.archived_at IS NULL AND m.kind = 'phase'
      ORDER BY m.sort_order`,
     [client.id]
   );
@@ -31,12 +31,12 @@ export default async function Home() {
   const pendingQ = sql(
     `SELECT d.id, d.title, p.id AS project_id, p.title AS project_title
      FROM deliverables_approvals d JOIN portal_projects p ON p.id = d.project_id
-     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND d.status = 'Pending' ORDER BY d.submitted_at ASC`,
+     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND p.archived_at IS NULL AND d.status = 'Pending' ORDER BY d.submitted_at ASC`,
     [client.id]
   );
   const openInvoicesQ = sql(
     `SELECT i.* FROM invoices i JOIN portal_projects p ON p.id = i.project_id
-     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND i.status IN ('Unpaid','Overdue') ORDER BY i.due_date ASC`,
+     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND p.archived_at IS NULL AND i.status IN ('Unpaid','Overdue') ORDER BY i.due_date ASC`,
     [client.id]
   );
   // The earliest unread message per project, so the attention link can jump
@@ -47,7 +47,7 @@ export default async function Home() {
        (array_agg(t.sender_name ORDER BY t.created_at ASC))[1] AS first_sender,
        MIN(t.created_at) AS first_at
      FROM communication_threads t JOIN portal_projects p ON p.id = t.project_id
-     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND t.sender_type = 'Internal_Operator' AND t.is_read = 0
+     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND p.archived_at IS NULL AND t.sender_type = 'Internal_Operator' AND t.is_read = 0
      GROUP BY p.id, p.title ORDER BY first_at DESC`,
     [client.id]
   );
@@ -59,7 +59,7 @@ export default async function Home() {
   const openRequestsQ = sql(
     `SELECT f.title, p.id AS project_id, p.title AS project_title
      FROM file_requests f JOIN portal_projects p ON p.id = f.project_id
-     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND f.status = 'open' ORDER BY f.created_at ASC`,
+     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND p.archived_at IS NULL AND f.status = 'open' ORDER BY f.created_at ASC`,
     [client.id]
   );
   const recentActivityQ = sql(

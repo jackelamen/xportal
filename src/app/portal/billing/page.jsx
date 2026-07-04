@@ -12,7 +12,7 @@ export default async function BillingPage() {
   const invoices = await sql(
     `SELECT i.*, p.title AS project_title FROM invoices i
      JOIN portal_projects p ON p.id = i.project_id
-     WHERE p.client_id = ? AND p.hidden_from_client = 0 ORDER BY i.issued_date DESC`,
+     WHERE p.client_id = ? AND p.hidden_from_client = 0 AND p.archived_at IS NULL ORDER BY i.issued_date DESC`,
     [client.id]
   );
 

@@ -29,7 +29,7 @@ export default async function ProjectPage({ params, searchParams }) {
   const t = (key, vars) => translate(locale, key, vars);
 
   const project = (await sql(
-    "SELECT * FROM portal_projects WHERE id = ? AND client_id = ? AND hidden_from_client = 0",
+    "SELECT * FROM portal_projects WHERE id = ? AND client_id = ? AND hidden_from_client = 0 AND archived_at IS NULL",
     [id, client.id]
   ))[0];
   if (!project) notFound();

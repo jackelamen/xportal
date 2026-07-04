@@ -14,7 +14,30 @@ export async function POST(request, { params }) {
   const form = await request.formData();
   const action = form.get("_action");
 
-  if (action === "toggle_visibility") {
+  if (action === "archive") {
+    await sql("UPDATE portal_projects SET archived_at = NOW() WHERE id = ?", [id]);
+    await logActivity({
+      clientId: project.client_id, projectId: id, actorType: "operator", actorName: operator.name,
+      eventType: "project.archived", summary: `${operator.name} archived "${project.title}"`,
+    });
+    return redirectBack(request, form);
+  } else if (action === "unarchive") {
+    await sql("UPDATE portal_projects SET archived_at = NULL WHERE id = ?", [id]);
+    await logActivity({
+      clientId: project.client_id, projectId: id, actorType: "operator", actorName: operator.name,
+      eventType: "project.unarchived", summary: `${operator.name} restored "${project.title}"`,
+    });
+    return redirectBack(request, form);
+  } else if (action === "delete") {
+    // Guarded: the operator types the exact project title. The delete cascades
+    // to every milestone, deliverable, invoice, message, and document.
+    const confirm = String(form.get("confirm_title") || "").trim().toLowerCase();
+    if (confirm !== String(project.title).trim().toLowerCase()) {
+      return new Response("Type the project's exact title to confirm deletion.", { status: 400 });
+    }
+    await sql("DELETE FROM portal_projects WHERE id = ?", [id]);
+    return redirectBack(request, form);
+  } else if (action === "toggle_visibility") {
     const next = project.hidden_from_client ? 0 : 1;
     await sql("UPDATE portal_projects SET hidden_from_client = ? WHERE id = ?", [next, id]);
     await logActivity({
