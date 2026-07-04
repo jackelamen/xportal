@@ -215,6 +215,8 @@ export default {
     brandedEyebrow: "Client portal · powered by xPortal",
     signInHeadline: "Sign in to your workspace",
     signInBlurb: "Review progress, deliverables, and billing in one place.",
+    operatorPrompt: "On the team?",
+    operatorLink: "Operator sign-in",
     copyright: "© {year} xPortal",
   },
   billing: {

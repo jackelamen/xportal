@@ -214,6 +214,8 @@ export default {
     brandedEyebrow: "클라이언트 포털 · xPortal 제공",
     signInHeadline: "워크스페이스에 로그인",
     signInBlurb: "진행 상황, 산출물, 청구서를 한곳에서 확인하세요.",
+    operatorPrompt: "팀 멤버이신가요?",
+    operatorLink: "운영자 로그인",
     copyright: "© {year} xPortal",
   },
   billing: {

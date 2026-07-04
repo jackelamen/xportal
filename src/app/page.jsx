@@ -1,3 +1,4 @@
+import Link from "next/link";
 import LoginForm from "@/components/LoginForm";
 import LoginShell from "@/components/LoginShell";
 import Logo from "@/components/Logo";
@@ -24,6 +25,12 @@ export default async function LoginPage() {
       <div className="mt-7">
         <LoginForm kind="client" locale={locale} />
       </div>
+      <p className="mt-8 border-t border-line pt-5 text-xs text-ink-muted">
+        {t(locale, "login.operatorPrompt")}{" "}
+        <Link href="/admin/login" className="font-medium text-accent hover:underline">
+          {t(locale, "login.operatorLink")}
+        </Link>
+      </p>
     </LoginShell>
   );
 }
