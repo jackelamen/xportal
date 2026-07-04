@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Eye, EyeOff, ChevronRight } from "lucide-react";
+import { Eye, EyeOff, ChevronRight, Plus, Upload, FolderOpen } from "lucide-react";
 import FilePicker from "@/components/FilePicker";
 import CsvImport from "@/components/admin/CsvImport";
 import { EditableRow } from "@/components/admin/EditableRow";
@@ -100,38 +100,56 @@ export default async function AdminClientPage({ params, searchParams }) {
         {tab === "projects" && (
           <>
             <section>
-              <h2 className="text-[17px]">Projects</h2>
-              <div className="mt-3 space-y-2">
+              <div className="flex items-baseline justify-between">
+                <h2 className="text-[17px]">Projects</h2>
+                <span className="font-data text-xs text-ink-muted">{activeProjects.length} active</span>
+              </div>
+
+              <div className="mt-3 space-y-2.5">
                 {activeProjects.map((p) => (
                   <div
                     key={p.id}
-                    className={`relative flex items-center gap-3 rounded-xl border border-line bg-bg-secondary px-4 py-3.5 text-sm shadow-[0_1px_2px_rgb(0_0_0_/_0.03)] transition-colors hover:border-accent-2 ${
-                      p.hidden_from_client ? "opacity-60" : ""
+                    className={`group relative flex items-center gap-4 rounded-xl border border-line bg-bg-secondary px-4 py-3.5 shadow-[0_1px_2px_rgb(0_0_0_/_0.03),0_10px_28px_-20px_rgb(0_0_0_/_0.18)] transition-all hover:-translate-y-0.5 hover:border-accent-2 ${
+                      p.hidden_from_client ? "opacity-70" : ""
                     }`}
                   >
-                    <Link href={`/admin/projects/${p.id}`} className="flex min-w-0 items-center gap-2 font-semibold after:absolute after:inset-0">
-                      <span className="truncate">{p.title}</span>
-                      {p.hidden_from_client ? (
-                        <span className="font-data rounded-full bg-warn/15 px-2 py-0.5 text-[10.5px] font-semibold text-warn">
-                          hidden from client
-                        </span>
-                      ) : null}
-                    </Link>
-                    <span className="font-data ml-auto shrink-0 text-xs text-ink-muted">{p.current_phase} · {p.progress_percentage}%</span>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-2/10 text-accent-2">
+                      <FolderOpen size={16} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <Link href={`/admin/projects/${p.id}`} className="block truncate text-sm font-semibold text-ink after:absolute after:inset-0">
+                        {p.title}
+                      </Link>
+                      <p className="mt-0.5 flex items-center gap-2 text-xs">
+                        <span className="font-medium text-accent-2">{p.current_phase || "No phase set"}</span>
+                        {p.hidden_from_client && (
+                          <span className="font-data rounded-full bg-warn/15 px-1.5 py-0.5 text-[9.5px] font-semibold uppercase tracking-wide text-warn">Hidden</span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="hidden w-40 shrink-0 items-center gap-2.5 sm:flex">
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-bg-tertiary">
+                        <div className="h-full rounded-full bg-accent-2" style={{ width: `${p.progress_percentage}%` }} />
+                      </div>
+                      <span className="font-data w-8 shrink-0 text-right text-xs font-medium text-ink-soft">{p.progress_percentage}%</span>
+                    </div>
                     <form action={`/api/admin/projects/${p.id}`} method="post" className="relative z-10 shrink-0">
                       <input type="hidden" name="_action" value="toggle_visibility" />
                       <input type="hidden" name="_redirect" value={here} />
                       <button
                         title={p.hidden_from_client ? "Show this project in the client portal" : "Hide this project from the client portal"}
-                        className="flex items-center gap-1 rounded-md border border-line px-2 py-1 text-xs text-ink-soft hover:border-accent hover:text-ink"
+                        className="flex items-center gap-1 rounded-md border border-line px-2 py-1 text-xs text-ink-soft hover:border-accent-2 hover:text-ink"
                       >
                         {p.hidden_from_client ? <><Eye size={12} /> Show</> : <><EyeOff size={12} /> Hide</>}
                       </button>
                     </form>
+                    <ChevronRight size={16} className="shrink-0 text-ink-muted transition-transform group-hover:translate-x-0.5 group-hover:text-accent-2" />
                   </div>
                 ))}
                 {activeProjects.length === 0 && (
-                  <p className="text-sm text-ink-muted">No active projects.</p>
+                  <div className="rounded-xl border border-dashed border-line bg-bg-secondary/40 px-4 py-8 text-center text-sm text-ink-muted">
+                    No active projects yet. Create one below or import from a CSV.
+                  </div>
                 )}
               </div>
 
@@ -155,35 +173,42 @@ export default async function AdminClientPage({ params, searchParams }) {
                   </div>
                 </details>
               )}
-              <details className="mt-3 rounded-xl border border-line bg-bg-secondary p-4">
-                <summary className="cursor-pointer text-sm font-medium text-ink-soft">+ New project</summary>
-                <form action="/api/admin/projects" method="post" className="mt-3 flex flex-wrap items-end gap-3 text-sm">
-                  <input type="hidden" name="client_id" value={id} />
-                  <input type="hidden" name="_redirect" value={here} />
-                  <label className="block text-ink-soft">
-                    Title
-                    <input name="title" required className="mt-1 block w-64 rounded-lg border border-line bg-bg-tertiary px-3 py-2 text-ink outline-none focus:border-accent-2" />
-                  </label>
-                  <label className="block text-ink-soft">
-                    Target date
-                    <input name="target_date" type="date" className="mt-1 block rounded-lg border border-line bg-bg-tertiary px-3 py-2 text-ink outline-none focus:border-accent-2" />
-                  </label>
-                  <label className="block text-ink-soft">
-                    <span className="flex items-center gap-1.5">xPM id (optional) <InfoTip text="Links this project to its xPM counterpart so phase, progress, KPIs, and decisions sync automatically over the bridge." /></span>
-                    <input name="xpm_project_id" className="mt-1 block w-32 rounded-lg border border-line bg-bg-tertiary px-3 py-2 text-ink outline-none focus:border-accent-2" />
-                  </label>
-                  <button className="rounded-lg bg-accent-2 px-4 py-2 font-medium text-white">Create</button>
-                </form>
-              </details>
-              <details className="mt-2 rounded-xl border border-line bg-bg-secondary p-4">
-                <summary className="flex cursor-pointer items-center gap-1.5 text-sm font-medium text-ink-soft">
-                  Import from CSV
-                  <InfoTip text="Create a whole project from one CSV: overview, phases & milestones, KPIs, links, people, working items, and decisions. Download the template to see the format." />
-                </summary>
-                <div className="mt-3">
-                  <CsvImport mode="create" clientId={id} />
-                </div>
-              </details>
+
+              <div className="mt-4 grid gap-2.5 sm:grid-cols-2">
+                <details className="rounded-xl border border-dashed border-line bg-bg-secondary/50 p-4 [&[open]]:border-solid [&[open]]:bg-bg-secondary">
+                  <summary className="flex cursor-pointer items-center gap-2 text-sm font-medium text-ink-soft hover:text-ink">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent-2/10 text-accent-2"><Plus size={14} /></span>
+                    New project
+                  </summary>
+                  <form action="/api/admin/projects" method="post" className="mt-3 flex flex-wrap items-end gap-3 text-sm">
+                    <input type="hidden" name="client_id" value={id} />
+                    <input type="hidden" name="_redirect" value={here} />
+                    <label className="block text-ink-soft">
+                      Title
+                      <input name="title" required className="mt-1 block w-full rounded-lg border border-line bg-bg-tertiary px-3 py-2 text-ink outline-none focus:border-accent-2" />
+                    </label>
+                    <label className="block text-ink-soft">
+                      Target date
+                      <input name="target_date" type="date" className="mt-1 block rounded-lg border border-line bg-bg-tertiary px-3 py-2 text-ink outline-none focus:border-accent-2" />
+                    </label>
+                    <label className="block text-ink-soft">
+                      <span className="flex items-center gap-1.5">xPM id (optional) <InfoTip text="Links this project to its xPM counterpart so phase, progress, KPIs, and decisions sync automatically over the bridge." /></span>
+                      <input name="xpm_project_id" className="mt-1 block w-32 rounded-lg border border-line bg-bg-tertiary px-3 py-2 text-ink outline-none focus:border-accent-2" />
+                    </label>
+                    <button className="rounded-lg bg-accent-2 px-4 py-2 font-medium text-white">Create</button>
+                  </form>
+                </details>
+                <details className="rounded-xl border border-dashed border-line bg-bg-secondary/50 p-4 [&[open]]:border-solid [&[open]]:bg-bg-secondary">
+                  <summary className="flex cursor-pointer items-center gap-2 text-sm font-medium text-ink-soft hover:text-ink">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent-2/10 text-accent-2"><Upload size={14} /></span>
+                    Import from CSV
+                    <InfoTip text="Create a whole project from one CSV: overview, phases & milestones, KPIs, links, people, working items, and decisions. Download the template to see the format." />
+                  </summary>
+                  <div className="mt-3">
+                    <CsvImport mode="create" clientId={id} />
+                  </div>
+                </details>
+              </div>
             </section>
 
             <section className="rounded-xl border border-warn/30 bg-bg-secondary p-5">
