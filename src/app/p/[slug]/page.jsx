@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { sql } from "@/lib/db";
 import LoginForm from "@/components/LoginForm";
 import LoginShell from "@/components/LoginShell";
+import { isDataLogo } from "@/lib/logo";
 import { t } from "@/lib/i18n";
 import { getLoginLocale } from "@/lib/i18n/loginLocale";
 
@@ -22,7 +23,7 @@ export default async function BrandedLoginPage({ params }) {
       tile="indigo"
       locale={locale}
       accentColor={client.accent_color}
-      logoSrc={client.logo_path ? `/api/public-logo/${slug}` : undefined}
+      logoSrc={client.logo_path ? (isDataLogo(client.logo_path) ? client.logo_path : `/api/public-logo/${slug}`) : undefined}
       logoAlt={client.company_name}
       eyebrow={t(locale, "login.brandedEyebrow")}
       headline={t(locale, "login.headline")}

@@ -1,7 +1,6 @@
 import { sql, uuid } from "@/lib/db";
 import { requireOperator, redirectBack, uniqueViolation } from "@/lib/admin";
 import { logActivity } from "@/lib/activity";
-import { saveUpload } from "@/lib/storage";
 
 // Branding + contact management for one client. Multipart because of the logo.
 // _action: branding | add_user | remove_user | add_note | update_note | delete_note
@@ -25,11 +24,15 @@ export async function POST(request, { params }) {
     if (accent && !/^#[0-9a-fA-F]{6}$/.test(accent)) {
       return new Response("Accent color must be a #rrggbb value", { status: 400 });
     }
+    // The logo is stored as a base64 data URI in logo_path, so it persists on
+    // serverless hosts with no writable filesystem.
     let logoPath;
     const logo = form.get("logo");
     if (logo && typeof logo === "object" && logo.size > 0) {
+      if (!String(logo.type).startsWith("image/")) return new Response("Logo must be an image (PNG, SVG, JPG)", { status: 400 });
       if (logo.size > 2_000_000) return new Response("Logo must be under 2 MB", { status: 400 });
-      logoPath = (await saveUpload(logo, "logos")).storedPath;
+      const b64 = Buffer.from(await logo.arrayBuffer()).toString("base64");
+      logoPath = `data:${logo.type};base64,${b64}`;
     }
     try {
       await sql(

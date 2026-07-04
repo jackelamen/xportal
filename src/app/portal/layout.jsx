@@ -7,6 +7,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import LocaleToggle from "@/components/LocaleToggle";
 import PortalNav from "@/components/PortalNav";
 import { LogoMark } from "@/components/Logo";
+import { logoSrc } from "@/lib/logo";
 import { t } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
@@ -113,7 +114,7 @@ function BrandMark({ client, locale, compact = false }) {
           {client.logo_path ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={`/api/${client.logo_path.replace(/^uploads\//, "files/")}`}
+              src={logoSrc(client.logo_path)}
               alt={client.company_name}
               className="h-7 max-w-40 object-contain object-left opacity-90"
             />

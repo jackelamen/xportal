@@ -6,6 +6,7 @@ import CsvImport from "@/components/admin/CsvImport";
 import { EditableRow } from "@/components/admin/EditableRow";
 import { InfoTip } from "@/components/Tip";
 import { sql } from "@/lib/db";
+import { logoSrc } from "@/lib/logo";
 
 export const dynamic = "force-dynamic";
 
@@ -261,7 +262,13 @@ export default async function AdminClientPage({ params, searchParams }) {
                 <button className="rounded-lg bg-accent-2 px-4 py-2 font-medium text-white">Save branding</button>
               </form>
               {client.logo_path && (
-                <p className="mt-2 text-xs text-ink-muted">Current logo: {client.logo_path.split("/").pop()}</p>
+                <div className="mt-2 flex items-center gap-2 text-xs text-ink-muted">
+                  Current logo:
+                  <span className="flex h-8 items-center rounded-lg border border-line bg-bg-tertiary px-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={logoSrc(client.logo_path)} alt="Current logo" className="h-5 max-w-28 object-contain" />
+                  </span>
+                </div>
               )}
             </section>
 
