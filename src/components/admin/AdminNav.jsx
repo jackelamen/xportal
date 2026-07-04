@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Settings } from "lucide-react";
+import { LayoutDashboard, Settings, Users } from "lucide-react";
 
 // Dark sidebar: caps labels, emerald active state with a right-edge accent
 // tab - mirrors the client portal's PortalNav, but accent-2 (emerald) instead
@@ -65,6 +65,7 @@ export default function AdminNav({ unreadCount, clients = [] }) {
       <p className="font-mono px-3 pb-1.5 pt-4 text-[10px] uppercase tracking-widest text-white/35">
         Console
       </p>
+      <NavItem href="/admin/team" icon={Users} label="Team" />
       <NavItem href="/admin/settings" icon={Settings} label="Settings" />
     </nav>
   );
