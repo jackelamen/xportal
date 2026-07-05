@@ -1,6 +1,5 @@
-import fs from "node:fs";
 import { getClientSession, getOperatorSession } from "@/lib/auth";
-import { resolveUpload, contentTypeFor } from "@/lib/storage";
+import { downloadUpload, contentTypeFor } from "@/lib/storage";
 
 // Serves uploaded files (deliverable documents, logos) to authenticated users.
 export async function GET(request, { params }) {
@@ -9,11 +8,11 @@ export async function GET(request, { params }) {
 
   const { path: parts } = await params;
   const storedPath = ["uploads", ...parts].join("/");
-  const abs = resolveUpload(storedPath);
-  if (!abs) return new Response("Not found", { status: 404 });
+  const buffer = await downloadUpload(storedPath);
+  if (!buffer) return new Response("Not found", { status: 404 });
 
   const name = parts[parts.length - 1];
-  return new Response(fs.readFileSync(abs), {
+  return new Response(buffer, {
     headers: {
       "Content-Type": contentTypeFor(name),
       "Content-Disposition": `inline; filename="${name}"`,

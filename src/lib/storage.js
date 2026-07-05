@@ -1,31 +1,38 @@
-import fs from "node:fs";
-import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
 
-// File storage abstraction. Phase 1 writes under ./uploads; Phase 2 swaps the
-// bodies of these two functions for Supabase Storage without touching callers.
-// Stored paths look like "uploads/ab12cd.../report.pdf" and are served through
-// the authenticated /api/files/[...path] route.
+// File storage on Supabase Storage (private "uploads" bucket). Stored paths
+// look like "uploads/documents/ab12cd.../report.pdf" and are served through
+// the authenticated /api/files/[...path] route, which downloads the object
+// server-side using the service-role key (bucket has no public access).
 
-const ROOT = path.resolve(process.env.UPLOAD_DIR || "./uploads");
+const BUCKET = "uploads";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+  { auth: { persistSession: false } }
+);
 
 export async function saveUpload(file, subdir = "misc") {
   const safeName = (file.name || "file").replace(/[^\w.\- ]/g, "_").slice(0, 120);
-  const dir = path.join(ROOT, subdir, randomUUID());
-  fs.mkdirSync(dir, { recursive: true });
-  const abs = path.join(dir, safeName);
-  fs.writeFileSync(abs, Buffer.from(await file.arrayBuffer()));
-  return { storedPath: path.relative(path.dirname(ROOT), abs), originalName: file.name || safeName };
+  const key = `${subdir}/${randomUUID()}/${safeName}`;
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(key, Buffer.from(await file.arrayBuffer()), {
+      contentType: file.type || contentTypeFor(safeName),
+    });
+  if (error) throw new Error(`Upload failed: ${error.message}`);
+  return { storedPath: `${BUCKET}/${key}`, originalName: file.name || safeName };
 }
 
-// Resolves a stored path to an absolute filesystem path, refusing traversal.
-export function resolveUpload(storedPath) {
-  const abs = path.resolve(path.dirname(ROOT), storedPath);
-  if (!abs.startsWith(ROOT + path.sep)) return null;
-  return fs.existsSync(abs) ? abs : null;
+// Downloads a previously-saved object. Returns null if missing.
+export async function downloadUpload(storedPath) {
+  const key = storedPath.startsWith(`${BUCKET}/`) ? storedPath.slice(BUCKET.length + 1) : storedPath;
+  const { data, error } = await supabase.storage.from(BUCKET).download(key);
+  if (error || !data) return null;
+  return Buffer.from(await data.arrayBuffer());
 }
-
-export const isFilePath = (assetPath) => assetPath.startsWith("uploads/");
 
 export function contentTypeFor(name) {
   const ext = name.toLowerCase().split(".").pop();
