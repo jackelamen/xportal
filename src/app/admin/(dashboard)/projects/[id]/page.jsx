@@ -74,7 +74,8 @@ export default async function AdminProjectPage({ params, searchParams }) {
     "SELECT * FROM decision_log WHERE project_id = ? ORDER BY decided_on DESC", [id]
   );
   const working = await sql(
-    "SELECT * FROM working_items WHERE project_id = ? ORDER BY status, created_at", [id]
+    `SELECT * FROM working_items WHERE project_id = ?
+     ORDER BY CASE status WHEN 'active' THEN 0 WHEN 'queued' THEN 1 ELSE 2 END, created_at`, [id]
   );
   const notes = await sql(
     "SELECT * FROM internal_notes WHERE project_id = ? ORDER BY created_at DESC", [id]
@@ -683,7 +684,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
                     key={w.id}
                     text={w.title}
                     struck={w.status === "done"}
-                    meta={w.status === "done" ? "done" : "active"}
+                    meta={w.status}
                     action={hub}
                     here={here}
                     idField="item_id"
@@ -692,11 +693,20 @@ export default async function AdminProjectPage({ params, searchParams }) {
                     deleteAction="delete_working"
                     editField="title"
                     extraActions={
-                      w.status === "active" ? (
-                        <RowButton action={hub} here={here} formAction="finish_working" idField="item_id" idValue={w.id} label="Mark done" tone="good" />
-                      ) : (
-                        <RowButton action={hub} here={here} formAction="reopen_working" idField="item_id" idValue={w.id} label="Reopen" />
-                      )
+                      <>
+                        {w.status === "queued" && (
+                          <RowButton action={hub} here={here} formAction="reopen_working" idField="item_id" idValue={w.id} label="Activate" tone="good" />
+                        )}
+                        {w.status === "active" && (
+                          <RowButton action={hub} here={here} formAction="queue_working" idField="item_id" idValue={w.id} label="Set inactive" />
+                        )}
+                        {w.status !== "done" && (
+                          <RowButton action={hub} here={here} formAction="finish_working" idField="item_id" idValue={w.id} label="Mark done" tone="good" />
+                        )}
+                        {w.status === "done" && (
+                          <RowButton action={hub} here={here} formAction="reopen_working" idField="item_id" idValue={w.id} label="Reopen" />
+                        )}
+                      </>
                     }
                   />
                 ))}

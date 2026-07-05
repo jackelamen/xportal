@@ -112,6 +112,10 @@ export async function POST(request, { params }) {
       await sql("UPDATE working_items SET status = 'done' WHERE id = ? AND project_id = ?", [str("item_id"), id]);
       break;
 
+    case "queue_working":
+      await sql("UPDATE working_items SET status = 'queued' WHERE id = ? AND project_id = ?", [str("item_id"), id]);
+      break;
+
     case "reopen_working":
       await sql("UPDATE working_items SET status = 'active' WHERE id = ? AND project_id = ?", [str("item_id"), id]);
       break;

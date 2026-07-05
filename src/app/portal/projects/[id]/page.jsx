@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
-import { Link2, Users, Gavel, Hammer } from "lucide-react";
+import { Link2, Users, Gavel, Hammer, CheckCircle2 } from "lucide-react";
 import ProjectStatus from "@/components/ProjectStatus";
 import ProjectProgress from "@/components/ProjectProgress";
 import ProjectPlan from "@/components/ProjectPlan";
@@ -67,7 +67,8 @@ export default async function ProjectPage({ params, searchParams }) {
     "SELECT * FROM decision_log WHERE project_id = ? ORDER BY decided_on DESC, created_at DESC", [id]
   );
   const working = await sql(
-    "SELECT * FROM working_items WHERE project_id = ? AND status = 'active' ORDER BY created_at", [id]
+    `SELECT * FROM working_items WHERE project_id = ? AND status IN ('active', 'done')
+     ORDER BY CASE status WHEN 'active' THEN 0 ELSE 1 END, created_at`, [id]
   );
   // The Progress tab's pulse: this project's recent team activity, the next
   // meeting, and any open invoices for the "coming up" list.
@@ -219,7 +220,12 @@ export default async function ProjectPage({ params, searchParams }) {
                   {working.length === 0 && <li className="text-ink-muted">{t("project.nothingInFlight")}</li>}
                   {working.map((w) => (
                     <li key={w.id} className="flex items-start gap-2.5">
-                      <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" /> {w.title}
+                      {w.status === "done" ? (
+                        <CheckCircle2 size={14} className="mt-[1px] shrink-0 text-ink-muted" />
+                      ) : (
+                        <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                      )}
+                      <span className={w.status === "done" ? "text-ink-muted line-through" : ""}>{w.title}</span>
                     </li>
                   ))}
                 </ul>
