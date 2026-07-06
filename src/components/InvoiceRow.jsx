@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Download, ShieldQuestion } from "lucide-react";
 import { toast } from "@/components/Toaster";
 import { t as translate } from "@/lib/i18n";
-import { formatMoney } from "@/lib/money";
+import Money from "@/components/Money";
 
 const STATUS_STYLE = {
   Paid: "text-accent-2",
@@ -51,7 +51,7 @@ export default function InvoiceRow({ invoice, locale = "en" }) {
         <span className="font-data font-semibold text-ink">{invoice.invoice_number}</span>
         <span className="text-ink-soft">{invoice.project_title}</span>
         <span className="font-data text-xs text-ink-muted">{invoice.issued_date} → {invoice.due_date}</span>
-        <span className="font-data ml-auto font-medium text-ink">{formatMoney(invoice.amount, invoice.currency, locale)}</span>
+        <Money amount={invoice.amount} currency={invoice.currency} locale={locale} className="font-data ml-auto font-medium text-ink" />
         <span className={`font-data w-20 text-right text-xs font-semibold ${STATUS_STYLE[invoice.status] || ""}`}>
           {statusLabel}
         </span>

@@ -2,7 +2,8 @@ import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import InvoiceRow from "@/components/InvoiceRow";
 import { t, formatDate } from "@/lib/i18n";
-import { formatMoney } from "@/lib/money";
+import { formatMoney, formatMoneyParts } from "@/lib/money";
+import Money from "@/components/Money";
 
 export const dynamic = "force-dynamic";
 
@@ -30,8 +31,8 @@ export default async function BillingPage() {
       return acc;
     }, {});
   const formatTotals = (byCurrency) => {
-    const parts = Object.entries(byCurrency).filter(([, v]) => v > 0).map(([c, v]) => formatMoney(v, c, locale));
-    return parts.length ? parts : [formatMoney(0, "USD", locale)];
+    const parts = Object.entries(byCurrency).filter(([, v]) => v > 0).map(([c, v]) => formatMoneyParts(v, c, locale));
+    return parts.length ? parts : [formatMoneyParts(0, "USD", locale)];
   };
   const outstandingParts = formatTotals(sumByCurrency(open));
   const paidParts = formatTotals(sumByCurrency(paidThisYear));
@@ -39,8 +40,11 @@ export default async function BillingPage() {
 
   const Amounts = ({ parts, tone = "text-ink" }) => (
     <div className={`font-data mt-2.5 leading-none tracking-tight ${tone} ${parts.length > 1 ? "space-y-1" : ""}`}>
-      {parts.map((s, i) => (
-        <p key={i} className={parts.length > 1 ? "text-[1.15rem] font-medium" : "text-[1.6rem] font-medium"}>{s}</p>
+      {parts.map(({ symbol, number }, i) => (
+        <p key={i} className={parts.length > 1 ? "text-[1.15rem] font-medium" : "text-[1.6rem] font-medium"}>
+          {symbol && <span className="mr-px text-[0.7em] font-normal text-ink-muted">{symbol}</span>}
+          {number}
+        </p>
       ))}
     </div>
   );

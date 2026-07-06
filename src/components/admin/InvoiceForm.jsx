@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import { formatMoney, CURRENCIES } from "@/lib/money";
+import { CURRENCIES } from "@/lib/money";
+import Money from "@/components/Money";
 
 const blankRow = () => ({ description: "", quantity: "1", unit_price: "" });
 const str = (v) => (v == null ? "" : String(v));
@@ -18,7 +19,6 @@ export default function InvoiceForm({ projectId, redirectTo, inputClass, invoice
       : [blankRow()]
   );
   const [currency, setCurrency] = useState(invoice?.currency || "USD");
-  const money = (n) => formatMoney(n, currency, "en");
 
   const setCell = (i, key, value) =>
     setRows((rs) => rs.map((r, j) => (j === i ? { ...r, [key]: value } : r)));
@@ -80,9 +80,12 @@ export default function InvoiceForm({ projectId, redirectTo, inputClass, invoice
                 type="number" step="0.01" min="0" placeholder="0.00"
                 className="w-24 rounded-lg border border-line bg-bg-tertiary px-2 py-2 text-right text-ink outline-none focus:border-accent-2"
               />
-              <span className="font-data w-24 text-right text-ink-soft">
-                {money((Number(r.quantity) || 0) * (Number(r.unit_price) || 0))}
-              </span>
+              <Money
+                amount={(Number(r.quantity) || 0) * (Number(r.unit_price) || 0)}
+                currency={currency}
+                locale="en"
+                className="font-data w-24 text-right text-ink-soft"
+              />
               <button
                 type="button"
                 onClick={() => removeRow(i)}
@@ -106,7 +109,7 @@ export default function InvoiceForm({ projectId, redirectTo, inputClass, invoice
 
       <div className="flex items-center justify-between border-t border-line pt-3">
         <span className="font-data text-[13px] font-semibold text-ink">
-          Total <span className="ml-2 text-ink-soft">{money(total)}</span>
+          Total <Money amount={total} currency={currency} locale="en" className="ml-2 text-ink-soft" />
         </span>
         <button
           disabled={total <= 0}

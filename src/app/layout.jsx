@@ -1,20 +1,23 @@
-import { Geist, Geist_Mono, Syne } from "next/font/google";
+import { IBM_Plex_Sans, IBM_Plex_Mono, Syne } from "next/font/google";
 import PwaRegister from "@/components/PwaRegister";
 import "./globals.css";
 
 // Type strategy - two distinct voices, each with a job:
 //  - Syne - the xPortal wordmark only. A characterful geometric display face
 //    that gives the brand mark its own presence, distinct from body and hero.
-//  - Geist - everything else: page-title hero (h1), section headings, body,
-//    UI, labels, buttons, KPI numbers. One clean grotesk system, no serif
-//    detour - reads as production SaaS rather than an editorial/deck font.
-//  - Geist Mono - data: dates, IDs, units, eyebrows.
-const sans = Geist({
+//  - IBM Plex Sans - everything else: page-title hero (h1), section headings,
+//    body, UI, labels, buttons, KPI numbers. A technical, engineered grotesk
+//    with real character (built for IBM's own product UI) instead of the
+//    reach-for-Inter/Geist default - reads as considered, not auto-picked.
+//  - IBM Plex Mono - data: dates, IDs, units, eyebrows. Same family as the
+//    sans, so the "instrumentation" register still feels like one system.
+const sans = IBM_Plex_Sans({
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
   display: "swap",
 });
-const mono = Geist_Mono({
+const mono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500"],
   variable: "--font-mono",
