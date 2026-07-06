@@ -74,7 +74,7 @@ export default function KpiGrid({ kpis, locale = "en" }) {
               <p className="min-h-[2.4em] text-[12.5px] font-semibold leading-snug text-ink">{k.name}</p>
 
               <p className="mt-2 flex items-baseline gap-0.5 leading-none text-ink">
-                <span className="font-serif text-[2.1rem]">{fmt(k.current_value)}</span>
+                <span className="font-sans text-[2.1rem] font-semibold tracking-tight">{fmt(k.current_value)}</span>
                 {k.unit && <span className="text-[13px] font-medium text-ink-muted">{k.unit}</span>}
               </p>
 

@@ -323,7 +323,7 @@ function Stat({ label, value, note, noteTone = "warn", tone }) {
   return (
     <div className={`px-5 py-4 ${tone === "danger" ? "bg-danger/[0.03]" : ""}`}>
       <p className="font-mono text-[10px] uppercase tracking-wide text-ink-muted">{label}</p>
-      <p className={`font-serif mt-2 text-[2rem] leading-none ${tone === "danger" ? "text-danger" : "text-ink"}`}>
+      <p className={`font-sans mt-2 text-[2rem] font-semibold leading-none tracking-tight ${tone === "danger" ? "text-danger" : "text-ink"}`}>
         {value}
         {note && (
           <span className={`font-sans ml-1.5 text-xs ${noteTone === "warn" ? "text-warn" : "text-ink-muted"}`}>{note}</span>

@@ -9,7 +9,6 @@
   --font-sans: var(--font-sans), system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, "SF Mono", monospace;
   --font-display: var(--font-display), system-ui, sans-serif;
-  --font-serif: var(--font-serif), Georgia, "Times New Roman", serif;
   --color-bg-primary: var(--bg-primary);
   --color-bg-secondary: var(--bg-secondary);
   --color-bg-tertiary: var(--bg-tertiary);
@@ -102,15 +101,14 @@ button.bg-warn:hover:not(:disabled) {
   border-radius: 4px;
 }
 
-/* One editorial serif moment per page: the page-title hero (h1) is Instrument
-   Serif, kept at its natural 400 weight and large. Section/card headings
-   (h2, h3) stay on Geist - the restraint of a single serif note against an
-   otherwise-sans system is what carries the editorial, high-end feel. */
+/* Page titles (h1) and section/card headings (h2, h3) share one grotesk
+   voice - the tighter tracking on h1 is what gives it presence at large
+   sizes, no serif detour into editorial/deck territory. */
 h1 {
-  font-family: var(--font-serif), Georgia, serif;
-  font-weight: 400;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-weight: 600;
   text-wrap: balance;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.02em;
 }
 h2, h3 {
   font-family: var(--font-sans), system-ui, sans-serif;

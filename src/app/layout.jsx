@@ -1,13 +1,13 @@
-import { Geist, Geist_Mono, Syne, Instrument_Serif } from "next/font/google";
+import { Geist, Geist_Mono, Syne } from "next/font/google";
 import PwaRegister from "@/components/PwaRegister";
 import "./globals.css";
 
-// Type strategy - three distinct voices, each with a job:
-//  - Instrument Serif - the one editorial moment per page: the page-title hero
-//    (h1) and big KPI numbers. A single restrained serif note.
+// Type strategy - two distinct voices, each with a job:
 //  - Syne - the xPortal wordmark only. A characterful geometric display face
 //    that gives the brand mark its own presence, distinct from body and hero.
-//  - Geist - everything else: section headings, body, UI, labels, buttons.
+//  - Geist - everything else: page-title hero (h1), section headings, body,
+//    UI, labels, buttons, KPI numbers. One clean grotesk system, no serif
+//    detour - reads as production SaaS rather than an editorial/deck font.
 //  - Geist Mono - data: dates, IDs, units, eyebrows.
 const sans = Geist({
   subsets: ["latin"],
@@ -24,13 +24,6 @@ const display = Syne({
   subsets: ["latin"],
   weight: ["600", "700", "800"],
   variable: "--font-display",
-  display: "swap",
-});
-const serif = Instrument_Serif({
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-  variable: "--font-serif",
   display: "swap",
 });
 
@@ -55,7 +48,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable} ${display.variable} ${serif.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${sans.variable} ${mono.variable} ${display.variable}`} suppressHydrationWarning>
       <body className="min-h-screen antialiased">
         {/* Apply the saved theme before paint so dark mode never flashes light. */}
         <script
