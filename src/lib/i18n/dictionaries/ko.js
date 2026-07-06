@@ -28,6 +28,7 @@ export default {
     attentionInvoice: "청구서 {number} ({amount}) 납부 기한 {date}",
     attentionMessages: "{sender}님으로부터 새 메시지 {n}개 ({project})",
     attentionMessagesFallback: "팀",
+    attentionMeeting: '"{topic}" 미팅에 새로운 시간이 제안되었습니다: {slot} - 응답이 필요합니다',
     yourProjects: "내 프로젝트",
     activeCount: "진행 중 {n}건",
     noProjects: "아직 진행 중인 프로젝트가 없습니다. 워크스페이스가 준비되어 있습니다.",

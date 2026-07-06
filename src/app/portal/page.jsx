@@ -57,6 +57,16 @@ export default async function Home() {
      ORDER BY starts_at ASC LIMIT 1`,
     [client.id]
   );
+  // Meetings sitting in status='pending' with proposed_by='operator' are
+  // awaiting a response from this client - they don't show up in any
+  // confirmed-only query, so without this they're only discoverable by
+  // manually visiting Schedule.
+  const awaitingResponseQ = sql(
+    `SELECT id, topic, starts_at FROM bookings
+     WHERE client_id = ? AND status = 'pending' AND proposed_by = 'operator'
+     ORDER BY starts_at ASC`,
+    [client.id]
+  );
   const openRequestsQ = sql(
     `SELECT f.title, p.id AS project_id, p.title AS project_title
      FROM file_requests f JOIN portal_projects p ON p.id = f.project_id
@@ -69,8 +79,10 @@ export default async function Home() {
     [client.id]
   );
 
-  const [projects, phases, pending, openInvoices, unreadByProject, nextMeetings, openRequests, recentActivity] =
-    await Promise.all([projectsQ, phasesQ, pendingQ, openInvoicesQ, unreadByProjectQ, nextMeetingQ, openRequestsQ, recentActivityQ]);
+  const [projects, phases, pending, openInvoices, unreadByProject, nextMeetings, openRequests, recentActivity, awaitingResponse] =
+    await Promise.all([
+      projectsQ, phasesQ, pendingQ, openInvoicesQ, unreadByProjectQ, nextMeetingQ, openRequestsQ, recentActivityQ, awaitingResponseQ,
+    ]);
   const nextMeeting = nextMeetings[0];
   const phasesByProject = {};
   for (const m of phases) (phasesByProject[m.project_id] ||= []).push(m);
@@ -102,6 +114,11 @@ export default async function Home() {
         sender: m.first_sender || t(locale, "home.attentionMessagesFallback"),
         project: m.project_title,
       }),
+    })),
+    ...awaitingResponse.map((b) => ({
+      icon: CalendarClock,
+      href: "/portal/schedule",
+      text: t(locale, "home.attentionMeeting", { topic: b.topic, slot: String(b.starts_at).slice(0, 16) }),
     })),
   ];
 

@@ -29,6 +29,7 @@ export default {
     attentionInvoice: "Invoice {number} ({amount}) due {date}",
     attentionMessages: "{n} new message{plural} from {sender} ({project})",
     attentionMessagesFallback: "the team",
+    attentionMeeting: 'New time proposed for "{topic}": {slot} - needs your response',
     yourProjects: "Your projects",
     activeCount: "{n} active",
     noProjects: "No active projects yet. Your workspace is ready for kickoff.",
