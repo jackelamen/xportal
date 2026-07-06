@@ -2,6 +2,7 @@ import Link from "next/link";
 import { sql } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
 import { InfoTip } from "@/components/Tip";
+import { activityHref } from "@/lib/activityLink";
 
 export const dynamic = "force-dynamic";
 
@@ -131,7 +132,7 @@ export default async function AdminHome() {
                     <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${isNew ? "bg-accent" : "bg-transparent"}`} />
                     <div className="min-w-0 flex-1">
                       <Link
-                        href={`/admin/clients/${a.client_id}`}
+                        href={activityHref(a, "admin") || `/admin/clients/${a.client_id}`}
                         className={`hover:text-accent ${isNew ? "font-medium text-ink" : "text-ink-soft"}`}
                       >
                         <span className="text-ink-muted">[{a.company_name}]</span> {a.summary}

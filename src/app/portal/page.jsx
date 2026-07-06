@@ -7,6 +7,7 @@ import { getClientSession } from "@/lib/auth";
 import { phaseLabel } from "@/lib/phases";
 import { t, formatDate } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
+import { activityHref } from "@/lib/activityLink";
 
 export const dynamic = "force-dynamic";
 
@@ -250,12 +251,22 @@ export default async function Home() {
           <h2 className="text-sm font-semibold text-ink">{t(locale, "home.latestFromTeam")}</h2>
           <ul className="mt-3 space-y-2 text-sm">
             {recentActivity.length === 0 && <li className="text-ink-muted">{t(locale, "home.noRecentUpdates")}</li>}
-            {recentActivity.map((a) => (
-              <li key={a.id} className="flex items-baseline gap-2">
-                <span className="font-data shrink-0 text-[11px] text-ink-muted">{a.created_at.slice(5, 10)}</span>
-                <span className="min-w-0 truncate text-ink-soft">{a.summary}</span>
-              </li>
-            ))}
+            {recentActivity.map((a) => {
+              const href = activityHref(a, "client");
+              const row = (
+                <>
+                  <span className="font-data shrink-0 text-[11px] text-ink-muted">{a.created_at.slice(5, 10)}</span>
+                  <span className="min-w-0 truncate text-ink-soft">{a.summary}</span>
+                </>
+              );
+              return (
+                <li key={a.id} className="flex items-baseline gap-2">
+                  {href ? (
+                    <Link href={href} className="flex min-w-0 items-baseline gap-2 hover:text-ink">{row}</Link>
+                  ) : row}
+                </li>
+              );
+            })}
           </ul>
           <Link href="/portal/activity" className="mt-3 inline-flex items-center gap-1 text-xs text-accent hover:underline">
             {t(locale, "home.fullActivityHistory")} <ArrowRight size={12} />
