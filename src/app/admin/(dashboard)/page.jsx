@@ -257,8 +257,9 @@ export default async function AdminHome() {
 
           {/* Upcoming meetings */}
           <section className="rounded-xl border border-line bg-bg-secondary">
-            <div className="border-b border-line px-4 py-3.5">
+            <div className="flex items-center justify-between border-b border-line px-4 py-3.5">
               <h2 className="text-sm font-semibold">Upcoming meetings</h2>
+              <Link href="/admin/bookings" className="text-xs text-accent hover:underline">View all</Link>
             </div>
             <ul className="divide-y divide-line/60 text-sm">
               {bookings.length === 0 && (

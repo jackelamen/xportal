@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Settings, Users } from "lucide-react";
+import { CalendarClock, LayoutDashboard, Settings, Users } from "lucide-react";
 
 // Dark sidebar: caps labels, emerald active state with a right-edge accent
 // tab - mirrors the client portal's PortalNav, but accent-2 (emerald) instead
@@ -31,7 +31,7 @@ function NavItem({ href, icon: Icon, label, badge, exact = false }) {
 
 const DOT_COLOR = ["bg-accent-2", "bg-accent", "bg-warn", "bg-dispute", "bg-danger"];
 
-export default function AdminNav({ unreadCount, clients = [] }) {
+export default function AdminNav({ unreadCount, clients = [], pendingBookingsCount }) {
   const pathname = usePathname();
   return (
     <nav className="flex flex-col gap-1">
@@ -65,6 +65,7 @@ export default function AdminNav({ unreadCount, clients = [] }) {
       <p className="font-mono px-3 pb-1.5 pt-4 text-[10px] uppercase tracking-widest text-white/35">
         Console
       </p>
+      <NavItem href="/admin/bookings" icon={CalendarClock} label="Bookings" badge={pendingBookingsCount} />
       <NavItem href="/admin/team" icon={Users} label="Team" />
       <NavItem href="/admin/settings" icon={Settings} label="Settings" />
     </nav>

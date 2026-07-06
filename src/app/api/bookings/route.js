@@ -9,12 +9,15 @@ export async function GET(request) {
   const session = await getClientSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const duration = Number(new URL(request.url).searchParams.get("duration")) || 30;
+  const params = new URL(request.url).searchParams;
+  const duration = Number(params.get("duration")) || 30;
+  const exclude = params.get("exclude") || null;
   const mine = await sql(
-    "SELECT * FROM bookings WHERE client_id = ? AND status = 'confirmed' AND starts_at > NOW() ORDER BY starts_at ASC",
+    `SELECT * FROM bookings WHERE client_id = ? AND status IN ('pending', 'confirmed') AND starts_at > NOW()
+     ORDER BY starts_at ASC`,
     [session.client.id]
   );
-  return NextResponse.json({ slots: await getAvailableSlots(duration), bookings: mine });
+  return NextResponse.json({ slots: await getAvailableSlots(duration, exclude), bookings: mine });
 }
 
 export async function POST(request) {
@@ -37,18 +40,19 @@ export async function POST(request) {
 
   const id = uuid();
   await sql(
-    "INSERT INTO bookings (id, client_id, client_user_id, starts_at, duration_minutes, topic) VALUES (?, ?, ?, ?, ?, ?)",
+    `INSERT INTO bookings (id, client_id, client_user_id, starts_at, duration_minutes, topic, status, proposed_by)
+     VALUES (?, ?, ?, ?, ?, ?, 'pending', 'client')`,
     [id, client.id, user.id, starts_at, duration, topic.trim()]
   );
 
   await logActivity({
     clientId: client.id, actorType: "client", actorName: user.name,
-    eventType: "meeting.booked", summary: `${user.name} booked "${topic.trim()}" (${duration} min) for ${starts_at}`,
+    eventType: "meeting.requested", summary: `${user.name} requested a meeting: "${topic.trim()}" (${duration} min) for ${starts_at}`,
   });
   await notifyOperators(
-    `[${client.company_name}] Meeting booked`,
-    `${user.name} booked "${topic.trim()}" for ${starts_at}, ${duration} minutes.`
+    `[${client.company_name}] Meeting requested`,
+    `${user.name} requested "${topic.trim()}" for ${starts_at}, ${duration} minutes.`
   );
-  await notifyXpm("meeting.booked", { client_id: client.id, starts_at, duration_minutes: duration, topic: topic.trim() });
+  await notifyXpm("meeting.requested", { client_id: client.id, starts_at, duration_minutes: duration, topic: topic.trim() });
   return NextResponse.json({ ok: true, id, starts_at, duration_minutes: duration });
 }

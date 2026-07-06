@@ -27,7 +27,7 @@ export async function addBlackout({ date, startTime, endTime, note }) {
   );
 }
 
-export async function getAvailableSlots(durationMinutes = 30) {
+export async function getAvailableSlots(durationMinutes = 30, excludeBookingId = null) {
   if (!MEETING_LENGTHS.includes(durationMinutes)) return [];
 
   const hoursRows = await getWeeklyHours();
@@ -39,10 +39,19 @@ export async function getAvailableSlots(durationMinutes = 30) {
     (blackouts[b.on_date] ||= []).push(b);
   }
 
-  const busyRows = await sql(
-    `SELECT starts_at, duration_minutes FROM bookings
-     WHERE status = 'confirmed' AND starts_at > (NOW() - INTERVAL '1 day')`
-  );
+  // Pending proposals tentatively hold their slot too, so two people can't
+  // both be offered the same time mid-negotiation. Exclude the booking being
+  // countered itself, since its own hold shouldn't block its new proposal.
+  const busyRows = excludeBookingId
+    ? await sql(
+        `SELECT starts_at, duration_minutes FROM bookings
+         WHERE status IN ('confirmed', 'pending') AND starts_at > (NOW() - INTERVAL '1 day') AND id != ?`,
+        [excludeBookingId]
+      )
+    : await sql(
+        `SELECT starts_at, duration_minutes FROM bookings
+         WHERE status IN ('confirmed', 'pending') AND starts_at > (NOW() - INTERVAL '1 day')`
+      );
   const busy = busyRows.map((b) => {
     const start = new Date(b.starts_at);
     return [start.getTime(), start.getTime() + b.duration_minutes * 60_000];
