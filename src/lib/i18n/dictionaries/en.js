@@ -123,6 +123,8 @@ export default {
     version: "v{n}",
     openFile: "Open {name}",
     viewWork: "View the work",
+    showPreview: "Show preview",
+    hidePreview: "Hide preview",
     yourFeedback: "Your feedback: {notes}",
     yourDecision: "Your decision",
     approve: "Approve",

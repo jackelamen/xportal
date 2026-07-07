@@ -122,6 +122,8 @@ export default {
     version: "v{n}",
     openFile: "{name} 열기",
     viewWork: "결과물 보기",
+    showPreview: "미리보기 표시",
+    hidePreview: "미리보기 숨기기",
     yourFeedback: "고객 피드백: {notes}",
     yourDecision: "결정하기",
     approve: "승인",

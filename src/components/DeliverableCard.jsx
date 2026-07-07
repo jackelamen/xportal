@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Check, X, ExternalLink, FileText, History, Eye, ThumbsUp, MessageSquareWarning,
+  Check, X, ExternalLink, FileText, History, Eye, EyeOff, ThumbsUp, MessageSquareWarning,
 } from "lucide-react";
 import { toast } from "@/components/Toaster";
 import { t as translate } from "@/lib/i18n";
@@ -19,6 +19,17 @@ const STATUS = {
 const assetHref = (v) =>
   v.kind === "file" ? `/api/${v.asset_path.replace(/^uploads\//, "files/")}` : v.asset_path;
 
+// Uploaded files render inline when the browser can show them natively.
+// External links never preview - most sites refuse to be embedded.
+const IMAGE_EXT = ["png", "jpg", "jpeg", "gif", "webp", "svg"];
+function previewKind(v) {
+  if (v?.kind !== "file") return null;
+  const ext = (v.original_name || v.asset_path || "").toLowerCase().split(".").pop();
+  if (IMAGE_EXT.includes(ext)) return "image";
+  if (ext === "pdf") return "pdf";
+  return null;
+}
+
 export default function DeliverableCard({ deliverable, locale = "en" }) {
   const router = useRouter();
   const t = (key, vars) => translate(locale, key, vars);
@@ -31,6 +42,12 @@ export default function DeliverableCard({ deliverable, locale = "en" }) {
 
   const current = deliverable.versions[0];
   const history = deliverable.versions.slice(1);
+  const preview = previewKind(current);
+  // Pending work opens with the preview visible - the review and the decision
+  // belong on one screen. Decided deliverables start collapsed.
+  const [showPreview, setShowPreview] = useState(
+    Boolean(preview) && deliverable.status === "Pending"
+  );
 
   function markViewed() {
     if (current && !current.viewed_at) {
@@ -41,6 +58,12 @@ export default function DeliverableCard({ deliverable, locale = "en" }) {
       });
     }
   }
+
+  // Rendering the preview counts as viewing the work.
+  useEffect(() => {
+    if (showPreview) markViewed();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showPreview]);
 
   async function act(action) {
     setBusy(true);
@@ -108,19 +131,50 @@ export default function DeliverableCard({ deliverable, locale = "en" }) {
         })()}
       </div>
 
-      {/* The thing to review, as an obvious button. */}
+      {/* The thing to review: inline when the browser can render it, with the
+          open-in-tab link alongside; just the link otherwise. */}
       {current && (
-        <a
-          href={assetHref(current)}
-          target="_blank"
-          rel="noreferrer"
-          onClick={markViewed}
-          className="mt-3 inline-flex items-center gap-2 rounded-lg border border-line bg-bg-primary px-3 py-2 text-sm font-medium text-accent hover:border-accent"
-        >
-          <FileText size={14} />
-          {current.kind === "file" ? t("deliverable.openFile", { name: current.original_name || "document" }) : t("deliverable.viewWork")}
-          <ExternalLink size={12} className="text-ink-muted" />
-        </a>
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <a
+            href={assetHref(current)}
+            target="_blank"
+            rel="noreferrer"
+            onClick={markViewed}
+            className="inline-flex items-center gap-2 rounded-lg border border-line bg-bg-primary px-3 py-2 text-sm font-medium text-accent hover:border-accent"
+          >
+            <FileText size={14} />
+            {current.kind === "file" ? t("deliverable.openFile", { name: current.original_name || "document" }) : t("deliverable.viewWork")}
+            <ExternalLink size={12} className="text-ink-muted" />
+          </a>
+          {preview && (
+            <button
+              onClick={() => setShowPreview(!showPreview)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-sm text-ink-soft hover:border-accent hover:text-ink"
+            >
+              {showPreview ? <EyeOff size={14} /> : <Eye size={14} />}
+              {t(showPreview ? "deliverable.hidePreview" : "deliverable.showPreview")}
+            </button>
+          )}
+        </div>
+      )}
+
+      {preview && showPreview && (
+        <div className="mt-3 overflow-hidden rounded-lg border border-line bg-bg-tertiary">
+          {preview === "image" ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={assetHref(current)}
+              alt={current.original_name || deliverable.title}
+              className="mx-auto max-h-[32rem] w-auto max-w-full"
+            />
+          ) : (
+            <iframe
+              src={`${assetHref(current)}#toolbar=0`}
+              title={current.original_name || deliverable.title}
+              className="h-[36rem] w-full bg-white"
+            />
+          )}
+        </div>
       )}
 
       {deliverable.feedback_notes && (
