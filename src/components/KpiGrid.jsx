@@ -1,56 +1,28 @@
-import { Check, TriangleAlert, Minus } from "lucide-react";
 import { InfoTip } from "@/components/Tip";
 import { t as translate } from "@/lib/i18n";
+import { kpiHealth, formatKpiValue as fmt } from "@/lib/kpi";
 
-// A KPI's health + a plain-English status line describing where it sits
-// relative to its goal. Countable metrics (whole numbers, no unit) read as
-// "N over/under goal"; scores and percentages read as "Beating target".
-function evaluate(k, t) {
-  const c = k.current_value;
-  const tgt = k.target_value;
-  if (c == null || tgt == null) return { tone: "none", text: t("kpi.noTargetSet") };
-
-  const good = k.direction === "down" ? c <= tgt : c >= tgt;
-  const delta = c - tgt;
-  const isCount = !k.unit && Number.isInteger(c) && Number.isInteger(tgt) && Math.abs(delta) >= 1;
-
-  let tone;
-  if (good) tone = "good";
-  else if (isCount) tone = Math.abs(delta) <= 1 ? "close" : "off";
-  else {
-    const ratio = k.direction === "down" ? tgt / c : c / tgt;
-    tone = ratio >= 0.85 ? "close" : "off";
-  }
-
-  let text;
-  if (delta === 0) text = t("kpi.onTarget");
-  else if (isCount) text = delta > 0 ? t("kpi.overGoal", { n: Math.abs(delta) }) : t("kpi.underGoal", { n: Math.abs(delta) });
-  else if (good) text = t("kpi.beatingTarget");
-  else text = k.direction === "down" ? t("kpi.overTarget") : t("kpi.belowTarget");
-
-  return { tone, text };
-}
+// Key results, presented the way the rest of the overview reads: one card,
+// one row per metric - name and goal on the left, the number on the right,
+// and a slim meter showing how far along the goal is. No stat-tile grid.
 
 const TONE = {
-  good: { chip: "bg-accent-2/12 text-accent-2", Icon: Check },
-  close: { chip: "bg-warn/14 text-warn", Icon: TriangleAlert },
-  off: { chip: "bg-danger/12 text-danger", Icon: TriangleAlert },
-  none: { chip: "bg-bg-tertiary text-ink-muted", Icon: Minus },
+  good: { text: "text-accent-2", bar: "bg-accent-2", key: "kpi.statusOn" },
+  close: { text: "text-warn", bar: "bg-warn", key: "kpi.statusClose" },
+  off: { text: "text-danger", bar: "bg-danger", key: "kpi.statusOff" },
 };
-
-const fmt = (v) => (v == null ? "–" : Number(v) % 1 === 0 ? String(v) : Number(v).toFixed(1));
 
 export default function KpiGrid({ kpis, locale = "en" }) {
   if (!kpis?.length) return null;
   const t = (key, vars) => translate(locale, key, vars);
 
-  const evaluated = kpis.map((k) => ({ k, ...evaluate(k, t) }));
-  const scored = evaluated.filter((e) => e.tone !== "none");
-  const onTarget = scored.filter((e) => e.tone === "good").length;
+  const rows = kpis.map((k) => ({ k, ...kpiHealth(k) }));
+  const scored = rows.filter((r) => r.tone !== "none");
+  const onTarget = scored.filter((r) => r.tone === "good").length;
 
   return (
-    <section>
-      <div className="mb-4 flex items-center justify-between">
+    <section className="rounded-2xl border border-line bg-bg-secondary p-6 shadow-[0_1px_2px_rgb(16_16_29_/_0.04)]">
+      <div className="flex items-center justify-between">
         <p className="font-mono flex items-center gap-1.5 text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">
           {t("kpi.keyResults")}
           <InfoTip text={t("kpi.keyResultsTip")} />
@@ -63,30 +35,42 @@ export default function KpiGrid({ kpis, locale = "en" }) {
         )}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {evaluated.map(({ k, tone, text }) => {
-          const { chip, Icon } = TONE[tone];
+      <div className="mt-2 divide-y divide-line/70">
+        {rows.map(({ k, tone, progress }) => {
+          const style = TONE[tone];
           return (
-            <div
-              key={k.id}
-              className="flex flex-col rounded-xl border border-line bg-bg-secondary p-4 shadow-[0_1px_2px_rgb(16_16_29_/_0.04)] transition-transform hover:-translate-y-0.5"
-            >
-              <p className="min-h-[2.4em] text-[12.5px] font-semibold leading-snug text-ink">{k.name}</p>
-
-              <p className="mt-2 flex items-baseline gap-0.5 leading-none text-ink">
-                <span className="font-sans text-[2.1rem] font-semibold tracking-tight">{fmt(k.current_value)}</span>
-                {k.unit && <span className="text-[13px] font-medium text-ink-muted">{k.unit}</span>}
-              </p>
-
-              <span className={`font-mono mt-3 inline-flex w-fit items-center gap-1 whitespace-nowrap rounded-md px-1.5 py-0.5 text-[10px] font-semibold ${chip}`}>
-                <Icon size={11} strokeWidth={2.4} />
-                {text}
-              </span>
-
-              <p className="font-mono mt-2.5 text-[10px] text-ink-muted">
-                {k.target_value == null ? t("kpi.noGoal") : t("kpi.goal", { value: `${fmt(k.target_value)}${k.unit || ""}` })}
-                {k.direction === "down" && k.target_value != null ? t("kpi.lowerWins") : ""}
-              </p>
+            <div key={k.id} className="py-4 first:pt-3 last:pb-0">
+              <div className="flex items-baseline justify-between gap-4">
+                <p className="min-w-0 truncate text-[13.5px] font-medium text-ink">{k.name}</p>
+                <p className="flex shrink-0 items-baseline gap-0.5 leading-none text-ink">
+                  <span className="font-data text-[1.35rem] font-semibold tracking-tight">{fmt(k.current_value)}</span>
+                  {k.unit && <span className="text-[12px] font-medium text-ink-muted">{k.unit}</span>}
+                </p>
+              </div>
+              <div className="mt-2 flex items-center gap-3">
+                {progress != null && (
+                  <div className="h-1 flex-1 overflow-hidden rounded-full bg-bg-tertiary">
+                    <div
+                      className={`h-full rounded-full ${style.bar}`}
+                      style={{ width: `${Math.max(4, Math.round(progress * 100))}%` }}
+                    />
+                  </div>
+                )}
+                <p className={`font-mono shrink-0 text-[10.5px] ${progress == null ? "text-ink-muted" : ""}`}>
+                  {k.target_value == null ? (
+                    <span className="text-ink-muted">{t("kpi.noGoal")}</span>
+                  ) : (
+                    <>
+                      <span className="text-ink-muted">
+                        {t("kpi.goal", { value: `${fmt(k.target_value)}${k.unit || ""}` })}
+                        {k.direction === "down" ? t("kpi.lowerBetter") : ""}
+                        {" · "}
+                      </span>
+                      {style && <span className={`font-semibold ${style.text}`}>{t(style.key)}</span>}
+                    </>
+                  )}
+                </p>
+              </div>
             </div>
           );
         })}

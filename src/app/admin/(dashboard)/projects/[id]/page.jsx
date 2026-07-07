@@ -12,6 +12,7 @@ import { InfoTip } from "@/components/Tip";
 import { sql } from "@/lib/db";
 import { numberPhases, phaseLabel } from "@/lib/phases";
 import Money from "@/components/Money";
+import { kpiHealth, formatKpiValue } from "@/lib/kpi";
 
 export const dynamic = "force-dynamic";
 
@@ -216,45 +217,82 @@ export default async function AdminProjectPage({ params, searchParams }) {
               </form>
 
               <div className="mt-5">
-                <p className="flex items-center gap-1.5 text-xs font-medium text-ink-muted">KPIs <InfoTip text="Shown to the client as health-colored cards: green when the target is met, amber within 15%, red when off. 'Better' sets whether higher or lower numbers win." /></p>
+                <p className="flex items-center gap-1.5 text-xs font-medium text-ink-muted">
+                  Key results
+                  <InfoTip text="Clients see these on the project overview with a meter toward each goal. Green means the goal is met, amber is within 15%, red needs attention." />
+                </p>
                 <div className="mt-2 divide-y divide-line/70 rounded-lg border border-line">
-                  {kpis.map((k) => (
-                    <div key={k.id} className="flex flex-wrap items-center gap-3 px-3.5 py-2.5 text-sm">
-                      <span className="w-40 font-semibold">{k.name}</span>
-                      <span className="font-data text-xs text-ink-muted">target {k.target_value ?? "–"}{k.unit || ""} ({k.direction})</span>
-                      <form action={hub} method="post" className="ml-auto flex items-center gap-2">
-                        <input type="hidden" name="_action" value="update_kpi" />
-                        <input type="hidden" name="kpi_id" value={k.id} />
-                        <input type="hidden" name="kpi_name" value={k.name} />
-                        <input type="hidden" name="_redirect" value={here} />
-                        <input name="current_value" type="number" step="any" defaultValue={k.current_value ?? ""} className="font-data w-20 rounded-md border border-line bg-bg-tertiary px-2 py-1 text-xs text-ink" />
-                        <button className="text-xs text-ink-muted hover:text-ink">Update</button>
-                      </form>
-                      <form action={hub} method="post">
-                        <input type="hidden" name="_action" value="delete_kpi" />
-                        <input type="hidden" name="kpi_id" value={k.id} />
-                        <input type="hidden" name="_redirect" value={here} />
-                        <button className="text-xs text-ink-muted hover:text-danger">Delete</button>
-                      </form>
-                    </div>
-                  ))}
-                  {kpis.length === 0 && <p className="px-3.5 py-3 text-sm text-ink-muted">No KPIs yet.</p>}
+                  {kpis.map((k) => {
+                    const { tone } = kpiHealth(k);
+                    const dot = { good: "bg-accent-2", close: "bg-warn", off: "bg-danger", none: "bg-ink-muted/40" }[tone];
+                    return (
+                      <div key={k.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3.5 py-2.5 text-sm">
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} title={{ good: "On target", close: "Close to goal", off: "Off target", none: "No goal set" }[tone]} />
+                        <span className="min-w-0 flex-1 truncate font-medium">{k.name}</span>
+                        <span className="font-data whitespace-nowrap text-xs text-ink-muted">
+                          {k.target_value == null
+                            ? "no goal"
+                            : `goal ${formatKpiValue(k.target_value)}${k.unit || ""} · ${k.direction === "down" ? "lower" : "higher"} is better`}
+                        </span>
+                        <form action={hub} method="post" className="flex items-center gap-2">
+                          <input type="hidden" name="_action" value="update_kpi" />
+                          <input type="hidden" name="kpi_id" value={k.id} />
+                          <input type="hidden" name="kpi_name" value={k.name} />
+                          <input type="hidden" name="_redirect" value={here} />
+                          <label className="flex items-center gap-1.5 text-xs text-ink-muted">
+                            now
+                            <input
+                              name="current_value"
+                              type="number"
+                              step="any"
+                              defaultValue={k.current_value ?? ""}
+                              className="font-data w-24 rounded-md border border-line bg-bg-tertiary px-2 py-1.5 text-xs text-ink outline-none focus:border-accent-2"
+                            />
+                          </label>
+                          <button className="rounded-md border border-line px-2 py-1.5 text-xs text-ink-soft hover:border-accent-2 hover:text-ink">Save</button>
+                        </form>
+                        <form action={hub} method="post">
+                          <input type="hidden" name="_action" value="delete_kpi" />
+                          <input type="hidden" name="kpi_id" value={k.id} />
+                          <input type="hidden" name="_redirect" value={here} />
+                          <button className="px-1 text-ink-muted hover:text-danger" title={`Remove "${k.name}"`}>×</button>
+                        </form>
+                      </div>
+                    );
+                  })}
+                  {kpis.length === 0 && (
+                    <p className="px-3.5 py-3 text-sm text-ink-muted">
+                      No key results yet. Pick 2–3 numbers this project is judged by — they show on the client's overview.
+                    </p>
+                  )}
                 </div>
-                <form action={hub} method="post" className="mt-2 flex flex-wrap items-end gap-3 text-sm">
+                <form action={hub} method="post" className="mt-3 flex flex-wrap items-end gap-3 text-sm">
                   <input type="hidden" name="_action" value="add_kpi" />
                   <input type="hidden" name="_redirect" value={here} />
-                  <label className="block text-ink-soft">Name<input name="name" required className={input} /></label>
-                  <label className="block text-ink-soft">Target<input name="target_value" type="number" step="any" className={`${input} w-24`} /></label>
-                  <label className="block text-ink-soft">Current<input name="current_value" type="number" step="any" className={`${input} w-24`} /></label>
-                  <label className="block text-ink-soft">Unit<input name="unit" placeholder="s, %, …" className={`${input} w-20`} /></label>
                   <label className="block text-ink-soft">
-                    Better
+                    Metric
+                    <input name="name" required placeholder="e.g. Page load time" className={`${input} w-44`} />
+                  </label>
+                  <label className="block text-ink-soft">
+                    Current
+                    <input name="current_value" type="number" step="any" className={`${input} w-24`} />
+                  </label>
+                  <label className="block text-ink-soft">
+                    Goal
+                    <input name="target_value" type="number" step="any" className={`${input} w-24`} />
+                  </label>
+                  <label className="block text-ink-soft">
+                    Unit
+                    <input name="unit" placeholder="s, %, users…" className={`${input} w-24`} />
+                  </label>
+                  <label className="block text-ink-soft">
+                    Direction
                     <select name="direction" className={input}>
-                      <option value="up">higher</option>
-                      <option value="down">lower</option>
+                      <option value="up">Higher is better</option>
+                      <option value="down">Lower is better</option>
                     </select>
                   </label>
-                  <button className="rounded-lg border border-line px-3 py-2 text-ink-soft hover:text-ink">Add KPI</button>
+                  <button className="rounded-lg border border-line px-3 py-2 text-ink-soft hover:border-accent-2 hover:text-ink">Add key result</button>
                 </form>
               </div>
 

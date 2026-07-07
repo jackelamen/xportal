@@ -8,9 +8,7 @@ import ProjectProgress from "@/components/ProjectProgress";
 import ProjectPlan from "@/components/ProjectPlan";
 import DeliverableCard from "@/components/DeliverableCard";
 import MessageFeed from "@/components/MessageFeed";
-// KpiGrid is paused for now (kept in src/components/KpiGrid.jsx for when KPIs
-// return). The Plan takes its place in the overview for the time being.
-// import KpiGrid from "@/components/KpiGrid";
+import KpiGrid from "@/components/KpiGrid";
 import DocumentLibrary from "@/components/DocumentLibrary";
 import { InfoTip } from "@/components/Tip";
 import { t as translate, formatDate } from "@/lib/i18n";
@@ -53,8 +51,7 @@ export default async function ProjectPage({ params, searchParams }) {
     "SELECT * FROM communication_threads WHERE project_id = ? AND invoice_id IS NULL ORDER BY created_at ASC",
     [id]
   );
-  // KPIs are paused for now; keep the query out until they return.
-  // const kpis = await sql("SELECT * FROM project_kpis WHERE project_id = ? ORDER BY name", [id]);
+  const kpis = await sql("SELECT * FROM project_kpis WHERE project_id = ? ORDER BY name", [id]);
   const documents = await sql(
     "SELECT * FROM project_documents WHERE project_id = ? ORDER BY created_at DESC", [id]
   );
@@ -163,6 +160,10 @@ export default async function ProjectPage({ params, searchParams }) {
       </nav>
 
       <div className="mt-6 space-y-8">
+        {tab === "overview" && kpis.length > 0 && (
+          <KpiGrid kpis={kpis} locale={locale} />
+        )}
+
         {tab === "overview" && (
           <div className="grid gap-5 lg:grid-cols-[1fr_320px]">
             {/* Left: project hub + the plan */}
