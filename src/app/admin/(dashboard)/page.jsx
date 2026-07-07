@@ -7,6 +7,13 @@ import { activityHref } from "@/lib/activityLink";
 export const dynamic = "force-dynamic";
 
 export default async function AdminHome() {
+  // "Cleared" reuses operator_seen_activity_at: clearing sets it to now, so
+  // everything before that stops appearing in Notifications below. Nothing
+  // is deleted - it's still in the client's own activity history and in
+  // Recent activity to the right, just off this one list.
+  const seenSetting = await getSettings(["operator_seen_activity_at"]);
+  const clearedAt = seenSetting.operator_seen_activity_at || "1970-01-01T00:00:00.000Z";
+
   const clientsQ = sql(
     `SELECT c.*,
       (SELECT COUNT(*)::int FROM portal_projects p WHERE p.client_id = c.id) AS project_count,
@@ -41,8 +48,9 @@ export default async function AdminHome() {
   );
   const inboxQ = sql(
     `SELECT a.*, c.company_name FROM activity_log a JOIN clients c ON c.id = a.client_id
-     WHERE a.actor_type = 'client'
-     ORDER BY a.created_at DESC LIMIT 20`
+     WHERE a.actor_type = 'client' AND a.created_at > ?
+     ORDER BY a.created_at DESC LIMIT 20`,
+    [clearedAt]
   );
   const ribbonQ = sql(
     `SELECT
@@ -55,19 +63,15 @@ export default async function AdminHome() {
          WHERE status = 'confirmed' AND starts_at BETWEEN NOW() AND NOW() + INTERVAL '7 days') AS meetings_this_week`
   );
 
-  const [clients, archivedClients, bookings, activity, inbox, seenSetting, ribbonRows] = await Promise.all([
+  const [clients, archivedClients, bookings, activity, inbox, ribbonRows] = await Promise.all([
     clientsQ,
     archivedQ,
     bookingsQ,
     activityQ,
     inboxQ,
-    getSettings(["operator_seen_activity_at"]),
     ribbonQ,
   ]);
   const ribbon = ribbonRows[0];
-
-  const seenTs = Date.parse(seenSetting.operator_seen_activity_at) || 0;
-  const unseen = inbox.filter((a) => (Date.parse(a.created_at) || 0) > seenTs);
 
   return (
     <div className="page-enter">
@@ -102,48 +106,42 @@ export default async function AdminHome() {
             <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
               <h2 className="flex items-center gap-2 text-[15px] font-semibold">
                 Notifications
-                {unseen.length > 0 && (
+                {inbox.length > 0 && (
                   <span className="font-data rounded-full bg-accent px-2 py-0.5 text-[11px] font-semibold text-white">
-                    {unseen.length} new
+                    {inbox.length} new
                   </span>
                 )}
-                <InfoTip side="bottom" text="Client activity since you last cleared. New items are highlighted." />
+                <InfoTip side="bottom" text="Client activity since you last cleared. Clearing empties this list - nothing is deleted, it still shows in the client's own activity history." />
               </h2>
-              {unseen.length > 0 && (
+              {inbox.length > 0 && (
                 <form action="/api/admin/notifications" method="post">
                   <input type="hidden" name="_redirect" value="/admin" />
                   <button className="rounded-md border border-line px-2.5 py-1 text-xs text-ink-soft hover:border-accent-2/50 hover:text-ink">
-                    Mark all read
+                    Clear
                   </button>
                 </form>
               )}
             </div>
             <ul className="divide-y divide-line/60 text-sm">
               {inbox.length === 0 && (
-                <li className="px-5 py-4 text-ink-muted">No client activity yet.</li>
+                <li className="px-5 py-4 text-ink-muted">Nothing new. You're all caught up.</li>
               )}
-              {inbox.map((a) => {
-                const isNew = (Date.parse(a.created_at) || 0) > seenTs;
-                return (
-                  <li
-                    key={a.id}
-                    className={`flex items-start gap-3 px-5 py-3.5 ${isNew ? "bg-accent/5" : ""}`}
-                  >
-                    <span className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${isNew ? "bg-accent" : "bg-transparent"}`} />
-                    <div className="min-w-0 flex-1">
-                      <Link
-                        href={activityHref(a, "admin") || `/admin/clients/${a.client_id}`}
-                        className={`hover:text-accent ${isNew ? "font-medium text-ink" : "text-ink-soft"}`}
-                      >
-                        <span className="text-ink-muted">[{a.company_name}]</span> {a.summary}
-                      </Link>
-                      <p className="font-data mt-0.5 text-xs text-ink-muted">
-                        {String(a.created_at).slice(0, 16)}
-                      </p>
-                    </div>
-                  </li>
-                );
-              })}
+              {inbox.map((a) => (
+                <li key={a.id} className="flex items-start gap-3 bg-accent/5 px-5 py-3.5">
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={activityHref(a, "admin") || `/admin/clients/${a.client_id}`}
+                      className="font-medium text-ink hover:text-accent"
+                    >
+                      <span className="text-ink-muted">[{a.company_name}]</span> {a.summary}
+                    </Link>
+                    <p className="font-data mt-0.5 text-xs text-ink-muted">
+                      {String(a.created_at).slice(0, 16)}
+                    </p>
+                  </div>
+                </li>
+              ))}
             </ul>
           </section>
 

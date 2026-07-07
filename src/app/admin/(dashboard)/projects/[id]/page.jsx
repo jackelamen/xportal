@@ -14,6 +14,7 @@ import { numberPhases, phaseLabel } from "@/lib/phases";
 import Money from "@/components/Money";
 import { kpiHealth, formatKpiValue } from "@/lib/kpi";
 import KpiTypeFields from "@/components/admin/KpiTypeFields";
+import ConfirmSubmit from "@/components/admin/ConfirmSubmit";
 
 export const dynamic = "force-dynamic";
 
@@ -670,7 +671,22 @@ export default async function AdminProjectPage({ params, searchParams }) {
 
         {tab === "messages" && (
           <section className="rounded-xl border border-line bg-bg-secondary p-5">
-            <h2 className="font-medium text-ink">Messages</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="font-medium text-ink">Messages</h2>
+              {messages.length > 0 && (
+                <form action="/api/admin/messages" method="post">
+                  <input type="hidden" name="_action" value="clear" />
+                  <input type="hidden" name="project_id" value={id} />
+                  <input type="hidden" name="_redirect" value={here} />
+                  <ConfirmSubmit
+                    confirmMessage={`Clear all ${messages.length} message${messages.length === 1 ? "" : "s"} on this project? This also removes them from the client's portal and can't be undone.`}
+                    className="text-xs text-ink-muted hover:text-danger"
+                  >
+                    Clear messages
+                  </ConfirmSubmit>
+                </form>
+              )}
+            </div>
             <div className="mt-3 space-y-2 text-sm">
               {messages.length === 0 && <p className="text-ink-muted">No messages yet.</p>}
               {messages.map((m) => {
