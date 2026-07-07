@@ -5,6 +5,7 @@ export default {
     cancel: "취소",
     signOut: "로그아웃",
     loading: "불러오는 중…",
+    userManual: "사용자 매뉴얼",
   },
   nav: {
     home: "홈",

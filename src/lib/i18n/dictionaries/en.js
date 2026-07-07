@@ -6,6 +6,7 @@ export default {
     cancel: "Cancel",
     signOut: "Sign out",
     loading: "Loading…",
+    userManual: "User manual",
   },
   nav: {
     home: "Home",

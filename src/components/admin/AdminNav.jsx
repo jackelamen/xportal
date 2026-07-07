@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarClock, LayoutDashboard, Settings, Users } from "lucide-react";
+import { CalendarClock, HelpCircle, LayoutDashboard, Settings, Users } from "lucide-react";
 
 // Dark sidebar: caps labels, emerald active state with a right-edge accent
 // tab - mirrors the client portal's PortalNav, but accent-2 (emerald) instead
@@ -68,6 +68,15 @@ export default function AdminNav({ unreadCount, clients = [], pendingBookingsCou
       <NavItem href="/admin/bookings" icon={CalendarClock} label="Bookings" badge={pendingBookingsCount} />
       <NavItem href="/admin/team" icon={Users} label="Team" />
       <NavItem href="/admin/settings" icon={Settings} label="Settings" />
+      <a
+        href="/admin-manual.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[12px] font-medium uppercase tracking-[0.08em] text-white/55 transition-colors hover:bg-white/[0.04] hover:text-white/90"
+      >
+        <HelpCircle size={16} strokeWidth={1.9} />
+        <span className="flex-1">User manual</span>
+      </a>
     </nav>
   );
 }

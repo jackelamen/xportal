@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { HelpCircle, LogOut } from "lucide-react";
 import { getClientSession } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import Toaster from "@/components/Toaster";
@@ -78,6 +78,16 @@ export default async function PortalLayout({ children }) {
                 </button>
               </form>
             </div>
+            <a
+              href="/client-manual.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              title={t(locale, "common.userManual")}
+              aria-label={t(locale, "common.userManual")}
+              className="rounded-lg p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
+            >
+              <HelpCircle size={16} />
+            </a>
             <LocaleToggle locale={locale} className="text-white/60 hover:bg-white/10 hover:text-white" />
             <ThemeToggle className="text-white/60 hover:bg-white/10 hover:text-white" />
           </div>
