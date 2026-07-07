@@ -13,6 +13,7 @@ import { sql } from "@/lib/db";
 import { numberPhases, phaseLabel } from "@/lib/phases";
 import Money from "@/components/Money";
 import { kpiHealth, formatKpiValue } from "@/lib/kpi";
+import KpiTypeFields from "@/components/admin/KpiTypeFields";
 
 export const dynamic = "force-dynamic";
 
@@ -227,28 +228,45 @@ export default async function AdminProjectPage({ params, searchParams }) {
                     const dot = { good: "bg-accent-2", close: "bg-warn", off: "bg-danger", none: "bg-ink-muted/40" }[tone];
                     return (
                       <div key={k.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3.5 py-2.5 text-sm">
-                        <span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} title={{ good: "On target", close: "Close to goal", off: "Off target", none: "No goal set" }[tone]} />
+                        <span className={`h-2 w-2 shrink-0 rounded-full ${dot}`} title={{ good: "On target / Yes", close: "Close to goal", off: "Off target / No", none: "No goal set / Pending" }[tone]} />
                         <span className="min-w-0 flex-1 truncate font-medium">{k.name}</span>
                         <span className="font-data whitespace-nowrap text-xs text-ink-muted">
-                          {k.target_value == null
-                            ? "no goal"
-                            : `goal ${formatKpiValue(k.target_value)}${k.unit || ""} · ${k.direction === "down" ? "lower" : "higher"} is better`}
+                          {k.kind === "boolean"
+                            ? "yes / no"
+                            : k.target_value == null
+                              ? "no goal"
+                              : `goal ${formatKpiValue(k.target_value)}${k.unit || ""} · ${k.direction === "down" ? "lower" : "higher"} is better`}
                         </span>
                         <form action={hub} method="post" className="flex items-center gap-2">
                           <input type="hidden" name="_action" value="update_kpi" />
                           <input type="hidden" name="kpi_id" value={k.id} />
                           <input type="hidden" name="kpi_name" value={k.name} />
                           <input type="hidden" name="_redirect" value={here} />
-                          <label className="flex items-center gap-1.5 text-xs text-ink-muted">
-                            now
-                            <input
-                              name="current_value"
-                              type="number"
-                              step="any"
-                              defaultValue={k.current_value ?? ""}
-                              className="font-data w-24 rounded-md border border-line bg-bg-tertiary px-2 py-1.5 text-xs text-ink outline-none focus:border-accent-2"
-                            />
-                          </label>
+                          {k.kind === "boolean" ? (
+                            <label className="flex items-center gap-1.5 text-xs text-ink-muted">
+                              now
+                              <select
+                                name="current_value"
+                                defaultValue={k.current_value == null ? "" : String(k.current_value)}
+                                className="font-data rounded-md border border-line bg-bg-tertiary px-2 py-1.5 text-xs text-ink outline-none focus:border-accent-2"
+                              >
+                                <option value="">Pending</option>
+                                <option value="1">Yes</option>
+                                <option value="0">No</option>
+                              </select>
+                            </label>
+                          ) : (
+                            <label className="flex items-center gap-1.5 text-xs text-ink-muted">
+                              now
+                              <input
+                                name="current_value"
+                                type="number"
+                                step="any"
+                                defaultValue={k.current_value ?? ""}
+                                className="font-data w-24 rounded-md border border-line bg-bg-tertiary px-2 py-1.5 text-xs text-ink outline-none focus:border-accent-2"
+                              />
+                            </label>
+                          )}
                           <button className="rounded-md border border-line px-2 py-1.5 text-xs text-ink-soft hover:border-accent-2 hover:text-ink">Save</button>
                         </form>
                         <form action={hub} method="post">
@@ -271,27 +289,9 @@ export default async function AdminProjectPage({ params, searchParams }) {
                   <input type="hidden" name="_redirect" value={here} />
                   <label className="block text-ink-soft">
                     Metric
-                    <input name="name" required placeholder="e.g. Page load time" className={`${input} w-44`} />
+                    <input name="name" required placeholder="e.g. Page load time or Legal sign-off" className={`${input} w-52`} />
                   </label>
-                  <label className="block text-ink-soft">
-                    Current
-                    <input name="current_value" type="number" step="any" className={`${input} w-24`} />
-                  </label>
-                  <label className="block text-ink-soft">
-                    Goal
-                    <input name="target_value" type="number" step="any" className={`${input} w-24`} />
-                  </label>
-                  <label className="block text-ink-soft">
-                    Unit
-                    <input name="unit" placeholder="s, %, users…" className={`${input} w-24`} />
-                  </label>
-                  <label className="block text-ink-soft">
-                    Direction
-                    <select name="direction" className={input}>
-                      <option value="up">Higher is better</option>
-                      <option value="down">Lower is better</option>
-                    </select>
-                  </label>
+                  <KpiTypeFields input={input} />
                   <button className="rounded-lg border border-line px-3 py-2 text-ink-soft hover:border-accent-2 hover:text-ink">Add key result</button>
                 </form>
               </div>

@@ -11,6 +11,9 @@ export async function upsertKpis(projectId, kpis) {
   if (!Array.isArray(kpis)) return;
   for (const k of kpis) {
     if (!k?.name) continue;
+    // Boolean KPIs (kind: "boolean") only ever carry a 0/1/null reading;
+    // target/unit/direction are numeric-only concepts and left null.
+    const kind = k.kind === "boolean" ? "boolean" : "numeric";
     const existing = (await sql(
       "SELECT id FROM project_kpis WHERE project_id = ? AND name = ?",
       [projectId, k.name]
@@ -27,10 +30,10 @@ export async function upsertKpis(projectId, kpis) {
       );
     } else {
       await sql(
-        `INSERT INTO project_kpis (id, project_id, name, target_value, current_value, unit, direction)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [uuid(), projectId, k.name, k.target_value ?? null, k.current_value ?? null,
-          k.unit ?? null, k.direction === "down" ? "down" : "up"]
+        `INSERT INTO project_kpis (id, project_id, name, target_value, current_value, unit, direction, kind)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [uuid(), projectId, k.name, kind === "boolean" ? null : (k.target_value ?? null), k.current_value ?? null,
+          kind === "boolean" ? null : (k.unit ?? null), k.direction === "down" ? "down" : "up", kind]
       );
     }
   }

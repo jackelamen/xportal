@@ -115,6 +115,9 @@ export default {
     noGoal: "Tracking · no goal set",
     goal: "Goal {value}",
     lowerBetter: " (lower is better)",
+    yes: "Yes",
+    no: "No",
+    pending: "Pending",
   },
   deliverable: {
     statusPending: "Pending review",

@@ -114,6 +114,9 @@ export default {
     noGoal: "추적 중 · 목표 미설정",
     goal: "목표 {value}",
     lowerBetter: " (낮을수록 좋음)",
+    yes: "예",
+    no: "아니오",
+    pending: "대기 중",
   },
   deliverable: {
     statusPending: "검토 대기 중",

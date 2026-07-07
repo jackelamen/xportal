@@ -27,15 +27,21 @@ export async function POST(request, { params }) {
       ]);
       break;
 
-    case "add_kpi":
+    case "add_kpi": {
       if (!str("name")) return new Response("KPI name required", { status: 400 });
+      const kind = form.get("kind") === "boolean" ? "boolean" : "numeric";
+      // Boolean KPIs only ever track a Yes/No/Pending reading - target,
+      // unit, and direction are numeric-only concepts.
       await sql(
-        `INSERT INTO project_kpis (id, project_id, name, target_value, current_value, unit, direction)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [uuid(), id, str("name"), num("target_value"), num("current_value"), str("unit") || null,
-          form.get("direction") === "down" ? "down" : "up"]
+        `INSERT INTO project_kpis (id, project_id, name, target_value, current_value, unit, direction, kind)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        kind === "boolean"
+          ? [uuid(), id, str("name"), null, num("current_value"), null, "up", "boolean"]
+          : [uuid(), id, str("name"), num("target_value"), num("current_value"), str("unit") || null,
+              form.get("direction") === "down" ? "down" : "up", "numeric"]
       );
       break;
+    }
 
     case "update_kpi":
       await sql(

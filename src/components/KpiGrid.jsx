@@ -12,6 +12,12 @@ const TONE = {
   off: { text: "text-danger", bar: "bg-danger", key: "kpi.statusOff" },
 };
 
+const BOOLEAN_CHIP = {
+  good: { chip: "bg-accent-2/12 text-accent-2", key: "kpi.yes" },
+  off: { chip: "bg-danger/12 text-danger", key: "kpi.no" },
+  none: { chip: "bg-bg-tertiary text-ink-muted", key: "kpi.pending" },
+};
+
 export default function KpiGrid({ kpis, locale = "en" }) {
   if (!kpis?.length) return null;
   const t = (key, vars) => translate(locale, key, vars);
@@ -37,6 +43,18 @@ export default function KpiGrid({ kpis, locale = "en" }) {
 
       <div className="mt-2 divide-y divide-line/70">
         {rows.map(({ k, tone, progress }) => {
+          if (k.kind === "boolean") {
+            const { chip, key } = BOOLEAN_CHIP[tone];
+            return (
+              <div key={k.id} className="flex items-center justify-between gap-4 py-4 first:pt-3 last:pb-0">
+                <p className="min-w-0 truncate text-[13.5px] font-medium text-ink">{k.name}</p>
+                <span className={`font-mono shrink-0 rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wide ${chip}`}>
+                  {t(key)}
+                </span>
+              </div>
+            );
+          }
+
           const style = TONE[tone];
           return (
             <div key={k.id} className="py-4 first:pt-3 last:pb-0">
