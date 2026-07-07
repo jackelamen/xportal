@@ -7,12 +7,12 @@ import { activityHref } from "@/lib/activityLink";
 export const dynamic = "force-dynamic";
 
 export default async function AdminHome() {
-  // "Cleared" reuses operator_seen_activity_at: clearing sets it to now, so
-  // everything before that stops appearing in Notifications below. Nothing
-  // is deleted - it's still in the client's own activity history and in
-  // Recent activity to the right, just off this one list.
-  const seenSetting = await getSettings(["operator_seen_activity_at"]);
-  const clearedAt = seenSetting.operator_seen_activity_at || "1970-01-01T00:00:00.000Z";
+  // Each dashboard activity list has its own "cleared up to" marker.
+  // Clearing advances the marker to now; nothing is ever deleted from
+  // activity_log itself - the client's own activity history is untouched.
+  const clearSettings = await getSettings(["operator_seen_activity_at", "operator_cleared_recent_activity_at"]);
+  const notificationsClearedAt = clearSettings.operator_seen_activity_at || "1970-01-01T00:00:00.000Z";
+  const recentClearedAt = clearSettings.operator_cleared_recent_activity_at || "1970-01-01T00:00:00.000Z";
 
   const clientsQ = sql(
     `SELECT c.*,
@@ -44,13 +44,15 @@ export default async function AdminHome() {
   );
   const activityQ = sql(
     `SELECT a.*, c.company_name FROM activity_log a JOIN clients c ON c.id = a.client_id
-     ORDER BY a.created_at DESC LIMIT 12`
+     WHERE a.created_at > ?
+     ORDER BY a.created_at DESC LIMIT 12`,
+    [recentClearedAt]
   );
   const inboxQ = sql(
     `SELECT a.*, c.company_name FROM activity_log a JOIN clients c ON c.id = a.client_id
      WHERE a.actor_type = 'client' AND a.created_at > ?
      ORDER BY a.created_at DESC LIMIT 20`,
-    [clearedAt]
+    [notificationsClearedAt]
   );
   const ribbonQ = sql(
     `SELECT
@@ -115,6 +117,7 @@ export default async function AdminHome() {
               </h2>
               {inbox.length > 0 && (
                 <form action="/api/admin/notifications" method="post">
+                  <input type="hidden" name="_action" value="clear_notifications" />
                   <input type="hidden" name="_redirect" value="/admin" />
                   <button className="rounded-md border border-line px-2.5 py-1 text-xs text-ink-soft hover:border-accent-2/50 hover:text-ink">
                     Clear
@@ -291,8 +294,17 @@ export default async function AdminHome() {
 
           {/* Recent activity */}
           <section className="rounded-xl border border-line bg-bg-secondary">
-            <div className="border-b border-line px-4 py-3.5">
+            <div className="flex items-center justify-between border-b border-line px-4 py-3.5">
               <h2 className="text-sm font-semibold">Recent activity</h2>
+              {activity.length > 0 && (
+                <form action="/api/admin/notifications" method="post">
+                  <input type="hidden" name="_action" value="clear_recent" />
+                  <input type="hidden" name="_redirect" value="/admin" />
+                  <button className="rounded-md border border-line px-2 py-0.5 text-xs text-ink-soft hover:border-accent-2/50 hover:text-ink">
+                    Clear
+                  </button>
+                </form>
+              )}
             </div>
             <ul className="divide-y divide-line/60 text-sm">
               {activity.map((a) => (
@@ -309,7 +321,7 @@ export default async function AdminHome() {
                 </li>
               ))}
               {activity.length === 0 && (
-                <li className="px-4 py-4 text-ink-muted">No activity yet.</li>
+                <li className="px-4 py-4 text-ink-muted">Nothing recent.</li>
               )}
             </ul>
           </section>
