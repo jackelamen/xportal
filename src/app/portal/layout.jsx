@@ -66,6 +66,17 @@ export default async function PortalLayout({ children }) {
           <div className="flex-1 overflow-y-auto px-3 py-2">
             <PortalNav items={nav} unread={unread} unreadTitle={t(locale, "nav.unreadTitle", { n: unread, plural: unread > 1 ? "s" : "" })} />
           </div>
+          <div className="px-3 pb-1">
+            <a
+              href="/client-manual.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-[12px] font-medium uppercase tracking-[0.08em] text-white/55 transition-colors hover:bg-white/[0.04] hover:text-white/90"
+            >
+              <HelpCircle size={16} strokeWidth={1.9} />
+              <span className="flex-1">{t(locale, "common.userManual")}</span>
+            </a>
+          </div>
           <div className="flex items-center gap-2 border-t border-white/[0.08] px-4 py-4">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-semibold text-white ring-1 ring-white/15">
               {(user.name || "?").slice(0, 1).toUpperCase()}
@@ -78,16 +89,6 @@ export default async function PortalLayout({ children }) {
                 </button>
               </form>
             </div>
-            <a
-              href="/client-manual.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              title={t(locale, "common.userManual")}
-              aria-label={t(locale, "common.userManual")}
-              className="rounded-lg p-1.5 text-white/60 hover:bg-white/10 hover:text-white"
-            >
-              <HelpCircle size={16} />
-            </a>
             <LocaleToggle locale={locale} className="text-white/60 hover:bg-white/10 hover:text-white" />
             <ThemeToggle className="text-white/60 hover:bg-white/10 hover:text-white" />
           </div>
