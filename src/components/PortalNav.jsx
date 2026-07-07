@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, Receipt, CalendarClock, CalendarDays, History,
+  LayoutDashboard, Receipt, CalendarClock, CalendarDays,
 } from "lucide-react";
 
-const ICONS = { LayoutDashboard, Receipt, CalendarClock, CalendarDays, History };
+const ICONS = { LayoutDashboard, Receipt, CalendarClock, CalendarDays };
 
 // Client nav with an active state - the current page is always visible.
 export default function PortalNav({ items, unread, unreadTitle, variant = "sidebar" }) {

@@ -7,7 +7,6 @@ import { getClientSession } from "@/lib/auth";
 import { phaseLabel } from "@/lib/phases";
 import { t, formatDate, formatDateTime } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
-import { activityHref } from "@/lib/activityLink";
 
 export const dynamic = "force-dynamic";
 
@@ -73,15 +72,9 @@ export default async function Home() {
      WHERE p.client_id = ? AND p.hidden_from_client = 0 AND p.archived_at IS NULL AND f.status = 'open' ORDER BY f.created_at ASC`,
     [client.id]
   );
-  const recentActivityQ = sql(
-    `SELECT * FROM activity_log WHERE client_id = ? AND actor_type = 'operator'
-     ORDER BY created_at DESC LIMIT 5`,
-    [client.id]
-  );
-
-  const [projects, phases, pending, openInvoices, unreadByProject, nextMeetings, openRequests, recentActivity, awaitingResponse] =
+  const [projects, phases, pending, openInvoices, unreadByProject, nextMeetings, openRequests, awaitingResponse] =
     await Promise.all([
-      projectsQ, phasesQ, pendingQ, openInvoicesQ, unreadByProjectQ, nextMeetingQ, openRequestsQ, recentActivityQ, awaitingResponseQ,
+      projectsQ, phasesQ, pendingQ, openInvoicesQ, unreadByProjectQ, nextMeetingQ, openRequestsQ, awaitingResponseQ,
     ]);
   const nextMeeting = nextMeetings[0];
   const phasesByProject = {};
@@ -236,7 +229,7 @@ export default async function Home() {
         })}
       </div>
 
-      <div className="mt-10 grid gap-4 md:grid-cols-2">
+      <div className="mt-10 md:max-w-sm">
         <section className="rounded-xl border border-line bg-bg-secondary p-5">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
             <CalendarClock size={15} className="text-accent" /> {t(locale, "home.nextMeeting")}
@@ -262,32 +255,6 @@ export default async function Home() {
               </Link>
             </div>
           )}
-        </section>
-
-        <section className="rounded-xl border border-line bg-bg-secondary p-5">
-          <h2 className="text-sm font-semibold text-ink">{t(locale, "home.latestFromTeam")}</h2>
-          <ul className="mt-3 space-y-2 text-sm">
-            {recentActivity.length === 0 && <li className="text-ink-muted">{t(locale, "home.noRecentUpdates")}</li>}
-            {recentActivity.map((a) => {
-              const href = activityHref(a, "client");
-              const row = (
-                <>
-                  <span className="font-data shrink-0 text-[11px] text-ink-muted">{fmtDate(a.created_at.slice(0, 10))}</span>
-                  <span className="min-w-0 truncate text-ink-soft">{a.summary}</span>
-                </>
-              );
-              return (
-                <li key={a.id} className="flex items-baseline gap-2">
-                  {href ? (
-                    <Link href={href} className="flex min-w-0 items-baseline gap-2 hover:text-ink">{row}</Link>
-                  ) : row}
-                </li>
-              );
-            })}
-          </ul>
-          <Link href="/portal/activity" className="mt-3 inline-flex items-center gap-1 text-xs text-accent hover:underline">
-            {t(locale, "home.fullActivityHistory")} <ArrowRight size={12} />
-          </Link>
         </section>
       </div>
     </div>

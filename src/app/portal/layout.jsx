@@ -17,7 +17,6 @@ const NAV = [
   { href: "/portal/calendar", icon: "CalendarDays", key: "nav.calendar" },
   { href: "/portal/billing", icon: "Receipt", key: "nav.billing" },
   { href: "/portal/schedule", icon: "CalendarClock", key: "nav.schedule" },
-  { href: "/portal/activity", icon: "History", key: "nav.activity" },
 ];
 
 export default async function PortalLayout({ children }) {

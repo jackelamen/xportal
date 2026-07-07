@@ -12,7 +12,6 @@ export default {
     calendar: "캘린더",
     billing: "청구서",
     schedule: "일정",
-    activity: "활동",
     clientPortal: "클라이언트 포털",
     unreadTitle: "팀으로부터 온 읽지 않은 메시지 {n}개",
   },
@@ -43,9 +42,6 @@ export default {
     manageMeetings: "미팅 관리",
     nothingScheduled: "예정된 일정이 없습니다.",
     bookMeeting: "미팅 예약",
-    latestFromTeam: "팀의 최근 소식",
-    noRecentUpdates: "최근 업데이트가 없습니다.",
-    fullActivityHistory: "전체 활동 내역 보기",
   },
   project: {
     onTrack: "정상 진행 중",
@@ -273,9 +269,5 @@ export default {
     legendInvoicesDue: "청구서 납부일",
     invoiceDue: "{number} 납부일",
     phaseEnds: "{title} 종료 ({project})",
-  },
-  activity: {
-    title: "활동",
-    empty: "아직 활동 내역이 없습니다.",
   },
 };

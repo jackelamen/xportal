@@ -13,7 +13,6 @@ export default {
     calendar: "Calendar",
     billing: "Billing",
     schedule: "Schedule",
-    activity: "Activity",
     clientPortal: "Client portal",
     unreadTitle: "{n} unread message{plural} from the team",
   },
@@ -44,9 +43,6 @@ export default {
     manageMeetings: "Manage meetings",
     nothingScheduled: "Nothing scheduled.",
     bookMeeting: "Book a meeting",
-    latestFromTeam: "Latest from the team",
-    noRecentUpdates: "No recent updates.",
-    fullActivityHistory: "Full activity history",
   },
   project: {
     onTrack: "On track",
@@ -274,9 +270,5 @@ export default {
     legendInvoicesDue: "Invoices due",
     invoiceDue: "{number} due",
     phaseEnds: "{title} ends ({project})",
-  },
-  activity: {
-    title: "Activity",
-    empty: "Nothing yet.",
   },
 };
