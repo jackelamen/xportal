@@ -5,7 +5,7 @@ import {
 import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
 import { phaseLabel } from "@/lib/phases";
-import { t, formatDate } from "@/lib/i18n";
+import { t, formatDate, formatDateTime } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
 import { activityHref } from "@/lib/activityLink";
 
@@ -103,7 +103,7 @@ export default async function Home() {
     ...openInvoices.map((i) => ({
       icon: Receipt,
       href: "/portal/billing",
-      text: t(locale, "home.attentionInvoice", { number: i.invoice_number, amount: formatMoney(i.amount, i.currency, locale), date: i.due_date }),
+      text: t(locale, "home.attentionInvoice", { number: i.invoice_number, amount: formatMoney(i.amount, i.currency, locale), date: fmtDate(i.due_date) }),
     })),
     ...unreadByProject.map((m) => ({
       icon: MessageSquare,
@@ -118,7 +118,7 @@ export default async function Home() {
     ...awaitingResponse.map((b) => ({
       icon: CalendarClock,
       href: "/portal/schedule",
-      text: t(locale, "home.attentionMeeting", { topic: b.topic, slot: String(b.starts_at).slice(0, 16) }),
+      text: t(locale, "home.attentionMeeting", { topic: b.topic, slot: formatDateTime(locale, String(b.starts_at)) }),
     })),
   ];
 
@@ -229,7 +229,7 @@ export default async function Home() {
               </div>
 
               <p className="font-data mt-3 text-[11px] text-ink-muted">
-                {p.target_date ? t(locale, "home.targetDate", { date: p.target_date }) : t(locale, "home.targetTbd")}
+                {p.target_date ? t(locale, "home.targetDate", { date: fmtDate(p.target_date) }) : t(locale, "home.targetTbd")}
               </p>
             </div>
           );
@@ -245,7 +245,7 @@ export default async function Home() {
             <div className="mt-3 text-sm">
               <p className="font-medium text-ink">{nextMeeting.topic}</p>
               <p className="font-data mt-1 text-xs text-ink-soft">
-                {nextMeeting.starts_at.slice(0, 16)} · {t(locale, "schedule.minutes", { n: nextMeeting.duration_minutes })}
+                {formatDateTime(locale, nextMeeting.starts_at)} · {t(locale, "schedule.minutes", { n: nextMeeting.duration_minutes })}
               </p>
               <Link href="/portal/schedule" className="mt-3 inline-flex items-center gap-1 text-xs text-accent hover:underline">
                 {t(locale, "home.manageMeetings")} <ArrowRight size={12} />
@@ -272,7 +272,7 @@ export default async function Home() {
               const href = activityHref(a, "client");
               const row = (
                 <>
-                  <span className="font-data shrink-0 text-[11px] text-ink-muted">{a.created_at.slice(5, 10)}</span>
+                  <span className="font-data shrink-0 text-[11px] text-ink-muted">{fmtDate(a.created_at.slice(0, 10))}</span>
                   <span className="min-w-0 truncate text-ink-soft">{a.summary}</span>
                 </>
               );

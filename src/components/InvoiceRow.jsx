@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Download, ShieldQuestion } from "lucide-react";
 import { toast } from "@/components/Toaster";
-import { t as translate } from "@/lib/i18n";
+import { t as translate, formatDate } from "@/lib/i18n";
 import Money from "@/components/Money";
 
 const STATUS_STYLE = {
@@ -50,7 +50,13 @@ export default function InvoiceRow({ invoice, locale = "en" }) {
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 py-3.5 text-sm">
         <span className="font-data font-semibold text-ink">{invoice.invoice_number}</span>
         <span className="text-ink-soft">{invoice.project_title}</span>
-        <span className="font-data text-xs text-ink-muted">{invoice.issued_date} → {invoice.due_date}</span>
+        <span className="font-data text-xs text-ink-muted">
+          {t("invoice.issued", { date: formatDate(locale, invoice.issued_date, { month: "short", day: "numeric" }) })}
+          {" · "}
+          <span className={invoice.status === "Overdue" ? "font-semibold text-danger" : ""}>
+            {t("invoice.due", { date: formatDate(locale, invoice.due_date, { month: "short", day: "numeric" }) })}
+          </span>
+        </span>
         <Money amount={invoice.amount} currency={invoice.currency} locale={locale} className="font-data ml-auto font-medium text-ink" />
         <span className={`font-data w-20 text-right text-xs font-semibold ${STATUS_STYLE[invoice.status] || ""}`}>
           {statusLabel}

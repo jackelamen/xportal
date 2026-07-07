@@ -13,7 +13,7 @@ import MessageFeed from "@/components/MessageFeed";
 // import KpiGrid from "@/components/KpiGrid";
 import DocumentLibrary from "@/components/DocumentLibrary";
 import { InfoTip } from "@/components/Tip";
-import { t as translate } from "@/lib/i18n";
+import { t as translate, formatDate } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
 
@@ -117,7 +117,7 @@ export default async function ProjectPage({ params, searchParams }) {
               </span>
             )}
             <span className="text-ink-muted/40">·</span>
-            <span className="font-mono text-[11px] text-ink-muted">{t("project.updated", { date: project.updated_at?.slice(0, 10) })}</span>
+            <span className="font-mono text-[11px] text-ink-muted">{t("project.updated", { date: formatDate(locale, project.updated_at?.slice(0, 10), { month: "short", day: "numeric" }) })}</span>
           </div>
           <h1 className="mt-2 text-[2.9rem] leading-[1.02] text-ink">{project.title}</h1>
           <p className="font-mono mt-3 text-[10.5px] uppercase tracking-[0.14em] text-ink-muted">{client.company_name}</p>
@@ -241,7 +241,7 @@ export default async function ProjectPage({ params, searchParams }) {
                     <li key={d.id}>
                       <p className="text-ink">{d.summary}</p>
                       <p className="font-mono mt-1 text-[10.5px] text-ink-muted">
-                        {d.decided_on}{d.recorded_by ? ` · ${d.recorded_by}` : ""}
+                        {formatDate(locale, d.decided_on, { month: "short", day: "numeric", year: "numeric" })}{d.recorded_by ? ` · ${d.recorded_by}` : ""}
                         {d.source === "approval" ? t("project.fromApproval") : d.source === "xpm" ? t("project.fromXpm") : ""}
                       </p>
                     </li>
@@ -255,7 +255,7 @@ export default async function ProjectPage({ params, searchParams }) {
         {tab === "deliverables" && (
           <section className="space-y-3">
             {deliverables.length === 0 && (
-              <p className="text-sm text-ink-muted">{t("project.nothingAwaitingReview")}</p>
+              <p className="rounded-xl border border-line bg-bg-secondary p-5 text-sm text-ink-soft">{t("project.nothingAwaitingReview")}</p>
             )}
             {deliverables.map((d) => (
               <DeliverableCard key={d.id} deliverable={d} locale={locale} />

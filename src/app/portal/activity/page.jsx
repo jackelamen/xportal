@@ -4,7 +4,7 @@ import { getClientSession } from "@/lib/auth";
 import {
   FileCheck2, MessageSquare, Receipt, CalendarClock, CircleDot,
 } from "lucide-react";
-import { t } from "@/lib/i18n";
+import { t, formatDateTime } from "@/lib/i18n";
 import { activityHref } from "@/lib/activityLink";
 
 export const dynamic = "force-dynamic";
@@ -47,8 +47,8 @@ export default async function ActivityPage() {
           const body = (
             <>
               <p className="text-sm text-ink">{a.summary}</p>
-              <p className="mt-0.5 text-xs text-ink-muted">
-                {a.created_at}
+              <p className="font-data mt-0.5 text-xs text-ink-muted">
+                {formatDateTime(locale, a.created_at)}
                 {a.project_title ? ` · ${a.project_title}` : ""}
               </p>
             </>

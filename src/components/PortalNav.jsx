@@ -16,7 +16,7 @@ export default function PortalNav({ items, unread, unreadTitle, variant = "sideb
 
   if (variant === "mobile") {
     return (
-      <nav className="flex gap-1 text-sm">
+      <nav className="flex min-w-0 gap-0.5 overflow-x-auto text-sm">
         {items.map(({ href, icon, label }) => {
           const Icon = ICONS[icon];
           return (
@@ -24,13 +24,13 @@ export default function PortalNav({ items, unread, unreadTitle, variant = "sideb
               key={href}
               href={href}
               title={label}
-              aria-label={label}
               aria-current={isActive(href) ? "page" : undefined}
-              className={`rounded-lg p-3 ${
+              className={`flex shrink-0 flex-col items-center gap-1 whitespace-nowrap rounded-lg px-2.5 py-2 ${
                 isActive(href) ? "bg-white/10 text-white" : "text-white/55 hover:bg-white/[0.06] hover:text-white"
               }`}
             >
-              <Icon size={18} />
+              <Icon size={17} />
+              <span className="text-[9px] font-medium uppercase tracking-wide leading-none">{label}</span>
             </Link>
           );
         })}

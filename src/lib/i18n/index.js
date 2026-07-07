@@ -46,6 +46,15 @@ export function formatDate(locale, isoLikeDate, opts) {
   return new Date(normalized).toLocaleDateString(DATE_LOCALE[resolveLocale(locale)], opts);
 }
 
+// One human-readable date+time string ("Wed, Jul 8 · 2:30 PM") for the many
+// places that were slicing raw ISO timestamps into the UI.
+export function formatDateTime(locale, isoLikeDate) {
+  if (!isoLikeDate) return null;
+  const date = formatDate(locale, isoLikeDate, { weekday: "short", month: "short", day: "numeric" });
+  const time = formatTime(locale, isoLikeDate.replace(" ", "T"), { hour: "numeric" });
+  return `${date} · ${time}`;
+}
+
 export function formatTime(locale, isoLikeDate, opts) {
   if (!isoLikeDate) return null;
   const normalized = isoLikeDate.includes("T") ? isoLikeDate : isoLikeDate.replace(" ", "T");

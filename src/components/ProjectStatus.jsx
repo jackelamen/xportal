@@ -78,7 +78,7 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
               <span className="font-mono text-[12px] font-medium text-ink-soft">{progress}%</span>
               {targetDate && (
                 <span className="flex items-center gap-1.5 font-mono text-[11px] text-ink-muted">
-                  <Flag size={12} className="text-accent" /> {t("status.targetDate", { date: targetDate })}
+                  <Flag size={12} className="text-accent" /> {t("status.targetDate", { date: fmtDate(targetDate) })}
                 </span>
               )}
             </div>

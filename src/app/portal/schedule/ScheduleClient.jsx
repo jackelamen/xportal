@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { CalendarCheck, CalendarClock, CalendarX2, Download } from "lucide-react";
 import { toast } from "@/components/Toaster";
-import { t, formatDate } from "@/lib/i18n";
+import { t, formatDate, formatDateTime } from "@/lib/i18n";
 
 const LENGTHS = [15, 30, 45, 60];
 
@@ -47,7 +47,7 @@ export default function ScheduleClient({ locale }) {
       load();
       return;
     }
-    toast(t(locale, "schedule.toastBooked", { topic: topic.trim(), slot: slot.slice(0, 16) }));
+    toast(t(locale, "schedule.toastBooked", { topic: topic.trim(), slot: formatDateTime(locale, slot) }));
     setTopic("");
     load();
   }
@@ -85,7 +85,7 @@ export default function ScheduleClient({ locale }) {
     });
     setBusy(false);
     if (res.ok) {
-      toast(t(locale, "schedule.toastBooked", { topic: b.topic, slot: slot.slice(0, 16) }));
+      toast(t(locale, "schedule.toastBooked", { topic: b.topic, slot: formatDateTime(locale, slot) }));
       setCounteringId(null);
       load();
     } else {
@@ -148,7 +148,7 @@ export default function ScheduleClient({ locale }) {
                     )}
                     <span className="font-medium">{b.topic}</span>
                     <span className="text-ink-soft">
-                      {b.starts_at.slice(0, 16)} · {t(locale, "schedule.minutes", { n: b.duration_minutes })}
+                      {formatDateTime(locale, b.starts_at)} · {t(locale, "schedule.minutes", { n: b.duration_minutes })}
                     </span>
                     <span className="ml-auto flex gap-3">
                       {b.status === "confirmed" && (
@@ -181,7 +181,7 @@ export default function ScheduleClient({ locale }) {
                   )}
                   {pendingOnUs && (
                     <p className="mt-1.5 text-xs font-medium text-warn">
-                      {t(locale, "schedule.newTimeProposed", { slot: b.starts_at.slice(0, 16) })}
+                      {t(locale, "schedule.newTimeProposed", { slot: formatDateTime(locale, b.starts_at) })}
                     </p>
                   )}
 
@@ -243,61 +243,78 @@ export default function ScheduleClient({ locale }) {
         </section>
       )}
 
-      <div className="mt-6 flex flex-wrap items-end gap-4">
-        <label className="block text-sm text-ink-soft">
-          {t(locale, "schedule.topic")} <span className="text-danger">*</span>
-          <input
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-            placeholder={t(locale, "schedule.topicPlaceholder")}
-            className="mt-1 block w-72 rounded-lg border border-line bg-bg-tertiary px-3 py-2 text-sm text-ink outline-none focus:border-accent"
-          />
-        </label>
-        <div className="text-sm text-ink-soft">
-          {t(locale, "schedule.length")}
-          <div className="mt-1 flex gap-1.5">
-            {LENGTHS.map((len) => (
-              <button
-                key={len}
-                onClick={() => setDuration(len)}
-                className={`rounded-lg border px-3 py-2 text-sm ${
-                  duration === len
-                    ? "border-accent bg-accent text-white"
-                    : "border-line bg-bg-secondary text-ink-soft hover:text-ink"
-                }`}
-              >
-                {t(locale, "schedule.minutes", { n: len })}
-              </button>
-            ))}
+      <section className="mt-6 rounded-xl border border-line bg-bg-secondary p-5">
+        <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
+          <label className="block text-sm text-ink-soft">
+            <span className="font-data text-[10.5px] font-medium uppercase tracking-widest text-ink-muted">
+              {t(locale, "schedule.stepTopic")}
+            </span>
+            <input
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder={t(locale, "schedule.topicPlaceholder")}
+              className="mt-1.5 block w-72 max-w-full rounded-lg border border-line bg-bg-tertiary px-3 py-2 text-sm text-ink outline-none focus:border-accent"
+            />
+          </label>
+          <div className="text-sm text-ink-soft">
+            <span className="font-data text-[10.5px] font-medium uppercase tracking-widest text-ink-muted">
+              {t(locale, "schedule.stepLength")}
+            </span>
+            <div className="mt-1.5 flex gap-1.5">
+              {LENGTHS.map((len) => (
+                <button
+                  key={len}
+                  onClick={() => setDuration(len)}
+                  aria-pressed={duration === len}
+                  className={`rounded-lg border px-3 py-2 text-sm ${
+                    duration === len
+                      ? "border-accent bg-accent font-medium text-white"
+                      : "border-line bg-bg-secondary text-ink-soft hover:border-accent/50 hover:text-ink"
+                  }`}
+                >
+                  {t(locale, "schedule.minutes", { n: len })}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      {slots === null ? (
-        <p className="mt-6 text-ink-muted">{t(locale, "schedule.loadingAvailability")}</p>
-      ) : (
-        <div className="mt-6 space-y-5">
-          {Object.entries(byDay).map(([day, daySlots]) => (
-            <div key={day}>
-              <p className="text-sm font-medium text-ink-soft">
-                {formatDate(locale, day, { weekday: "long", month: "short", day: "numeric" })}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {daySlots.map((s) => (
-                  <button
-                    key={s}
-                    disabled={busy}
-                    onClick={() => book(s)}
-                    className="rounded-lg border border-line bg-bg-secondary px-3 py-1.5 text-sm hover:border-accent disabled:opacity-50"
-                  >
-                    {s.slice(11, 16)}
-                  </button>
-                ))}
-              </div>
+        <div className="mt-5 border-t border-line pt-4">
+          <p className="font-data text-[10.5px] font-medium uppercase tracking-widest text-ink-muted">
+            {t(locale, "schedule.stepPick")}
+          </p>
+          {!topic.trim() && slots !== null && slots.length > 0 && (
+            <p className="mt-2 text-xs text-ink-muted">{t(locale, "schedule.topicFirstHint")}</p>
+          )}
+          {slots === null ? (
+            <p className="mt-3 text-sm text-ink-muted">{t(locale, "schedule.loadingAvailability")}</p>
+          ) : slots.length === 0 ? (
+            <p className="mt-3 text-sm text-ink-soft">{t(locale, "schedule.noSlots")}</p>
+          ) : (
+            <div className={`mt-4 space-y-5 transition-opacity ${topic.trim() ? "" : "opacity-60"}`}>
+              {Object.entries(byDay).map(([day, daySlots]) => (
+                <div key={day}>
+                  <p className="text-sm font-medium text-ink-soft">
+                    {formatDate(locale, day, { weekday: "long", month: "short", day: "numeric" })}
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {daySlots.map((s) => (
+                      <button
+                        key={s}
+                        disabled={busy}
+                        onClick={() => book(s)}
+                        className="font-data rounded-lg border border-line bg-bg-primary px-3 py-1.5 text-sm hover:border-accent hover:text-accent disabled:opacity-50"
+                      >
+                        {s.slice(11, 16)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          )}
         </div>
-      )}
+      </section>
     </div>
   );
 }
