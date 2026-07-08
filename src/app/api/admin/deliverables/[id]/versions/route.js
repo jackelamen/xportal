@@ -1,5 +1,5 @@
 import { sql, uuid } from "@/lib/db";
-import { requireOperator, redirectBack } from "@/lib/admin";
+import { requireOperator, redirectBack, errorRedirect } from "@/lib/admin";
 import { logActivity, notifyClient } from "@/lib/activity";
 import { buildVersion } from "@/lib/deliverable-version";
 
@@ -9,16 +9,16 @@ export async function POST(request, { params }) {
   if (error) return error;
 
   const { id } = await params;
+  const form = await request.formData();
   const row = (await sql(
     `SELECT d.*, p.client_id, p.title AS project_title FROM deliverables_approvals d
      JOIN portal_projects p ON p.id = d.project_id WHERE d.id = ?`,
     [id]
   ))[0];
-  if (!row) return new Response("Not found", { status: 404 });
+  if (!row) return errorRedirect(request, form, "Not found");
 
-  const form = await request.formData();
   const version = await buildVersion(form);
-  if (version.error) return new Response(version.error, { status: 400 });
+  if (version.error) return errorRedirect(request, form, version.error);
 
   const mxRow = (await sql("SELECT MAX(version_no) AS mx FROM deliverable_versions WHERE deliverable_id = ?", [id]))[0];
   const mx = mxRow?.mx ?? 0;

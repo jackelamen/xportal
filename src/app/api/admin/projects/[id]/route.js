@@ -1,5 +1,5 @@
 import { sql, uuid } from "@/lib/db";
-import { requireOperator, redirectBack } from "@/lib/admin";
+import { requireOperator, redirectBack, errorRedirect } from "@/lib/admin";
 import { logActivity } from "@/lib/activity";
 
 // _action: status | add_milestone | set_milestone_status | delete_milestone | toggle_visibility
@@ -8,10 +8,10 @@ export async function POST(request, { params }) {
   if (error) return error;
 
   const { id } = await params;
-  const project = (await sql("SELECT * FROM portal_projects WHERE id = ?", [id]))[0];
-  if (!project) return new Response("Not found", { status: 404 });
-
   const form = await request.formData();
+  const project = (await sql("SELECT * FROM portal_projects WHERE id = ?", [id]))[0];
+  if (!project) return errorRedirect(request, form, "Not found");
+
   const action = form.get("_action");
 
   if (action === "archive") {
@@ -33,7 +33,7 @@ export async function POST(request, { params }) {
     // to every milestone, deliverable, invoice, message, and document.
     const confirm = String(form.get("confirm_title") || "").trim().toLowerCase();
     if (confirm !== String(project.title).trim().toLowerCase()) {
-      return new Response("Type the project's exact title to confirm deletion.", { status: 400 });
+      return errorRedirect(request, form, "Type the project's exact title to confirm deletion.");
     }
     await sql("DELETE FROM portal_projects WHERE id = ?", [id]);
     return redirectBack(request, form);
@@ -73,7 +73,7 @@ export async function POST(request, { params }) {
     }
   } else if (action === "add_milestone") {
     const title = String(form.get("title") || "").trim();
-    if (!title) return new Response("Milestone title required", { status: 400 });
+    if (!title) return errorRedirect(request, form, "Milestone title required");
     const mxRow = (await sql(
       "SELECT COALESCE(MAX(sort_order), -1) AS mx FROM project_milestones WHERE project_id = ?", [id]
     ))[0];
@@ -92,7 +92,7 @@ export async function POST(request, { params }) {
     );
   } else if (action === "edit_milestone") {
     const title = String(form.get("title") || "").trim();
-    if (!title) return new Response("Milestone title required", { status: 400 });
+    if (!title) return errorRedirect(request, form, "Milestone title required");
     await sql(
       `UPDATE project_milestones SET title = ?, starts_on = ?, ends_on = ?, detail = ?
        WHERE id = ? AND project_id = ?`,
@@ -113,7 +113,7 @@ export async function POST(request, { params }) {
       String(form.get("milestone_id")), id,
     ]);
   } else {
-    return new Response("Unknown action", { status: 400 });
+    return errorRedirect(request, form, "Unknown action");
   }
 
   await logActivity({

@@ -1,5 +1,5 @@
 import { sql, uuid } from "@/lib/db";
-import { requireOperator, redirectBack, uniqueViolation } from "@/lib/admin";
+import { requireOperator, redirectBack, errorRedirect, uniqueViolation } from "@/lib/admin";
 import { logActivity, notifyClient } from "@/lib/activity";
 import { formatMoney, CURRENCIES } from "@/lib/money";
 
@@ -43,7 +43,7 @@ export async function POST(request) {
 
   const project = (await sql("SELECT * FROM portal_projects WHERE id = ?", [projectId]))[0];
   if (!project || !number || !(amount > 0) || !issued || !due) {
-    return new Response("project, invoice_number, at least one line item (or amount), issued and due dates required", { status: 400 });
+    return errorRedirect(request, form, "Invoice number, at least one line item (or amount), and issued/due dates are required.");
   }
 
   const invoiceId = uuid();
@@ -54,7 +54,7 @@ export async function POST(request) {
     );
   } catch (e) {
     const msg = uniqueViolation(e);
-    if (msg) return new Response(msg, { status: 409 });
+    if (msg) return errorRedirect(request, form, msg);
     throw e;
   }
 

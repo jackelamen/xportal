@@ -1,5 +1,5 @@
 import { sql, uuid } from "@/lib/db";
-import { requireOperator, redirectBack } from "@/lib/admin";
+import { requireOperator, redirectBack, errorRedirect } from "@/lib/admin";
 import { logActivity, notifyClient } from "@/lib/activity";
 import { buildVersion } from "@/lib/deliverable-version";
 
@@ -12,10 +12,10 @@ export async function POST(request) {
   const projectId = String(form.get("project_id") || "");
   const title = String(form.get("title") || "").trim();
   const project = (await sql("SELECT * FROM portal_projects WHERE id = ?", [projectId]))[0];
-  if (!project || !title) return new Response("project_id and title are required", { status: 400 });
+  if (!project || !title) return errorRedirect(request, form, "project_id and title are required");
 
   const version = await buildVersion(form);
-  if (version.error) return new Response(version.error, { status: 400 });
+  if (version.error) return errorRedirect(request, form, version.error);
 
   const id = uuid();
   await sql("INSERT INTO deliverables_approvals (id, project_id, title) VALUES (?, ?, ?)", [id, projectId, title]);

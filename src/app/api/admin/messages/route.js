@@ -1,5 +1,5 @@
 import { sql, uuid } from "@/lib/db";
-import { requireOperator, redirectBack } from "@/lib/admin";
+import { requireOperator, redirectBack, errorRedirect } from "@/lib/admin";
 import { logActivity, notifyClient } from "@/lib/activity";
 
 // Operator reply into a project (or invoice-scoped) thread, or clearing that
@@ -13,7 +13,7 @@ export async function POST(request) {
   const projectId = String(form.get("project_id") || "");
 
   const project = (await sql("SELECT * FROM portal_projects WHERE id = ?", [projectId]))[0];
-  if (!project) return new Response("project_id is required", { status: 400 });
+  if (!project) return errorRedirect(request, form, "project_id is required");
 
   if (action === "clear") {
     // Deletes both sides of the conversation - the client's portal shows the
@@ -26,7 +26,7 @@ export async function POST(request) {
 
   const invoiceId = String(form.get("invoice_id") || "") || null;
   const content = String(form.get("message_content") || "").trim();
-  if (!content) return new Response("message is required", { status: 400 });
+  if (!content) return errorRedirect(request, form, "message is required");
 
   await sql(
     `INSERT INTO communication_threads (id, project_id, invoice_id, sender_type, sender_name, message_content, operator_read)

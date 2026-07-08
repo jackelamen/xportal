@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { sql } from "@/lib/db";
-import { requireOperator } from "@/lib/admin";
+import { requireOperator, errorRedirect } from "@/lib/admin";
 
 // Enter / exit "preview as client". The cookie makes getClientSession return
 // a read-only impersonated session for the operator. _action: enter | exit
@@ -19,7 +19,7 @@ export async function POST(request) {
 
   const clientId = String(form.get("client_id") || "");
   if (!(await sql("SELECT id FROM clients WHERE id = ?", [clientId]))[0]) {
-    return new Response("Client not found", { status: 404 });
+    return errorRedirect(request, form, "Client not found");
   }
   store.set("xportal_preview", clientId, {
     httpOnly: true,

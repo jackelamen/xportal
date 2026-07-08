@@ -1,5 +1,5 @@
 import { sql, uuid } from "@/lib/db";
-import { requireOperator, redirectBack } from "@/lib/admin";
+import { requireOperator, redirectBack, errorRedirect } from "@/lib/admin";
 import { logActivity, notifyClient } from "@/lib/activity";
 
 // Project-hub management. _action:
@@ -12,10 +12,10 @@ export async function POST(request, { params }) {
   if (error) return error;
 
   const { id } = await params;
-  const project = (await sql("SELECT * FROM portal_projects WHERE id = ?", [id]))[0];
-  if (!project) return new Response("Not found", { status: 404 });
-
   const form = await request.formData();
+  const project = (await sql("SELECT * FROM portal_projects WHERE id = ?", [id]))[0];
+  if (!project) return errorRedirect(request, form, "Not found");
+
   const action = form.get("_action");
   const str = (k) => String(form.get(k) || "").trim();
   const num = (k) => (form.get(k) === null || str(k) === "" ? null : Number(form.get(k)));
@@ -28,7 +28,7 @@ export async function POST(request, { params }) {
       break;
 
     case "add_kpi": {
-      if (!str("name")) return new Response("KPI name required", { status: 400 });
+      if (!str("name")) return errorRedirect(request, form, "KPI name required");
       const kind = form.get("kind") === "boolean" ? "boolean" : "numeric";
       // Boolean KPIs only ever track a Yes/No/Pending reading - target,
       // unit, and direction are numeric-only concepts.
@@ -60,7 +60,7 @@ export async function POST(request, { params }) {
 
     case "add_link":
       if (!str("label") || !/^https?:\/\//.test(str("url"))) {
-        return new Response("Label and http(s) URL required", { status: 400 });
+        return errorRedirect(request, form, "Label and http(s) URL required");
       }
       await sql("INSERT INTO project_links (id, project_id, label, url) VALUES (?, ?, ?, ?)", [
         uuid(), id, str("label"), str("url"),
@@ -72,7 +72,7 @@ export async function POST(request, { params }) {
       break;
 
     case "add_person":
-      if (!str("name")) return new Response("Name required", { status: 400 });
+      if (!str("name")) return errorRedirect(request, form, "Name required");
       await sql(
         "INSERT INTO project_people (id, project_id, side, name, role, email) VALUES (?, ?, ?, ?, ?, ?)",
         [uuid(), id, form.get("side") === "client" ? "client" : "operator",
@@ -85,7 +85,7 @@ export async function POST(request, { params }) {
       break;
 
     case "add_decision":
-      if (!str("summary")) return new Response("Decision summary required", { status: 400 });
+      if (!str("summary")) return errorRedirect(request, form, "Decision summary required");
       await sql(
         "INSERT INTO decision_log (id, project_id, decided_on, summary, recorded_by, source) VALUES (?, ?, ?, ?, ?, 'manual')",
         [uuid(), id, str("decided_on") || new Date().toISOString().slice(0, 10), str("summary"), operator.name]
@@ -93,7 +93,7 @@ export async function POST(request, { params }) {
       break;
 
     case "update_decision":
-      if (!str("summary")) return new Response("Decision summary required", { status: 400 });
+      if (!str("summary")) return errorRedirect(request, form, "Decision summary required");
       await sql(
         "UPDATE decision_log SET summary = ?, decided_on = COALESCE(NULLIF(?, ''), decided_on) WHERE id = ? AND project_id = ?",
         [str("summary"), str("decided_on"), str("decision_id"), id]
@@ -105,12 +105,12 @@ export async function POST(request, { params }) {
       break;
 
     case "add_working":
-      if (!str("title")) return new Response("Title required", { status: 400 });
+      if (!str("title")) return errorRedirect(request, form, "Title required");
       await sql("INSERT INTO working_items (id, project_id, title) VALUES (?, ?, ?)", [uuid(), id, str("title")]);
       break;
 
     case "update_working":
-      if (!str("title")) return new Response("Title required", { status: 400 });
+      if (!str("title")) return errorRedirect(request, form, "Title required");
       await sql("UPDATE working_items SET title = ? WHERE id = ? AND project_id = ?", [str("title"), str("item_id"), id]);
       break;
 
@@ -131,7 +131,7 @@ export async function POST(request, { params }) {
       break;
 
     case "create_file_request":
-      if (!str("title")) return new Response("Title required", { status: 400 });
+      if (!str("title")) return errorRedirect(request, form, "Title required");
       await sql("INSERT INTO file_requests (id, project_id, title, note) VALUES (?, ?, ?, ?)", [
         uuid(), id, str("title"), str("note") || null,
       ]);
@@ -147,7 +147,7 @@ export async function POST(request, { params }) {
       break;
 
     case "add_note":
-      if (!str("content")) return new Response("Note content required", { status: 400 });
+      if (!str("content")) return errorRedirect(request, form, "Note content required");
       await sql(
         "INSERT INTO internal_notes (id, client_id, project_id, author_name, content) VALUES (?, ?, ?, ?, ?)",
         [uuid(), project.client_id, id, operator.name, str("content")]
@@ -155,7 +155,7 @@ export async function POST(request, { params }) {
       break;
 
     case "update_note":
-      if (!str("content")) return new Response("Note content required", { status: 400 });
+      if (!str("content")) return errorRedirect(request, form, "Note content required");
       await sql("UPDATE internal_notes SET content = ? WHERE id = ? AND project_id = ?", [
         str("content"), str("note_id"), id,
       ]);
@@ -166,7 +166,7 @@ export async function POST(request, { params }) {
       break;
 
     default:
-      return new Response("Unknown action", { status: 400 });
+      return errorRedirect(request, form, "Unknown action");
   }
   return redirectBack(request, form);
 }

@@ -1,5 +1,5 @@
 import { sql, uuid } from "@/lib/db";
-import { requireOperator, redirectBack, uniqueViolation } from "@/lib/admin";
+import { requireOperator, redirectBack, errorRedirect, uniqueViolation } from "@/lib/admin";
 import { logActivity, notifyClient } from "@/lib/activity";
 import { CURRENCIES } from "@/lib/money";
 
@@ -18,14 +18,14 @@ export async function POST(request, { params }) {
   if (error) return error;
 
   const { id } = await params;
+  const form = await request.formData();
   const inv = (await sql(
     `SELECT i.*, p.client_id, p.id AS project_id, p.title AS project_title
      FROM invoices i JOIN portal_projects p ON p.id = i.project_id WHERE i.id = ?`,
     [id]
   ))[0];
-  if (!inv) return new Response("Not found", { status: 404 });
+  if (!inv) return errorRedirect(request, form, "Not found");
 
-  const form = await request.formData();
   const action = form.get("_action");
 
   if (action === "delete") {
@@ -46,7 +46,7 @@ export async function POST(request, { params }) {
       ? lineItems.reduce((sum, r) => sum + r.quantity * r.unit_price, 0)
       : Number(form.get("amount"));
     if (!number || !(amount > 0) || !issued || !due) {
-      return new Response("invoice_number, at least one line item (or amount), issued and due dates required", { status: 400 });
+      return errorRedirect(request, form, "invoice_number, at least one line item (or amount), issued and due dates required");
     }
     try {
       await sql(
@@ -55,7 +55,7 @@ export async function POST(request, { params }) {
       );
     } catch (e) {
       const msg = uniqueViolation(e);
-      if (msg) return new Response(msg, { status: 409 });
+      if (msg) return errorRedirect(request, form, msg);
       throw e;
     }
     await sql("DELETE FROM invoice_line_items WHERE invoice_id = ?", [id]);
@@ -74,7 +74,7 @@ export async function POST(request, { params }) {
       eventType: "invoice.paid", summary: `Invoice ${inv.invoice_number} marked paid`,
     });
   } else if (action === "resolve_dispute") {
-    if (inv.status !== "Disputed") return new Response("Invoice is not disputed", { status: 409 });
+    if (inv.status !== "Disputed") return errorRedirect(request, form, "Invoice is not disputed");
     await sql("UPDATE invoices SET status = 'Unpaid', dispute_reason = NULL WHERE id = ?", [id]);
     await notifyClient(
       inv.client_id,
@@ -82,10 +82,10 @@ export async function POST(request, { params }) {
       `We've reviewed your dispute on invoice ${inv.invoice_number} (${inv.project_title}). The invoice is now active again. Check the project thread for details.`
     );
   } else if (action === "mark_overdue") {
-    if (inv.status !== "Unpaid") return new Response("Only unpaid invoices can be marked overdue", { status: 409 });
+    if (inv.status !== "Unpaid") return errorRedirect(request, form, "Only unpaid invoices can be marked overdue");
     await sql("UPDATE invoices SET status = 'Overdue' WHERE id = ?", [id]);
   } else {
-    return new Response("Unknown action", { status: 400 });
+    return errorRedirect(request, form, "Unknown action");
   }
   return redirectBack(request, form);
 }

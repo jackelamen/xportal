@@ -1,5 +1,5 @@
 import { sql } from "@/lib/db";
-import { requireOperator, redirectBack } from "@/lib/admin";
+import { requireOperator, redirectBack, errorRedirect } from "@/lib/admin";
 import { addBlackout } from "@/lib/calendar";
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -20,12 +20,12 @@ export async function POST(request) {
   if (action === "add") {
     const date = str("on_date");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-      return new Response("A date is required", { status: 400 });
+      return errorRedirect(request, form, "A date is required");
     }
     const startTime = TIME_RE.test(str("start_time")) ? str("start_time") : null;
     const endTime = TIME_RE.test(str("end_time")) ? str("end_time") : null;
     if (startTime && endTime && startTime >= endTime) {
-      return new Response("End time must be after start time", { status: 400 });
+      return errorRedirect(request, form, "End time must be after start time");
     }
     await addBlackout({ date, startTime, endTime, note: str("note") || null });
   } else if (action === "delete") {
@@ -36,7 +36,7 @@ export async function POST(request) {
       const start = TIME_RE.test(str(`start_${d}`)) ? str(`start_${d}`) : "09:00";
       const end = TIME_RE.test(str(`end_${d}`)) ? str(`end_${d}`) : "17:00";
       if (enabled && start >= end) {
-        return new Response(`End time must be after start time (${DAY_NAMES[d]})`, { status: 400 });
+        return errorRedirect(request, form, `End time must be after start time (${DAY_NAMES[d]})`);
       }
       await sql(
         "UPDATE weekly_hours SET enabled = ?, start_time = ?, end_time = ? WHERE weekday = ?",
@@ -44,7 +44,7 @@ export async function POST(request) {
       );
     }
   } else {
-    return new Response("Unknown action", { status: 400 });
+    return errorRedirect(request, form, "Unknown action");
   }
   return redirectBack(request, form);
 }

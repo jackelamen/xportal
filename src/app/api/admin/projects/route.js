@@ -1,5 +1,5 @@
 import { sql, uuid } from "@/lib/db";
-import { requireOperator, redirectBack, uniqueViolation } from "@/lib/admin";
+import { requireOperator, redirectBack, errorRedirect, uniqueViolation } from "@/lib/admin";
 
 export async function POST(request) {
   const { error } = await requireOperator();
@@ -9,7 +9,7 @@ export async function POST(request) {
   const clientId = String(form.get("client_id") || "");
   const title = String(form.get("title") || "").trim();
   if (!title || !(await sql("SELECT id FROM clients WHERE id = ?", [clientId]))[0]) {
-    return new Response("client_id and title are required", { status: 400 });
+    return errorRedirect(request, form, "client_id and title are required");
   }
   try {
     await sql(
@@ -24,7 +24,7 @@ export async function POST(request) {
     );
   } catch (e) {
     const msg = uniqueViolation(e);
-    if (msg) return new Response(msg, { status: 409 });
+    if (msg) return errorRedirect(request, form, msg);
     throw e;
   }
   return redirectBack(request, form);

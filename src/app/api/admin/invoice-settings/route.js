@@ -1,4 +1,4 @@
-import { requireOperator, redirectBack } from "@/lib/admin";
+import { requireOperator, redirectBack, errorRedirect } from "@/lib/admin";
 import { setSetting, INVOICE_SETTING_KEYS, INVOICE_LOGO_KEY } from "@/lib/settings";
 
 const LOGO_MAX_BYTES = 800_000;
@@ -21,8 +21,8 @@ export async function POST(request) {
   } else {
     const logo = form.get("logo");
     if (logo && typeof logo === "object" && logo.size > 0) {
-      if (!LOGO_TYPES[logo.type]) return new Response("Logo must be a PNG or JPG", { status: 400 });
-      if (logo.size > LOGO_MAX_BYTES) return new Response("Logo must be under 800 KB", { status: 400 });
+      if (!LOGO_TYPES[logo.type]) return errorRedirect(request, form, "Logo must be a PNG or JPG");
+      if (logo.size > LOGO_MAX_BYTES) return errorRedirect(request, form, "Logo must be under 800 KB");
       const b64 = Buffer.from(await logo.arrayBuffer()).toString("base64");
       await setSetting(INVOICE_LOGO_KEY, `data:${logo.type};base64,${b64}`);
     }

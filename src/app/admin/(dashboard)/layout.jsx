@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
 import { LogOut } from "lucide-react";
 import { LogoMark } from "@/components/Logo";
@@ -6,6 +7,7 @@ import { getOperatorSession } from "@/lib/auth";
 import { sql } from "@/lib/db";
 import AdminNav from "@/components/admin/AdminNav";
 import ThemeToggle from "@/components/ThemeToggle";
+import ErrorBanner from "@/components/admin/ErrorBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -79,7 +81,12 @@ export default async function AdminLayout({ children }) {
       </aside>
 
       <main className="min-w-0 flex-1">
-        <div className="mx-auto max-w-5xl p-5 md:px-10 md:py-8">{children}</div>
+        <div className="mx-auto max-w-5xl p-5 md:px-10 md:py-8">
+          <Suspense fallback={null}>
+            <ErrorBanner />
+          </Suspense>
+          {children}
+        </div>
       </main>
     </div>
   );

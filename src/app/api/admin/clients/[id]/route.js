@@ -1,5 +1,5 @@
 import { sql, uuid } from "@/lib/db";
-import { requireOperator, redirectBack, uniqueViolation } from "@/lib/admin";
+import { requireOperator, redirectBack, errorRedirect, uniqueViolation } from "@/lib/admin";
 import { logActivity } from "@/lib/activity";
 
 // Branding + contact management for one client. Multipart because of the logo.
@@ -10,27 +10,27 @@ export async function POST(request, { params }) {
   if (error) return error;
 
   const { id } = await params;
+  const form = await request.formData();
   const client = (await sql("SELECT id, company_name FROM clients WHERE id = ?", [id]))[0];
   if (!client) {
-    return new Response("Not found", { status: 404 });
+    return errorRedirect(request, form, "Not found");
   }
 
-  const form = await request.formData();
   const action = form.get("_action");
 
   if (action === "branding") {
     const accent = String(form.get("accent_color") || "").trim();
     const slug = String(form.get("slug") || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
     if (accent && !/^#[0-9a-fA-F]{6}$/.test(accent)) {
-      return new Response("Accent color must be a #rrggbb value", { status: 400 });
+      return errorRedirect(request, form, "Accent color must be a #rrggbb value");
     }
     // The logo is stored as a base64 data URI in logo_path, so it persists on
     // serverless hosts with no writable filesystem.
     let logoPath;
     const logo = form.get("logo");
     if (logo && typeof logo === "object" && logo.size > 0) {
-      if (!String(logo.type).startsWith("image/")) return new Response("Logo must be an image (PNG, SVG, JPG)", { status: 400 });
-      if (logo.size > 2_000_000) return new Response("Logo must be under 2 MB", { status: 400 });
+      if (!String(logo.type).startsWith("image/")) return errorRedirect(request, form, "Logo must be an image (PNG, SVG, JPG)");
+      if (logo.size > 2_000_000) return errorRedirect(request, form, "Logo must be under 2 MB");
       const b64 = Buffer.from(await logo.arrayBuffer()).toString("base64");
       logoPath = `data:${logo.type};base64,${b64}`;
     }
@@ -45,13 +45,13 @@ export async function POST(request, { params }) {
       );
     } catch (e) {
       const msg = uniqueViolation(e);
-      if (msg) return new Response(msg, { status: 409 });
+      if (msg) return errorRedirect(request, form, msg);
       throw e;
     }
   } else if (action === "add_user") {
     const name = String(form.get("name") || "").trim();
     const email = String(form.get("email") || "").trim().toLowerCase();
-    if (!name || !email) return new Response("Name and email are required", { status: 400 });
+    if (!name || !email) return errorRedirect(request, form, "Name and email are required");
     try {
       await sql(
         "INSERT INTO client_users (id, client_id, name, email) VALUES (?, ?, ?, ?)",
@@ -59,7 +59,7 @@ export async function POST(request, { params }) {
       );
     } catch (e) {
       const msg = uniqueViolation(e);
-      if (msg) return new Response(msg, { status: 409 });
+      if (msg) return errorRedirect(request, form, msg);
       throw e;
     }
   } else if (action === "remove_user") {
@@ -68,7 +68,7 @@ export async function POST(request, { params }) {
     ]);
   } else if (action === "add_note") {
     const content = String(form.get("content") || "").trim();
-    if (!content) return new Response("Note content required", { status: 400 });
+    if (!content) return errorRedirect(request, form, "Note content required");
     const { getOperatorSession } = await import("@/lib/auth");
     const op = await getOperatorSession();
     await sql(
@@ -77,7 +77,7 @@ export async function POST(request, { params }) {
     );
   } else if (action === "update_note") {
     const content = String(form.get("content") || "").trim();
-    if (!content) return new Response("Note content required", { status: 400 });
+    if (!content) return errorRedirect(request, form, "Note content required");
     await sql(
       "UPDATE internal_notes SET content = ? WHERE id = ? AND client_id = ? AND project_id IS NULL",
       [content, String(form.get("note_id")), id]
@@ -104,13 +104,13 @@ export async function POST(request, { params }) {
     // to every project, invoice, deliverable, message, document, etc.
     const confirm = String(form.get("confirm_name") || "").trim().toLowerCase();
     if (confirm !== client.company_name.trim().toLowerCase()) {
-      return new Response("Type the client's exact company name to confirm deletion.", { status: 400 });
+      return errorRedirect(request, form, "Type the client's exact company name to confirm deletion.");
     }
     await sql("DELETE FROM clients WHERE id = ?", [id]);
     // No activity_log entry - it's client-scoped and would cascade away with the row.
     return redirectBack(request, form);
   } else {
-    return new Response("Unknown action", { status: 400 });
+    return errorRedirect(request, form, "Unknown action");
   }
   return redirectBack(request, form);
 }

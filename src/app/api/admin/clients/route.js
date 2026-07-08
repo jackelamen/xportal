@@ -1,5 +1,5 @@
 import { sql, uuid } from "@/lib/db";
-import { requireOperator, redirectBack, uniqueViolation } from "@/lib/admin";
+import { requireOperator, redirectBack, errorRedirect, uniqueViolation } from "@/lib/admin";
 
 export async function POST(request) {
   const { error } = await requireOperator();
@@ -10,7 +10,7 @@ export async function POST(request) {
   const email = String(form.get("email") || "").trim().toLowerCase();
   const contactName = String(form.get("contact_name") || "").trim();
   if (!company || !email || !contactName) {
-    return new Response("company_name, contact_name and email are required", { status: 400 });
+    return errorRedirect(request, form, "company_name, contact_name and email are required");
   }
 
   // Email is globally unique across clients (primary_email) and client_users
@@ -20,7 +20,7 @@ export async function POST(request) {
     (await sql("SELECT 1 FROM clients WHERE lower(primary_email) = ? LIMIT 1", [email]))[0] ||
     (await sql("SELECT 1 FROM client_users WHERE lower(email) = ? LIMIT 1", [email]))[0];
   if (emailTaken) {
-    return new Response(`A client or contact with the email ${email} already exists.`, { status: 409 });
+    return errorRedirect(request, form, `A client or contact with the email ${email} already exists.`);
   }
 
   // Slug is unique - derive a base and add a numeric suffix on collision so
@@ -46,7 +46,7 @@ export async function POST(request) {
     // row (the two inserts aren't a single transaction).
     await sql("DELETE FROM clients WHERE id = ?", [clientId]).catch(() => {});
     const msg = uniqueViolation(e);
-    if (msg) return new Response(msg, { status: 409 });
+    if (msg) return errorRedirect(request, form, msg);
     throw e;
   }
   return redirectBack(request, form);

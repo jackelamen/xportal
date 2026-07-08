@@ -17,6 +17,19 @@ export function redirectBack(request, form) {
   return NextResponse.redirect(new URL(String(dest), request.url), 303);
 }
 
+// Same as redirectBack, but for the error path of a plain <form action="…">
+// POST. These are full-page navigations (not fetch), so a raw error Response
+// used to just replace the whole page with unstyled text — and in the PWA
+// there's no browser chrome to navigate back with. Redirect back to the
+// originating page instead, with the message in ?error= for <ErrorBanner/>
+// (mounted in the admin layout) to show inline.
+export function errorRedirect(request, form, message) {
+  const dest = form?.get("_redirect") || "/admin";
+  const url = new URL(String(dest), request.url);
+  url.searchParams.set("error", message);
+  return NextResponse.redirect(url, 303);
+}
+
 // Friendly messages for the DB's UNIQUE constraints, so a duplicate value
 // returns a clear 409 instead of an unhandled 500. Keyed by constraint name
 // (Postgres exposes it as err.constraint on a 23505 unique_violation).

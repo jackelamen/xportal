@@ -1,5 +1,5 @@
 import { sql, uuid } from "@/lib/db";
-import { requireOperator, redirectBack } from "@/lib/admin";
+import { requireOperator, redirectBack, errorRedirect } from "@/lib/admin";
 import { saveUpload } from "@/lib/storage";
 import { logActivity, notifyClient } from "@/lib/activity";
 
@@ -12,10 +12,9 @@ export async function POST(request, { params }) {
   if (error) return error;
 
   const { id } = await params;
-  const project = (await sql("SELECT * FROM portal_projects WHERE id = ?", [id]))[0];
-  if (!project) return new Response("Not found", { status: 404 });
-
   const form = await request.formData();
+  const project = (await sql("SELECT * FROM portal_projects WHERE id = ?", [id]))[0];
+  if (!project) return errorRedirect(request, form, "Not found");
 
   if (form.get("_action") === "delete") {
     await sql("DELETE FROM project_documents WHERE id = ? AND project_id = ?", [
@@ -26,17 +25,17 @@ export async function POST(request, { params }) {
 
   const title = String(form.get("title") || "").trim();
   const category = CATEGORIES.includes(form.get("category")) ? form.get("category") : "reference";
-  if (!title) return new Response("Title required", { status: 400 });
+  if (!title) return errorRedirect(request, form, "Title required");
 
   let kind, assetPath, originalName = null;
   const file = form.get("file");
   if (file && typeof file === "object" && file.size > 0) {
-    if (file.size > MAX_FILE) return new Response("File must be under 25 MB", { status: 400 });
+    if (file.size > MAX_FILE) return errorRedirect(request, form, "File must be under 25 MB");
     const saved = await saveUpload(file, "documents");
     kind = "file"; assetPath = saved.storedPath; originalName = saved.originalName;
   } else {
     const link = String(form.get("link") || "").trim();
-    if (!/^https?:\/\//.test(link)) return new Response("Provide a file or http(s) link", { status: 400 });
+    if (!/^https?:\/\//.test(link)) return errorRedirect(request, form, "Provide a file or http(s) link");
     kind = "link"; assetPath = link;
   }
 
