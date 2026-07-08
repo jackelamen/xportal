@@ -5,6 +5,7 @@ import FilePicker from "@/components/FilePicker";
 import CsvImport from "@/components/admin/CsvImport";
 import { EditableRow } from "@/components/admin/EditableRow";
 import { InfoTip } from "@/components/Tip";
+import CopyUrl from "@/components/admin/CopyUrl";
 import { sql } from "@/lib/db";
 import { logoSrc } from "@/lib/logo";
 
@@ -53,6 +54,13 @@ export default async function AdminClientPage({ params, searchParams }) {
                 </>
               )}
             </p>
+            <div className="mt-2 flex items-center gap-1.5">
+              <span className="text-xs text-ink-muted">
+                xPlan link
+                <InfoTip side="bottom" text="Paste this into xPlan's initiative drawer to link a project to this existing client, instead of creating a new one." />
+              </span>
+              <CopyUrl url={`${process.env.APP_BASE_URL || ""}/admin/clients/${client.id}`} />
+            </div>
           </div>
         </div>
         <form action="/api/admin/preview" method="post">
