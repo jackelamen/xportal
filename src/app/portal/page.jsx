@@ -4,7 +4,7 @@ import {
 } from "lucide-react";
 import { sql } from "@/lib/db";
 import { getClientSession } from "@/lib/auth";
-import { phaseLabel } from "@/lib/phases";
+import { numberPhases, phaseLabel } from "@/lib/phases";
 import { t, formatDate, formatDateTime } from "@/lib/i18n";
 import { formatMoney } from "@/lib/money";
 
@@ -79,6 +79,9 @@ export default async function Home() {
   const nextMeeting = nextMeetings[0];
   const phasesByProject = {};
   for (const m of phases) (phasesByProject[m.project_id] ||= []).push(m);
+  // Number each project's phases independently (1-based) - the flat query
+  // above interleaves phases from every project in one array.
+  for (const pid of Object.keys(phasesByProject)) phasesByProject[pid] = numberPhases(phasesByProject[pid]);
 
   const unreadMap = Object.fromEntries(unreadByProject.map((m) => [m.project_id, m.n]));
 
@@ -173,8 +176,7 @@ export default async function Home() {
         )}
         {projects.map((p) => {
           const phases = phasesByProject[p.id] || [];
-          const activeIdx = phases.findIndex((ph) => ph.status === "active");
-          const active = activeIdx >= 0 ? phases[activeIdx] : null;
+          const active = phases.find((ph) => ph.status === "active");
           const blocked = phases.find((ph) => ph.status === "blocked");
           return (
             // Stretched-link card: the title link covers the whole card; the
@@ -202,12 +204,12 @@ export default async function Home() {
 
               <p className="mt-2 text-sm">
                 {blocked ? (
-                  <span className="font-medium text-danger">{t(locale, "home.blocked", { phase: phaseLabel(phases.indexOf(blocked), blocked.title) })}</span>
+                  <span className="font-medium text-danger">{t(locale, "home.blocked", { phase: phaseLabel(blocked.phaseNo, blocked.title) })}</span>
                 ) : (
                   <>
-                    <span className="font-medium text-accent">{active ? phaseLabel(activeIdx, active.title) : p.current_phase}</span>
+                    <span className="font-medium text-accent">{active ? phaseLabel(active.phaseNo, active.title) : p.current_phase}</span>
                     <span className="text-ink-muted">
-                      {active ? t(locale, "home.ofTotal", { idx: activeIdx + 1, total: phases.length }) : ""}
+                      {active ? t(locale, "home.ofTotal", { idx: active.phaseNo, total: phases.length }) : ""}
                       {active?.ends_on ? t(locale, "home.through", { date: fmtDate(active.ends_on) }) : ""}
                     </span>
                   </>

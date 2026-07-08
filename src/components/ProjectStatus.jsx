@@ -1,5 +1,5 @@
 import { Flag } from "lucide-react";
-import { phaseLabel } from "@/lib/phases";
+import { numberPhases, phaseLabel } from "@/lib/phases";
 import { t as translate, formatDate } from "@/lib/i18n";
 
 // The phase-timeline card body: a connected bar of phase segments (the active
@@ -25,30 +25,28 @@ const stripes = {
 export default function ProjectStatus({ phases, currentPhase, progress, targetDate, locale = "en" }) {
   const t = (key, vars) => translate(locale, key, vars);
   const fmtDate = (s) => (s ? formatDate(locale, s, { month: "short", day: "numeric" }) : null);
-  const items = phases?.length > 0 ? phases : [];
+  const items = phases?.length > 0 ? numberPhases(phases) : [];
   const activeIdx = items.findIndex((p) => p.status === "active");
   const blocked = items.find((p) => p.status === "blocked");
-  const blockedIdx = blocked ? items.indexOf(blocked) : -1;
   const next = items.slice(activeIdx + 1).find((p) => p.status === "upcoming");
-  const nextIdx = next ? items.indexOf(next) : -1;
 
   return (
     <div>
       {items.length > 0 ? (
         <>
           <div className="flex h-9 overflow-hidden rounded-lg border border-line bg-bg-tertiary">
-            {items.map((ph, i) => (
+            {items.map((ph) => (
               <div
                 key={ph.id}
                 className={`relative flex-1 border-r border-line last:border-r-0 ${SEG[ph.status] || SEG.upcoming}`}
-                title={`${phaseLabel(i, ph.title)} · ${ph.status}`}
+                title={`${phaseLabel(ph.phaseNo, ph.title)} · ${ph.status}`}
               >
                 {ph.status === "active" && <div className="absolute inset-0" style={stripes} />}
               </div>
             ))}
           </div>
           <div className="mt-2.5 flex">
-            {items.map((ph, i) => (
+            {items.map((ph) => (
               <p
                 key={ph.id}
                 className={`min-w-0 flex-1 truncate px-1 text-center text-[10.5px] ${
@@ -57,7 +55,7 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
                   : ph.status === "done" ? "text-ink-soft" : "text-ink-muted"
                 }`}
               >
-                {phaseLabel(i, ph.title)}
+                {phaseLabel(ph.phaseNo, ph.title)}
               </p>
             ))}
           </div>
@@ -87,12 +85,12 @@ export default function ProjectStatus({ phases, currentPhase, progress, targetDa
             <p className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-ink-soft">
               {blocked && (
                 <span className="font-medium text-danger">
-                  {t("status.isBlocked", { phase: phaseLabel(blockedIdx, blocked.title) })}
+                  {t("status.isBlocked", { phase: phaseLabel(blocked.phaseNo, blocked.title) })}
                 </span>
               )}
               {next && (
                 <span>
-                  {t("status.upNextLabel")}<span className="font-medium text-ink">{phaseLabel(nextIdx, next.title)}</span>
+                  {t("status.upNextLabel")}<span className="font-medium text-ink">{phaseLabel(next.phaseNo, next.title)}</span>
                   {next.starts_on && <span className="font-mono text-xs text-ink-muted">{t("status.starts", { date: fmtDate(next.starts_on) })}</span>}
                 </span>
               )}
