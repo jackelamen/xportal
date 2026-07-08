@@ -70,28 +70,48 @@ export async function POST(request) {
 }
 
 // space.link payload:
-//   { action: "space.link", xpm_space_id, space_name,
+//   { action: "space.link", xpm_space_id, space_name, xportal_client_id?,
 //     contacts: [{ name, email }],            -- first becomes primary
 //     projects: [{ xpm_project_id, title, description?, current_phase?,
 //                  progress_percentage?, target_date?, ...hub payloads }] }
 // Idempotent: re-linking updates the client and upserts projects by
 // xpm_project_id. Imported projects start hidden so operators curate what the
 // client sees before anything goes live.
+//
+// xportal_client_id, when given, pins this space to that exact existing
+// client instead of the xpm_space_id/email auto-match below — needed because
+// one xPM space can front multiple xPortal clients (e.g. several divisions
+// of one account), so the fallback match can't always guess the right one.
 async function linkSpace(body) {
-  const { xpm_space_id, space_name, contacts = [], projects = [] } = body;
+  const { xpm_space_id, space_name, xportal_client_id, contacts = [], projects = [] } = body;
   if (!xpm_space_id || !space_name) {
     return NextResponse.json({ error: "xpm_space_id and space_name are required" }, { status: 400 });
   }
   const primary = contacts.find((c) => c?.email);
 
-  let client = (await sql("SELECT * FROM clients WHERE xpm_space_id = ?", [xpm_space_id]))[0];
-  if (!client && primary) {
-    client = (await sql("SELECT * FROM clients WHERE primary_email = ?", [primary.email.toLowerCase()]))[0];
+  let client;
+  if (xportal_client_id) {
+    client = (await sql("SELECT * FROM clients WHERE id = ?", [xportal_client_id]))[0];
+    if (!client) {
+      return NextResponse.json({ error: `No xPortal client found with id ${xportal_client_id}` }, { status: 404 });
+    }
+  } else {
+    client = (await sql("SELECT * FROM clients WHERE xpm_space_id = ?", [xpm_space_id]))[0];
+    if (!client && primary) {
+      client = (await sql("SELECT * FROM clients WHERE primary_email = ?", [primary.email.toLowerCase()]))[0];
+    }
   }
 
   if (client) {
-    await sql("UPDATE clients SET company_name = ?, xpm_space_id = ? WHERE id = ?",
-      [space_name, xpm_space_id, client.id]);
+    // Only stamp xpm_space_id when linking by the auto-match path - an
+    // explicit client shared across spaces shouldn't get overwritten to
+    // point at just the last-linked space.
+    if (xportal_client_id) {
+      await sql("UPDATE clients SET company_name = COALESCE(company_name, ?) WHERE id = ?", [space_name, client.id]);
+    } else {
+      await sql("UPDATE clients SET company_name = ?, xpm_space_id = ? WHERE id = ?",
+        [space_name, xpm_space_id, client.id]);
+    }
   } else {
     if (!primary) {
       return NextResponse.json(
