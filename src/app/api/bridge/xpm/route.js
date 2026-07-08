@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { sql, uuid } from "@/lib/db";
 import { verifyBridgeSecret } from "@/lib/xpm-bridge";
-import { upsertKpis, replaceWorkingItems, appendDecisions, appendPhases, appendMilestones } from "@/lib/project-import";
+import { upsertKpis, replaceWorkingItems, appendDecisions, appendPhases, appendMilestones, syncCurrentPhase } from "@/lib/project-import";
 
 // Inbound sync from xPM, authenticated by X-XPM-Bridge-Secret. Only top-level
 // status fields cross the boundary - granular xPM tasks never reach the portal.
@@ -189,15 +189,5 @@ async function syncHub(projectId, body) {
   await appendDecisions(projectId, body.decisions, { recordedBy: "xPM", source: "xpm" });
   await appendPhases(projectId, body.phases);
   await appendMilestones(projectId, body.milestones);
-
-  // Keep current_phase in step with the pushed plan (same rule as the importer).
-  if (body.phases?.length) {
-    const active = (await sql(
-      "SELECT title FROM project_milestones WHERE project_id = ? AND kind = 'phase' AND status = 'active' ORDER BY sort_order LIMIT 1",
-      [projectId]
-    ))[0];
-    if (active) {
-      await sql("UPDATE portal_projects SET current_phase = ?, updated_at = NOW() WHERE id = ?", [active.title, projectId]);
-    }
-  }
+  if (body.phases?.length) await syncCurrentPhase(projectId);
 }

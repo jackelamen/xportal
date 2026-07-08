@@ -10,7 +10,7 @@ import InvoiceForm from "@/components/admin/InvoiceForm";
 import { EditableRow, RowButton } from "@/components/admin/EditableRow";
 import { InfoTip } from "@/components/Tip";
 import { sql } from "@/lib/db";
-import { numberPhases, phaseLabel } from "@/lib/phases";
+import { numberPhases, phaseLabel, pickCurrentPhase } from "@/lib/phases";
 import Money from "@/components/Money";
 import { kpiHealth, formatKpiValue } from "@/lib/kpi";
 import KpiTypeFields from "@/components/admin/KpiTypeFields";
@@ -40,6 +40,7 @@ export default async function AdminProjectPage({ params, searchParams }) {
     "SELECT * FROM project_milestones WHERE project_id = ? ORDER BY sort_order", [id]
   ));
   const phaseList = milestones.filter((m) => m.kind === "phase");
+  const currentPhaseMs = pickCurrentPhase(phaseList);
   const deliverableRows = await sql(
     "SELECT * FROM deliverables_approvals WHERE project_id = ? ORDER BY submitted_at DESC", [id]
   );
@@ -173,18 +174,14 @@ export default async function AdminProjectPage({ params, searchParams }) {
         {tab === "overview" && (
           <>
             <section className="rounded-xl border border-line bg-bg-secondary p-5">
-              <h2 className="flex items-center gap-1.5 font-medium text-ink">Status <InfoTip side="bottom" text="What the client sees at the top of their portal: current phase, percent complete, and target date." /></h2>
-              <form action={post()} method="post" className="mt-3 flex flex-wrap items-end gap-3 text-sm">
-                <input type="hidden" name="_action" value="status" />
-                <input type="hidden" name="_redirect" value={here} />
-                <label className="block text-ink-soft">
-                  Phase
+              <h2 className="flex items-center gap-1.5 font-medium text-ink">Status <InfoTip side="bottom" text="What the client sees at the top of their portal: current phase, percent complete, and target date. Phase and target date are derived from the Plan tab - set a phase to active there (or done) to advance them; if more than one phase is active, the earliest-starting one wins." /></h2>
+              <div className="mt-3 flex flex-wrap items-end gap-6 text-sm">
+                <div>
+                  <p className="text-ink-soft">Phase</p>
                   {phaseList.length > 0 ? (
-                    <select name="current_phase" defaultValue={project.current_phase} className={input}>
-                      {phaseList.map((m) => (
-                        <option key={m.id} value={m.title}>{phaseLabel(m.phaseNo, m.title)}</option>
-                      ))}
-                    </select>
+                    <p className="mt-1.5 font-medium text-ink">
+                      {currentPhaseMs ? phaseLabel(currentPhaseMs.phaseNo, currentPhaseMs.title) : project.current_phase}
+                    </p>
                   ) : (
                     <p className="mt-1 max-w-xs text-xs text-ink-muted">
                       No phases yet. Add them in the{" "}
@@ -192,17 +189,21 @@ export default async function AdminProjectPage({ params, searchParams }) {
                       to set how many phases there are and name them.
                     </p>
                   )}
-                </label>
-                <label className="block text-ink-soft">
-                  Progress %
-                  <input name="progress_percentage" type="number" min="0" max="100" defaultValue={project.progress_percentage} className={`${input} w-24`} />
-                </label>
-                <label className="block text-ink-soft">
-                  Target date
-                  <input name="target_date" type="date" defaultValue={project.target_date || ""} className={input} />
-                </label>
-                <button className="rounded-lg bg-accent-2 px-4 py-2 font-medium text-white">Save</button>
-              </form>
+                </div>
+                <div>
+                  <p className="text-ink-soft">Target date</p>
+                  <p className="mt-1.5 font-data font-medium text-ink">{project.target_date || "—"}</p>
+                </div>
+                <form action={post()} method="post" className="flex items-end gap-3">
+                  <input type="hidden" name="_action" value="status" />
+                  <input type="hidden" name="_redirect" value={here} />
+                  <label className="block text-ink-soft">
+                    Progress %
+                    <input name="progress_percentage" type="number" min="0" max="100" defaultValue={project.progress_percentage} className={`${input} w-24`} />
+                  </label>
+                  <button className="rounded-lg bg-accent-2 px-4 py-2 font-medium text-white">Save</button>
+                </form>
+              </div>
             </section>
 
             <section className="rounded-xl border border-line bg-bg-secondary p-5">

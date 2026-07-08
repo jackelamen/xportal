@@ -1,4 +1,5 @@
 import { sql, uuid } from "./db";
+import { pickCurrentPhase } from "./phases";
 
 // Server-side writers that turn a parsed CSV (see lib/csv.js) into project rows.
 // The KPI / working / decision helpers are shared with the xPM bridge so the two
@@ -6,6 +7,24 @@ import { sql, uuid } from "./db";
 // import can be safely re-run.
 
 // --- shared with the xPM bridge (behavior-preserving extraction of syncHub) ---
+
+// Recompute portal_projects.current_phase/target_date from this project's
+// phases - the single place that turns Plan phase statuses/dates into what
+// Status (and the client) sees. Called after any write that could change a
+// phase's status or dates: admin Plan edits, CSV import, and the xPM bridge.
+export async function syncCurrentPhase(projectId) {
+  const phases = await sql(
+    "SELECT title, status, starts_on, ends_on FROM project_milestones WHERE project_id = ? AND kind = 'phase' ORDER BY sort_order",
+    [projectId]
+  );
+  const current = pickCurrentPhase(phases);
+  if (current) {
+    await sql(
+      "UPDATE portal_projects SET current_phase = ?, target_date = ?, updated_at = NOW() WHERE id = ?",
+      [current.title, current.ends_on, projectId]
+    );
+  }
+}
 
 export async function upsertKpis(projectId, kpis) {
   if (!Array.isArray(kpis)) return;
@@ -175,13 +194,5 @@ export async function importProjectData(projectId, data, { recordedBy } = {}) {
   await addPeople(projectId, data.people);
   await addWorkingItems(projectId, data.working);
   await appendDecisions(projectId, data.decisions, { recordedBy: recordedBy || "Import" });
-
-  // current_phase = the first active phase (the dropdown/status bar reads this).
-  const active = (await sql(
-    "SELECT title FROM project_milestones WHERE project_id = ? AND kind = 'phase' AND status = 'active' ORDER BY sort_order LIMIT 1",
-    [projectId]
-  ))[0];
-  if (active) {
-    await sql("UPDATE portal_projects SET current_phase = ?, updated_at = NOW() WHERE id = ?", [active.title, projectId]);
-  }
+  await syncCurrentPhase(projectId);
 }

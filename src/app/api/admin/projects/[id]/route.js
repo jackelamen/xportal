@@ -1,6 +1,7 @@
 import { sql, uuid } from "@/lib/db";
 import { requireOperator, redirectBack, errorRedirect } from "@/lib/admin";
 import { logActivity } from "@/lib/activity";
+import { syncCurrentPhase } from "@/lib/project-import";
 
 // _action: status | add_milestone | set_milestone_status | delete_milestone | toggle_visibility
 export async function POST(request, { params }) {
@@ -46,31 +47,13 @@ export async function POST(request, { params }) {
       summary: `${operator.name} ${next ? "hid" : "published"} "${project.title}" ${next ? "from" : "to"} the client portal`,
     });
   } else if (action === "status") {
-    const currentPhase = String(form.get("current_phase") || project.current_phase);
+    // Phase and target date are no longer set here - they're derived from
+    // Plan (see syncCurrentPhase below). Progress is the one thing that
+    // genuinely needs a human's judgment call, so it stays manual.
     await sql(
-      "UPDATE portal_projects SET current_phase = ?, progress_percentage = ?, target_date = ?, updated_at = NOW() WHERE id = ?",
-      [
-        currentPhase,
-        Math.min(100, Math.max(0, Number(form.get("progress_percentage")) || 0)),
-        String(form.get("target_date") || "") || null,
-        id,
-      ]
+      "UPDATE portal_projects SET progress_percentage = ?, updated_at = NOW() WHERE id = ?",
+      [Math.min(100, Math.max(0, Number(form.get("progress_percentage")) || 0)), id]
     );
-    // Picking a phase advances the bar: earlier phases done, this one active,
-    // later ones upcoming. Skips silently if the value isn't a defined phase.
-    const phases = await sql(
-      "SELECT id, title FROM project_milestones WHERE project_id = ? AND kind = 'phase' ORDER BY sort_order",
-      [id]
-    );
-    const selIdx = phases.findIndex((p) => p.title === currentPhase);
-    if (selIdx >= 0) {
-      for (let i = 0; i < phases.length; i++) {
-        await sql("UPDATE project_milestones SET status = ? WHERE id = ?", [
-          i < selIdx ? "done" : i === selIdx ? "active" : "upcoming",
-          phases[i].id,
-        ]);
-      }
-    }
   } else if (action === "add_milestone") {
     const title = String(form.get("title") || "").trim();
     if (!title) return errorRedirect(request, form, "Milestone title required");
@@ -115,6 +98,11 @@ export async function POST(request, { params }) {
   } else {
     return errorRedirect(request, form, "Unknown action");
   }
+
+  // Plan phase statuses/dates are the single source of truth for
+  // current_phase/target_date - recompute after anything that could touch
+  // them (a no-op if this project has no phases yet).
+  await syncCurrentPhase(id);
 
   await logActivity({
     clientId: project.client_id, projectId: id, actorType: "operator", actorName: operator.name,
